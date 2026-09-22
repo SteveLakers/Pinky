@@ -27,8 +27,8 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
   - Expanded-universe beat rates ~52–55% (was ~60–78% on old mega-10 — bias reduced)
 - **Training:** not started (wait for explicit go)
 - Architecture locked in `docs/ARCHITECTURE.md`
-- Git is local only (no GitHub remote yet)
-- Branch: `main` (initial local checkpoint committed)
+- GitHub: **private** repo at https://github.com/steveonshit/Pinky (invite collaborator next)
+- Branch: `main` (tracking `origin/main`)
 - **Graphify:** graph current
 
 ## What it will do
