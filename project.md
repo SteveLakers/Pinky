@@ -16,7 +16,7 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 7. **Stress-test your thinking.** Always consider whether what you’re doing or saying is the best approach. If not, say so. You won’t be mad.
 8. **Actively hunt for mistakes.** Continuously check statements, assumptions, plans, and requests for errors, gaps, or weaker approaches. When found, tell you right away — no waiting, soft-pedaling, or silence.
 9. **Every new chat:** agent must read `project.md` first.
-10. **Done signal:** when finished with a task, speak `Daddy Q` out loud (`say "Daddy Q"`), don’t just type it.
+10. **Done signal:** when finished with a task and the reply, speak `Daddy Q` out loud last (`say "Daddy Q"`) — not first, and don’t just type it.
 
 ## Status
 
@@ -75,8 +75,11 @@ Horizons:
 - `data/features/features_panel.parquet` — feature matrix (gitignored)
 - `data/labels/labels_panel.parquet` — label matrix (gitignored)
 - `requirements.txt` / `.venv/` — Python deps
+- `README.md` — public overview (what / how / what’s shared vs private)
 - `docs/ARCHITECTURE.md` — design and build plan
-- `.cursor/rules/` — Cursor agent rules (Pinky-only)
+- `docs/PRD.md` — product requirements
+- `docs/EVAL.md` — short pre-trust eval checklist
+- `.cursor/rules/` — Cursor agent rules (Pinky-only; review personal prefs before public push)
 - `project.md` — this overview
 - `graphify-out/` — knowledge graph output
 
