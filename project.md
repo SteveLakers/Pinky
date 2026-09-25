@@ -16,8 +16,7 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 7. **Stress-test your thinking.** Always consider whether what you’re doing or saying is the best approach. If not, say so. You won’t be mad.
 8. **Actively hunt for mistakes.** Continuously check statements, assumptions, plans, and requests for errors, gaps, or weaker approaches. When found, tell you right away — no waiting, soft-pedaling, or silence.
 9. **Every new chat:** agent must read `project.md` first.
-10. **Strong models for hard tasks** (`.cursor/rules/strong-models.mdc`).
-11. **One chat at a time** on Pinky — parallel chats overwrite each other's work.
+10. **Always lean toward higher AI models.** When in doubt, use the stronger one; hard tasks → strongest available. Cost is not a reason to downgrade (`.cursor/rules/strong-models.mdc`).
 
 ## Where we are (2026-09-25)
 
@@ -123,6 +122,7 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 
 ## Working notes
 
+- Suggestion: use one chat at a time on Pinky (parallel chats can overwrite each other's edits)
 - Activate venv: `source .venv/bin/activate`
 - Re-pull data: `PYTHONPATH=. python scripts/pull_data.py`
 - Rebuild features / labels / dataset: `PYTHONPATH=. python scripts/build_features.py` (then `build_labels.py`, `build_dataset.py`)

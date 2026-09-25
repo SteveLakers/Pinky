@@ -1,11 +1,12 @@
 ---
-description: Use strong AI models for hard tasks
+description: Prefer strong AI models; always lean toward higher models
 alwaysApply: true
 ---
 
-# Use strong models for hard work
+# Prefer strong models
 
-- For hard tasks (model training design, debugging tricky results, deep code/research reviews, architecture decisions), delegate to subagents on the strongest available model. Don't default to cheap/fast models to save cost.
-- Pick the latest top-tier model from the available list (e.g., latest Claude Opus thinking-high or latest GPT); use fast models only for simple lookups.
+- **Default: lean toward higher models.** The user is always more willing to use a stronger model than a weaker one. When in doubt, pick the stronger one. Cost is not a reason to downgrade.
+- Hard tasks (model/training design, debugging tricky results, deep code/research reviews, architecture decisions, data pipelines) → delegate to subagents on the strongest available model (latest top-tier Claude Opus thinking-high or latest GPT).
+- Fast/cheap models only for trivial lookups.
 - Say which model was used and for what.
-- Note: the agent cannot change the main chat model; the user picks that in Cursor.
+- The main chat model is set by the user in Cursor (currently **Auto**); the agent can't change it. For big sessions, suggest the user pick a top model manually.
