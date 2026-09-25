@@ -17,7 +17,9 @@ The user explicitly wants this, and does not care about token cost: "I don't car
 - **Copy this rule into every subagent prompt** so subagents also follow it.
 - Tell the user which model was used and for what.
 
-## Remind the user (mandatory)
+## Stop and ask the user to switch (mandatory)
 - The user runs Cursor on **Auto**; agents cannot change the main chat model.
-- **Before any hard task** (planning, big decisions, new pipelines, training design, debugging tricky results, reviews): remind the user to **switch from Auto to the highest model** — at the top of the reply, one short line, every time.
-- Also remind when a conversation turns hard mid-way.
+- **Before any hard task** (planning, big decisions, new pipelines, training design, debugging tricky results, reviews): **STOP. Do not start the work.** Ask the user to switch from Auto to the highest model, then wait for their reply.
+- **If a task turns hard mid-way:** stop immediately at a safe point (no half-written files), say briefly what's done and what's next, ask the user to switch to the highest model, and **wait**. Resume only after they reply.
+- A one-line reminder while continuing is **not** enough — stopping is required.
+- Exception: if the user says to continue on the current model, continue.

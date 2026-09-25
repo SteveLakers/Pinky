@@ -20,7 +20,7 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 8. **Actively hunt for mistakes.** Continuously check statements, assumptions, plans, and requests for errors, gaps, or weaker approaches. When found, tell you right away — no waiting, soft-pedaling, or silence.
 9. **Every new chat:** agent must read `project.md` first.
 10. **HIGHEST MODELS — top priority, all agents.** Go very heavy on higher/highest models for reasoning, planning, decisions, and thinking. Token cost doesn't matter to the user. Never downgrade to save cost (`.cursor/rules/strong-models.mdc`).
-    - User runs Cursor on **Auto**; agents can't change the main model → **always remind the user to switch to the highest model before hard tasks** (one line, top of reply, every time).
+    - User runs Cursor on **Auto**; agents can't change the main model → **before a hard task, or if a task turns hard mid-way: STOP, ask the user to switch to the highest model, and wait** before doing the work (unless the user says continue).
     - Hard sub-work → subagents on the strongest model; copy this rule into every subagent prompt.
 11. **Communication:** simple, plain sentences; bullet points; **ask before large decisions/changes** (`.cursor/rules/communication.mdc`).
 12. **Graphify first:** run `graphify query/explain/path` before exploring code; `graphify update .` after code changes (`.cursor/rules/graphify.mdc`).
