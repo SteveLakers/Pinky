@@ -139,14 +139,14 @@ Detailed pass/fail bar: `docs/EVAL.md`
 - Data pull (58 stocks + helpers)
 - Feature builder
 - Labels vs SPY
-- Eval checklist
-- Initial git commit
-
-**Not done**
 - Train-ready joined dataset
 - Walk-forward + purge implementation
-- Model training
-- Evaluation report
+- First walk-forward train/eval (LightGBM + linear baselines)
+- Eval checklist
+- Git commit history + private GitHub repo
+
+**Not done**
+- Model that clearly beats linear baseline
 - Prediction API / UI
 
 ---
@@ -155,9 +155,9 @@ Detailed pass/fail bar: `docs/EVAL.md`
 
 1. **M0 — Design** ✅  
 2. **M1 — Data + features + labels** ✅  
-3. **M2 — Train-ready dataset + walk-forward/purge** ⏳ next  
-4. **M3 — Train + evaluate** (only on explicit go)  
-5. **M4 — Prediction interface** (only if M3 passes eval bar)
+3. **M2 — Train-ready dataset + walk-forward/purge** ✅  
+4. **M3 — Train + evaluate** ✅ first run (soft bar FAIL — see `docs/WALKFORWARD_RESULTS.md`)  
+5. **M4 — Prediction interface** (only if a later model passes eval bar)
 
 ---
 

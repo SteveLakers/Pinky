@@ -6,6 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_RAW_DIR = PROJECT_ROOT / "data" / "raw"
 DATA_FEATURES_DIR = PROJECT_ROOT / "data" / "features"
 DATA_LABELS_DIR = PROJECT_ROOT / "data" / "labels"
+DATA_DATASET_DIR = PROJECT_ROOT / "data" / "dataset"
 
 # Need this many trading days of history before a row is usable
 FEATURE_WARMUP_DAYS = 252
@@ -17,6 +18,12 @@ HORIZONS = {
     "1y": 252,
     "2y": 504,
 }
+
+# Walk-forward (expanding train window, fixed-length test)
+WF_MIN_TRAIN_DAYS = 504   # ~2y trading days before first test
+WF_TEST_DAYS = 252        # ~1y test fold
+WF_STEP_DAYS = 252        # slide forward ~1y per fold
+
 
 # How far back to pull daily bars (enough room for 2y labels + features later)
 HISTORY_START = "2015-01-01"

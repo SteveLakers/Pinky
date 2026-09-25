@@ -1,16 +1,14 @@
 {
   "0": "Pinky Architecture Plan",
-  "1": "pull_universe",
-  "2": "raw_io.py",
+  "1": "data_pull.py",
+  "2": "dataset.py",
   "3": "Pinky",
   "4": "__init__.py",
-  "5": "adj_close_series",
+  "5": "Pinky PRD (Product Requirements Document)",
   "6": "features.py",
-  "7": "build_universe_labels",
-  "8": "data_pull.py",
-  "9": "labels.py",
-  "10": "build_labels_for_ticker",
-  "11": "load_raw_ticker",
-  "12": "all_tickers",
-  "13": "_safe_filename"
+  "7": "labels.py",
+  "8": "walkforward.py",
+  "9": "train.py",
+  "10": "Metrics to report",
+  "11": "Walk-Forward Results (v1)"
 }

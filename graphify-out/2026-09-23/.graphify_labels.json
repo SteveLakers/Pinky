@@ -1,0 +1,13 @@
+{
+  "0": "Pinky Architecture Plan",
+  "1": "data_pull.py",
+  "2": "walkforward.py",
+  "3": "Pinky",
+  "4": "__init__.py",
+  "5": "Pinky PRD (Product Requirements Document)",
+  "6": "features.py",
+  "7": "build_labels_for_ticker",
+  "8": "iter_walk_forward_folds",
+  "9": "train.py",
+  "10": "Metrics to report"
+}
