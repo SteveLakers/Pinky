@@ -1,5 +1,45 @@
 # Walk-Forward Results
 
+## v4 — sector cap (max 40%) + Ridge/LightGBM blend (2026-09-25)
+
+Changes vs v3:
+1. **Sector cap:** no sector above 40% of the top-10 (skip to next-best name in another sector)
+2. **Blend:** average of daily Ridge and LightGBM percentile ranks
+3. Every signal (LightGBM, Ridge, Blend, Momentum) run capped/uncapped, with/without top-5 hindsight winners
+
+### Ranking metrics (1y, 8 folds)
+
+| Metric | LightGBM | Ridge | Blend |
+|---|---|---|---|
+| Mean rank IC | 0.159 | **0.166** | 0.165 |
+| Mean top-5 1y excess | 0.524 | **0.594** | 0.578 |
+
+### Portfolio backtest CAGR (Jan 2018 → Oct 2025, net of 10 bps; SPY +14.1%)
+
+| Signal | Uncapped | Capped | Uncapped ex top-5 winners | Capped ex top-5 winners |
+|---|---|---|---|---|
+| LightGBM | +41.4% | +36.5% | +24.7% | **+26.2%** |
+| Ridge | **+43.0%** | +32.0% | +26.3% | +20.1% |
+| Blend | +38.6% | +33.7% | **+28.5%** | +24.2% |
+| Momentum 12-1 | +29.4% | +32.7% | +18.0% | +17.9% |
+
+Universe equal-weight: +18.2% (all), +16.4% (ex top-5 winners).
+
+- Cap cuts Tech/AI picks from **63% → 38%**; Energy becomes #2 (~16%).
+- Cap costs 5–11%/yr on raw CAGR (it blocks the tech winners). Ridge is hurt most.
+- On the tougher "ex top-5 winners" test, **LightGBM capped (+26%)** and **Blend uncapped (+28.5%)** lead; Ridge capped drops to +20%.
+- Max drawdown still worse than SPY for all models (−31% to −37% vs −23%).
+- Capped models still beat capped momentum by ~6–8%/yr on the ex-winners test.
+
+### Honest read
+
+- **No clear winner.** Gaps of 2–4%/yr across 16 variants and 93 months are within noise. Picking the best row = overfitting to hindsight.
+- Ridge's lead is mostly tech concentration: it falls apart when capped.
+- LightGBM holds up best under the cap → its signal is less "just buy tech."
+- Survivorship bias still inflates every number above.
+
+---
+
 ## v3 — bigger balanced universe + trading-cost backtest (2026-09-25)
 
 Changes vs v2:

@@ -30,6 +30,10 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
   - **Inflated by survivorship/hindsight** — ex top-5 winners: +25%/yr; naive momentum ex winners: +18%
   - Ridge ≈ LightGBM (Ridge slightly better) → soft bar **FAIL**
   - Picks ~63% Tech/AI → consider sector caps
+- **Step 6d (v4) done** — 40% sector cap + Ridge/LightGBM rank blend
+  - Cap: Tech/AI picks 63% → 38%; costs 5–11%/yr raw CAGR
+  - Ex top-5 winners: LightGBM capped +26%, Blend uncapped +28.5%, Ridge capped +20%, momentum +18%, SPY +14%
+  - No clear winner (gaps within noise); LightGBM most robust under cap
   - Report: `docs/WALKFORWARD_RESULTS.md`
 - Architecture locked in `docs/ARCHITECTURE.md`
 - GitHub: **private** https://github.com/steveonshit/Pinky
@@ -70,6 +74,8 @@ Horizons:
 ## Portfolio backtest defaults
 
 - Monthly rebalance, equal-weight top-10, **10 bps per side** (1 bp = 0.01%)
+- Optional sector cap: max **40%** of picks per sector (`BACKTEST_MAX_SECTOR_SHARE`)
+- Signals compared: LightGBM, Ridge, Blend (avg daily rank), naive momentum
 - Signal at day D close, trade at D+1 close
 - Settings in `pinky/config.py` (`BACKTEST_*`)
 
@@ -112,7 +118,7 @@ Horizons:
 5. Labels vs SPY — **done (v1)**
 6. Train-ready dataset + walk-forward/purge — **done**
 7. Train models — **first run done** (LightGBM did not beat linear baseline)
-8. Improve model / features — **in progress** (v2 prep, v3 universe + cost backtest done)
+8. Improve model / features — **in progress** (v2 prep, v3 universe + cost backtest, v4 sector cap + blend done)
 9. API / UI only after models prove useful
 
 ## Working notes

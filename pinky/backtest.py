@@ -3,12 +3,16 @@ Tradeable portfolio backtest on out-of-sample (walk-forward test) predictions.
 
 - Rebalance on the first test day of each month.
 - Hold equal-weight top-N by model score until the next rebalance.
+- Optional sector cap: no sector may exceed `max_sector_share` of picks
+  (skip to the next-best name in another sector).
 - Costs: `cost_bps` per side on every dollar traded (buys + sells),
   using drifted weights, so only real turnover is charged.
 - Compare to SPY and to an equal-weight universe basket over the same windows.
 """
 
 from __future__ import annotations
+
+import math
 
 import pandas as pd
 
@@ -61,6 +65,31 @@ def _period_end(
     return calendar[min(pos, len(calendar) - 1)]
 
 
+def pick_top(
+    g: pd.DataFrame,
+    score_col: str,
+    top_n: int,
+    max_sector_share: float | None = None,
+) -> list[str]:
+    """Top-N tickers by score, optionally capping names per sector."""
+    ranked = g.sort_values(score_col, ascending=False)["Ticker"].tolist()
+    n = min(top_n, len(ranked))
+    if max_sector_share is None:
+        return ranked[:n]
+    cap = max(1, math.floor(max_sector_share * n + 1e-9))
+    counts: dict[str, int] = {}
+    picks: list[str] = []
+    for t in ranked:
+        s = TICKER_SECTOR.get(t, "Other")
+        if counts.get(s, 0) >= cap:
+            continue
+        picks.append(t)
+        counts[s] = counts.get(s, 0) + 1
+        if len(picks) == n:
+            break
+    return picks
+
+
 def run_backtest(
     preds: pd.DataFrame,
     score_col: str,
@@ -68,6 +97,7 @@ def run_backtest(
     top_n: int = BACKTEST_TOP_N,
     cost_bps: float = BACKTEST_COST_BPS,
     exclude: set[str] | None = None,
+    max_sector_share: float | None = None,
 ) -> pd.DataFrame:
     """
     One row per holding period (gross, cost, net, SPY, universe, turnover).
@@ -98,7 +128,7 @@ def run_backtest(
         stock_ret = prices.loc[end, g["Ticker"]] / prices.loc[d, g["Ticker"]] - 1.0
         stock_ret = stock_ret.fillna(0.0)
 
-        picks = g.nlargest(min(top_n, len(g)), score_col)["Ticker"].tolist()
+        picks = pick_top(g, score_col, top_n, max_sector_share)
         target = pd.Series(1.0 / len(picks), index=picks)
 
         all_names = target.index.union(prev_drift.index)
@@ -224,6 +254,7 @@ __all__ = [
     "momentum_scores",
     "monthly_rebalance_dates",
     "pick_sector_share",
+    "pick_top",
     "run_backtest",
     "summarize_backtest",
     "top_winners",
