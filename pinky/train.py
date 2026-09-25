@@ -6,6 +6,8 @@ v2 prep:
 - Drop highly correlated features (fit on train only)
 - Focus horizon: 1y (others optional)
 - Smaller / more regularized LightGBM
+
+v3: saves out-of-sample predictions and adds a tradeable cost-aware backtest to the report.
 """
 
 from __future__ import annotations
@@ -20,7 +22,23 @@ from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from pinky.config import HORIZONS, PROJECT_ROOT
+from pinky.backtest import (
+    default_prices,
+    momentum_scores,
+    pick_sector_share,
+    run_backtest,
+    summarize_backtest,
+    top_winners,
+    within_sector_ic,
+    yearly_table,
+)
+from pinky.config import (
+    BACKTEST_COST_BPS,
+    BACKTEST_TOP_N,
+    HORIZONS,
+    PROJECT_ROOT,
+    UNIVERSE_STOCKS,
+)
 from pinky.dataset import load_dataset
 from pinky.metrics import (
     brier_score,
@@ -38,6 +56,9 @@ MODELS_DIR = PROJECT_ROOT / "models"
 
 # Primary focus after v1 failure
 DEFAULT_HORIZONS = ["1y"]
+
+VERSION = "v3"
+PRED_COLS = ["pred_excess_ridge", "pred_excess_lgbm", "pred_beat_logit", "pred_beat_lgbm"]
 
 
 def _xy_return(df: pd.DataFrame, fcols: list[str], horizon: str):
@@ -164,12 +185,18 @@ def _eval_prepared(
         if not (np.isnan(row["top5_excess_lgbm"]) or np.isnan(row["top5_excess_ridge"]))
         else False
     )
-    return row
+    preds = test[["Date", "Ticker", excess_col, beat_col, *PRED_COLS]].assign(
+        fold_id=fold.fold_id
+    )
+    return row, preds
 
 
-def run_horizon(df: pd.DataFrame, horizon: str) -> tuple[pd.DataFrame, dict]:
+def run_horizon(
+    df: pd.DataFrame, horizon: str
+) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
     """Train/eval all folds for one horizon with CS prep + tuned LightGBM."""
     rows = []
+    pred_parts = []
     last_models: dict = {}
 
     for fold in iter_walk_forward_folds(df, horizon):
@@ -180,7 +207,7 @@ def run_horizon(df: pd.DataFrame, horizon: str) -> tuple[pd.DataFrame, dict]:
         ridge, lgbm_ret = _fit_return_models(x_tr, y_tr)
         logit, lgbm_beat = _fit_beat_models(x_tb, y_tb)
 
-        metrics = _eval_prepared(
+        metrics, preds = _eval_prepared(
             horizon,
             fold,
             test_cs,
@@ -192,6 +219,7 @@ def run_horizon(df: pd.DataFrame, horizon: str) -> tuple[pd.DataFrame, dict]:
             n_train=len(train_cs),
         )
         rows.append(metrics)
+        pred_parts.append(preds)
         last_models = {
             "feature_cols": fcols,
             "ridge": ridge,
@@ -210,13 +238,90 @@ def run_horizon(df: pd.DataFrame, horizon: str) -> tuple[pd.DataFrame, dict]:
             f"univ={metrics['universe_mean_excess']:.3f}"
         )
 
-    return pd.DataFrame(rows), last_models
+    return pd.DataFrame(rows), last_models, pd.concat(pred_parts, ignore_index=True)
 
 
-def _write_summary(all_metrics: pd.DataFrame, path: Path) -> None:
+def _fmt_pct(x: float) -> str:
+    return f"{100 * x:+.1f}%"
+
+
+def _backtest_lines(horizon: str, preds: pd.DataFrame, prices: pd.DataFrame) -> list[str]:
+    excess_col = f"excess_{horizon}"
     lines = [
-        "# Pinky Walk-Forward Training Report (v2 prep)",
+        f"## Portfolio backtest `{horizon}` signal (out-of-sample, tradeable)",
         "",
+        f"- Monthly rebalance, equal-weight top-{BACKTEST_TOP_N}, "
+        f"cost **{BACKTEST_COST_BPS:.0f} bps per side** on real turnover.",
+        f"- Signal is the `{horizon}` forecast; holding is 1 month (re-ranked monthly).",
+        "",
+        "| Model | Cost bps | CAGR net | CAGR SPY | CAGR univ EW | Months > SPY | "
+        "Turnover/mo | Cost drag/yr | Max DD | Max DD SPY |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    mom = momentum_scores(preds, prices)
+    winners = top_winners(prices, preds["Date"].min(), preds["Date"].max())
+    runs = [
+        ("LightGBM", preds, "pred_excess_lgbm", None),
+        ("Ridge", preds, "pred_excess_ridge", None),
+        ("Momentum 12-1 (naive)", mom, "mom_12_1", None),
+        ("LightGBM ex top-5 winners", preds, "pred_excess_lgbm", set(winners)),
+        ("Momentum ex top-5 winners", mom, "mom_12_1", set(winners)),
+    ]
+    main_bt = {}
+    for model, frame, col, excl in runs:
+        for bps in [0.0, BACKTEST_COST_BPS, 25.0]:
+            bt = run_backtest(frame, col, prices, cost_bps=bps, exclude=excl)
+            s = summarize_backtest(bt)
+            if bps == BACKTEST_COST_BPS:
+                main_bt[model] = bt
+            lines.append(
+                f"| {model} | {bps:.0f} | {_fmt_pct(s['cagr_net'])} | {_fmt_pct(s['cagr_spy'])} | "
+                f"{_fmt_pct(s['cagr_universe_ew'])} | {100 * s['months_beat_spy']:.0f}% | "
+                f"{100 * s['avg_monthly_turnover']:.0f}% | {_fmt_pct(-s['annual_cost_drag'])} | "
+                f"{_fmt_pct(s['max_dd_net'])} | {_fmt_pct(s['max_dd_spy'])} |"
+            )
+    s = summarize_backtest(main_bt["LightGBM"])
+    lines += [
+        "",
+        f"Window: {s['start']} → {s['end']} ({s['months']} months). "
+        "Trades fill at next day's close.",
+        f"Top-5 winners over the window (hindsight stress test): {', '.join(winners)}.",
+        "",
+    ]
+
+    yt = yearly_table(main_bt["LightGBM"])
+    lines += [
+        f"### LightGBM by year (net of {BACKTEST_COST_BPS:.0f} bps)",
+        "",
+        "| Year | Net | SPY | Univ EW | Net − SPY |",
+        "|---|---|---|---|---|",
+    ]
+    for year, r in yt.iterrows():
+        lines.append(
+            f"| {year} | {_fmt_pct(r['net'])} | {_fmt_pct(r['spy'])} | "
+            f"{_fmt_pct(r['universe_ew'])} | {_fmt_pct(r['net_minus_spy'])} |"
+        )
+
+    share = pick_sector_share(main_bt["LightGBM"])
+    lines += ["", "### LightGBM average pick share by sector", ""]
+    lines += [f"- {sec}: {100 * v:.0f}%" for sec, v in share.items()]
+
+    wic = within_sector_ic(preds, "pred_excess_lgbm", excess_col)
+    lines += ["", f"### LightGBM rank IC inside each sector (`{horizon}`)", ""]
+    lines += [f"- {sec}: {v:.3f}" for sec, v in wic.items()]
+    lines.append("")
+    return lines
+
+
+def _write_summary(
+    all_metrics: pd.DataFrame,
+    path: Path,
+    preds_by_h: dict[str, pd.DataFrame] | None = None,
+) -> None:
+    lines = [
+        f"# Pinky Walk-Forward Training Report ({VERSION})",
+        "",
+        f"Universe: {len(UNIVERSE_STOCKS)} stocks, sector-balanced (Tech/AI ~25%).",
         "Prep: cross-sectional z-score + correlated-feature drop + regularized LightGBM.",
         "Validation: expanding walk-forward + label purge (no random splits).",
         "Baseline to beat: **Ridge**.",
@@ -246,9 +351,15 @@ def _write_summary(all_metrics: pd.DataFrame, path: Path) -> None:
             f"- Mean top-5 excess — LightGBM: **{top5_lgbm:.3f}** | Ridge: **{top5_ridge:.3f}** | Universe: **{univ:.3f}**",
             f"- LightGBM beats Ridge on top-5 in **{100 * beat_top:.0f}%** of folds",
             f"- Avg features used: **{m['n_features'].mean():.1f}**",
+            f"- Mean test beat rate: **{100 * m['beat_rate_test'].mean():.0f}%**",
             f"**Soft bar vs Ridge:** **{soft}**",
             "",
         ]
+
+    if preds_by_h:
+        prices = default_prices()
+        for horizon, preds in preds_by_h.items():
+            lines += _backtest_lines(horizon, preds, prices)
 
     path.write_text("\n".join(lines))
 
@@ -262,22 +373,26 @@ def run_all(
     df = load_dataset()
     parts = []
     last_by_h = {}
+    preds_by_h = {}
 
     for h in horizons:
-        print(f"\n=== Training horizon {h} (v2 prep) ===")
-        metrics, last = run_horizon(df, h)
+        print(f"\n=== Training horizon {h} ({VERSION}) ===")
+        metrics, last, preds = run_horizon(df, h)
         parts.append(metrics)
         last_by_h[h] = last
+        preds_by_h[h] = preds
 
     all_metrics = pd.concat(parts, ignore_index=True)
 
     if save:
         ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
         MODELS_DIR.mkdir(parents=True, exist_ok=True)
-        metrics_path = ARTIFACTS_DIR / "walkforward_metrics_v2.csv"
+        metrics_path = ARTIFACTS_DIR / f"walkforward_metrics_{VERSION}.csv"
         all_metrics.to_csv(metrics_path, index=False)
-        summary_path = ARTIFACTS_DIR / "walkforward_summary_v2.md"
-        _write_summary(all_metrics, summary_path)
+        for h, preds in preds_by_h.items():
+            preds.to_parquet(ARTIFACTS_DIR / f"oos_preds_{h}_{VERSION}.parquet", index=False)
+        summary_path = ARTIFACTS_DIR / f"walkforward_summary_{VERSION}.md"
+        _write_summary(all_metrics, summary_path, preds_by_h)
 
         for h, pack in last_by_h.items():
             out = MODELS_DIR / h
@@ -296,7 +411,7 @@ def run_all(
             p = pack["lgbm_beat"].predict_proba(x)[:, 1]
             y = test["beat_1y"].to_numpy(dtype=float)
             calibration_table(y, p).to_csv(
-                ARTIFACTS_DIR / "calibration_1y_last_fold_v2.csv", index=False
+                ARTIFACTS_DIR / f"calibration_1y_last_fold_{VERSION}.csv", index=False
             )
 
         print(f"\nWrote {metrics_path}")

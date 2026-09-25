@@ -1,4 +1,4 @@
-"""Universe + path config for Pinky v1 prototype."""
+"""Universe + path config for Pinky."""
 
 from pathlib import Path
 
@@ -37,21 +37,50 @@ HELPERS = [
     "^IRX",  # short rates
 ]
 
-# Broader liquid universe (~55) across sectors — not just mega-cap winners.
-# Still smaller than full NASDAQ-100; expand again later if needed.
-UNIVERSE_STOCKS = [
-    # Mega / large tech
-    "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA", "AVGO", "ORCL", "CRM",
-    "ADBE", "CSCO", "INTC", "AMD", "QCOM", "TXN", "INTU", "NOW",
-    # Consumer / retail / media
-    "COST", "NFLX", "PEP", "KO", "WMT", "HD", "MCD", "NKE", "SBUX", "DIS", "CMCSA", "BKNG",
-    # Healthcare
-    "UNH", "JNJ", "LLY", "ABBV", "MRK", "PFE", "TMO", "ABT", "ISRG",
-    # Financials
-    "JPM", "V", "MA", "BAC", "WFC", "GS", "MS", "AXP", "BLK",
-    # Industrials / energy / other
-    "CAT", "GE", "HON", "UPS", "BA", "XOM", "CVX", "LIN", "ACN", "IBM",
-]
+# Sector-balanced liquid universe (~128). Tech/AI tilted (~25%), no other sector > ~11%.
+# "Tech/AI" is a Pinky bucket (includes AMZN/TSLA/GOOGL/META), not strict GICS.
+# Survivorship bias: these are today's large names; delisted losers are missing.
+UNIVERSE_BY_SECTOR: dict[str, list[str]] = {
+    "Tech/AI": [
+        "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA", "AVGO", "ORCL", "CRM",
+        "ADBE", "CSCO", "INTC", "AMD", "QCOM", "TXN", "INTU", "NOW", "IBM", "ACN",
+        "AMAT", "LRCX", "KLAC", "MU", "ADI", "MRVL", "CDNS", "SNPS", "ANET", "PANW",
+        "SMCI", "PLTR",
+    ],
+    "Healthcare": [
+        "UNH", "JNJ", "LLY", "ABBV", "MRK", "PFE", "TMO", "ABT", "ISRG", "AMGN",
+        "GILD", "VRTX", "REGN", "MDT",
+    ],
+    "Financials": [
+        "JPM", "V", "MA", "BAC", "WFC", "GS", "MS", "AXP", "BLK", "SCHW",
+        "C", "SPGI", "CB", "PGR",
+    ],
+    "Industrials": [
+        "CAT", "GE", "HON", "UPS", "BA", "DE", "RTX", "LMT", "UNP", "ETN",
+        "ADP", "WM", "GD", "EMR",
+    ],
+    "Consumer Disc": [
+        "HD", "MCD", "NKE", "SBUX", "BKNG", "LOW", "TJX", "CMG", "ORLY", "MAR",
+        "GM", "F",
+    ],
+    "Consumer Staples": [
+        "COST", "PEP", "KO", "WMT", "PG", "MDLZ", "CL", "MO", "KMB", "GIS",
+    ],
+    "Energy": ["XOM", "CVX", "COP", "EOG", "SLB", "PSX", "MPC", "OXY"],
+    "Materials": ["LIN", "SHW", "APD", "ECL", "NEM", "FCX"],
+    "Utilities": ["NEE", "DUK", "SO", "D", "AEP", "EXC"],
+    "Real Estate": ["PLD", "AMT", "EQIX", "SPG", "O", "PSA"],
+    "Communication": ["NFLX", "DIS", "CMCSA", "T", "VZ", "TMUS"],
+}
+
+UNIVERSE_STOCKS = [t for tickers in UNIVERSE_BY_SECTOR.values() for t in tickers]
+
+TICKER_SECTOR = {t: s for s, tickers in UNIVERSE_BY_SECTOR.items() for t in tickers}
+
+# Portfolio backtest (tradeable, net of costs)
+BACKTEST_TOP_N = 10          # equal-weight top-N picks
+BACKTEST_COST_BPS = 10.0     # cost per side (buy or sell), 1 bp = 0.01%
+BACKTEST_REBALANCE = "M"     # monthly
 
 # Back-compat alias used by older scripts/imports
 STARTER_STOCKS = UNIVERSE_STOCKS

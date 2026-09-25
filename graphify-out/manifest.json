@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "pinky/config.py": {
-    "mtime": 1790171701.806012,
-    "seen": 1790171736.438828,
-    "ast_hash": "4fc3786905c9424f063b1c303b96f81d",
+    "mtime": 1790340501.0422025,
+    "seen": 1790340746.988804,
+    "ast_hash": "46ce6f85bfb381944e08443abf41b0df",
     "semantic_hash": ""
   },
   "pinky/data_pull.py": {
@@ -30,15 +30,15 @@
     "semantic_hash": ""
   },
   "project.md": {
-    "mtime": 1790174387.3239293,
-    "seen": 1790175556.9297411,
-    "ast_hash": "8fe0f797b6eb0e9456607e9ab327bb1d",
+    "mtime": 1790340743.5015552,
+    "seen": 1790340746.988814,
+    "ast_hash": "dbd04695476e78bfbde5ae0c789e0b12",
     "semantic_hash": ""
   },
   "requirements.txt": {
-    "mtime": 1790174388.5975883,
-    "seen": 1790175556.9297411,
-    "ast_hash": "48b0c58502c141b6e2c3ef448aed6ed8",
+    "mtime": 1790340526.4939883,
+    "seen": 1790340746.988815,
+    "ast_hash": "2637b013e3bd40c27abec7bd5d7cbc3e",
     "semantic_hash": ""
   },
   "pinky/features.py": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "pinky/train.py": {
-    "mtime": 1790175522.346281,
-    "seen": 1790175556.929735,
-    "ast_hash": "9921d4ac7260c9d1b21cf14253f33389",
+    "mtime": 1790340746.5033615,
+    "seen": 1790340746.9888089,
+    "ast_hash": "862a78b79aed80463b6f95e7e2c22eea",
     "semantic_hash": ""
   },
   "scripts/train_walkforward.py": {
@@ -138,9 +138,15 @@
     "semantic_hash": ""
   },
   "docs/WALKFORWARD_RESULTS.md": {
-    "mtime": 1790174379.5484607,
-    "seen": 1790175556.9297411,
-    "ast_hash": "74815f45256cda4ef75e7e1a6ecaff37",
+    "mtime": 1790340737.7038057,
+    "seen": 1790340746.988814,
+    "ast_hash": "e5c855f753a7fcf07619f1926ae66c9c",
+    "semantic_hash": ""
+  },
+  "pinky/backtest.py": {
+    "mtime": 1790340688.9540715,
+    "seen": 1790340746.9888031,
+    "ast_hash": "fc99c0df97a4d3ee6b23967f3f4dae2b",
     "semantic_hash": ""
   }
 }
