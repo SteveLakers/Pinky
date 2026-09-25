@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "project.md": {
-    "mtime": 1790375240.544368,
-    "seen": 1790375241.203042,
-    "ast_hash": "de1b1ff750ee2f27e16dbc41a5af9a7a",
+    "mtime": 1790376487.4943361,
+    "seen": 1790376488.305832,
+    "ast_hash": "0816a6fb1ff961e9256e43fc40a804c6",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -147,6 +147,24 @@
     "mtime": 1790341533.4650047,
     "seen": 1790341594.2235572,
     "ast_hash": "cb5afc6d3d471e314125e28e7540ee73",
+    "semantic_hash": ""
+  },
+  "scripts/build_showcase.py": {
+    "mtime": 1790376371.795476,
+    "seen": 1790376396.955269,
+    "ast_hash": "a5034e364363055f483be647bf1e0b81",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1790375916.3232453,
+    "seen": 1790376396.955271,
+    "ast_hash": "9afe8a7091fb42380d6c29608f471fad",
+    "semantic_hash": ""
+  },
+  "showcase/index.html": {
+    "mtime": 1790376380.896378,
+    "seen": 1790376396.955275,
+    "ast_hash": "443ad82368368e52045756200fdb29be",
     "semantic_hash": ""
   }
 }

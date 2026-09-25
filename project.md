@@ -98,8 +98,10 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 
 | | LightGBM | Ridge | Random |
 |---|---|---|---|
-| precision@10 (picks that end up top-10%) | 0.32 | 0.34 | 0.12 |
-| Winner capture (time holding year's top-20) | 0.25 | 0.25 | 0.07 |
+| precision@10 (picks that end up top-10%) | 0.32 | 0.34 | 0.10 |
+| Winner capture (time holding year's top-20) | 0.25 | 0.25 | 0.08 |
+
+Random = mean of 20 random-score runs (matches theory: 0.10 and 10/128 ≈ 0.08).
 
 ## Portfolio backtest defaults
 
@@ -128,7 +130,8 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 - `pinky/train.py` — train/eval (Ridge, LightGBM, Blend), report, `--ex-winners` runs
 - `pinky/metrics.py` — IC, top-N, precision@k, winner capture, calibration
 - `pinky/backtest.py` — monthly top-N backtest, costs, sector cap, stress tests
-- `scripts/` — `pull_data`, `build_features`, `build_labels`, `build_dataset`, `train_walkforward`, `summarize_walkforward`
+- `scripts/` — `pull_data`, `build_features`, `build_labels`, `build_dataset`, `train_walkforward`, `summarize_walkforward`, `build_showcase`
+- `showcase/index.html` — generated one-page visual summary (self-contained, offline; rebuild with `PYTHONPATH=. python scripts/build_showcase.py`). All numbers computed from `artifacts/oos_preds_1y_v4*.parquet`; leads with the +41% → +19% survivorship caveat.
 - `data/` — all gitignored (`raw`, `features`, `labels`, `dataset`, `universe`, `sharadar`)
 - `data/reference/` — S&P 500 files + yfinance coverage probe created by another chat (untracked; not used by code)
 - `artifacts/`, `models/` — outputs (gitignored)

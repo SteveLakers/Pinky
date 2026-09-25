@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pinky — a stock-ranking research project</title>
+<style>
+  :root{
+    --bg:#080a0f; --panel:#11141c; --panel2:#161a24; --line:#232836;
+    --ink:#eef2f8; --muted:#97a1b5; --cyan:#22d3ee; --violet:#a78bfa;
+    --amber:#f59e0b; --slate:#94a3b8; --red:#fb7185; --green:#34d399;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 22px}
+  section{padding:70px 0; border-top:1px solid var(--line)}
+  section:first-of-type{border-top:0}
+  h1,h2,h3{line-height:1.2; margin:0 0 14px}
+  h1{font-size:clamp(34px,6vw,60px); letter-spacing:-.025em; font-weight:700}
+  h2{font-size:clamp(24px,3.4vw,34px); letter-spacing:-.02em}
+  h3{font-size:17px; letter-spacing:-.01em}
+  p{margin:0 0 14px; color:var(--muted)}
+  .lead{font-size:clamp(17px,2.1vw,20px); color:#c6cede; max-width:62ch}
+  .eyebrow{
+    font-size:12px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--cyan); margin-bottom:12px;
+  }
+
+  /* hero */
+  .hero{position:relative; overflow:hidden; padding:84px 0 60px}
+  .hero::before{
+    content:""; position:absolute; inset:-40% 30% auto -10%; height:640px;
+    background:radial-gradient(circle at 30% 30%, rgba(34,211,238,.16), transparent 62%);
+    pointer-events:none;
+  }
+  .hero::after{
+    content:""; position:absolute; inset:-30% -20% auto 40%; height:600px;
+    background:radial-gradient(circle at 60% 30%, rgba(167,139,250,.14), transparent 62%);
+    pointer-events:none;
+  }
+  .hero > *{position:relative}
+  .pill{
+    display:inline-flex; align-items:center; gap:8px; padding:6px 13px; border-radius:999px;
+    border:1px solid var(--line); background:rgba(255,255,255,.03);
+    font-size:12.5px; color:var(--muted);
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan)}
+  .grad{background:linear-gradient(95deg,#22d3ee,#a78bfa 55%,#f472b6);
+        -webkit-background-clip:text; background-clip:text; color:transparent}
+  .badges{display:flex; flex-wrap:wrap; gap:9px; margin-top:26px}
+  .badge{
+    padding:7px 13px; border-radius:9px; border:1px solid var(--line);
+    background:var(--panel); font-size:13px; color:#c6cede;
+  }
+  .badge b{color:var(--ink); font-weight:600}
+
+  /* generic blocks */
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:22px}
+  .grid{display:grid; gap:16px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .note{font-size:13.5px; color:var(--muted); margin:10px 0 0}
+
+  /* pipeline */
+  .pipe{display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-top:26px}
+  .step{
+    background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:16px 14px;
+    position:relative;
+  }
+  .step .n{
+    font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--cyan);
+    display:block; margin-bottom:8px;
+  }
+  .step b{display:block; font-size:14.5px; margin-bottom:5px}
+  .step span.d{font-size:12.5px; color:var(--muted); display:block; line-height:1.5}
+  .step:not(:last-child)::after{
+    content:"›"; position:absolute; right:-9px; top:50%; transform:translateY(-50%);
+    color:#3b4256; font-size:20px; z-index:2;
+  }
+
+  /* chart */
+  .chartbox{background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:20px 18px 12px}
+  .charthead{display:flex; flex-wrap:wrap; gap:12px; align-items:baseline; justify-content:space-between; margin-bottom:6px}
+  .legend{display:flex; flex-wrap:wrap; gap:8px 16px; margin:14px 2px 4px}
+  .lg{display:flex; align-items:center; gap:7px; font-size:13px; color:#c6cede; cursor:default}
+  .sw{width:11px;height:11px;border-radius:3px;flex:none}
+  .toggle{
+    display:flex; gap:2px; padding:3px; border:1px solid var(--line);
+    border-radius:9px; background:var(--panel2);
+  }
+  .toggle button{
+    border:0; background:transparent; color:var(--muted); font:inherit; font-size:12.5px;
+    padding:5px 12px; border-radius:7px; cursor:pointer;
+  }
+  .toggle button.on{background:#232a38; color:var(--ink)}
+  .svgwrap{position:relative}
+  svg{display:block; width:100%; height:auto; overflow:visible}
+  .tip{
+    position:absolute; pointer-events:none; opacity:0; transition:opacity .1s;
+    background:#0d1017; border:1px solid #2b3244; border-radius:11px; padding:10px 12px;
+    font-size:12.5px; box-shadow:0 12px 34px rgba(0,0,0,.6); min-width:190px; z-index:5;
+  }
+  .tip .tt{color:var(--muted); font-size:11.5px; margin-bottom:7px; letter-spacing:.02em}
+  .tip .tr{display:flex; align-items:center; gap:7px; justify-content:space-between; margin-top:3px}
+  .tip .tr span{display:flex; align-items:center; gap:7px; color:#c6cede}
+  .tip .tr b{font-variant-numeric:tabular-nums; color:var(--ink); font-weight:600}
+
+  /* table */
+  table{width:100%; border-collapse:collapse; font-size:14.5px}
+  th,td{padding:12px 10px; text-align:right; border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  tbody tr:last-child td{border-bottom:0}
+  td.num{font-variant-numeric:tabular-nums}
+  .tick{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:9px;vertical-align:middle}
+  .sub{display:block; font-size:12px; color:var(--muted); margin-top:3px}
+
+  /* reality check */
+  .reality{
+    border:1px solid rgba(251,113,133,.35); border-radius:15px; padding:24px;
+    background:linear-gradient(180deg, rgba(251,113,133,.09), rgba(251,113,133,.03));
+    margin-top:26px;
+  }
+  .reality h3{color:#fda4af; display:flex; align-items:center; gap:9px}
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:center; margin:20px 0 6px; max-width:520px}
+  .vsb{background:rgba(0,0,0,.28); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+  .vsb .big{font-size:32px; font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+  .vsb .cap{font-size:12px; color:var(--muted); margin-top:2px; line-height:1.45}
+  .arrow{color:#fb7185; font-size:22px; text-align:center}
+
+  /* roadmap */
+  .phase{background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:20px}
+  .phase .tag{
+    display:inline-block; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px; margin-bottom:12px;
+  }
+  .t1{background:rgba(34,211,238,.14); color:var(--cyan)}
+  .t2{background:rgba(167,139,250,.14); color:var(--violet)}
+  .t3{background:rgba(148,163,184,.13); color:var(--slate)}
+  .phase ul{margin:0; padding-left:18px}
+  .phase li{color:var(--muted); font-size:14px; margin-bottom:7px}
+  .phase li b{color:#c6cede; font-weight:600}
+
+  footer{border-top:1px solid var(--line); padding:34px 0 56px; color:var(--muted); font-size:13.5px}
+  footer strong{color:#c6cede}
+
+  @media (max-width:900px){
+    .pipe{grid-template-columns:repeat(2,1fr)}
+    .step:not(:last-child)::after{display:none}
+    .g3{grid-template-columns:1fr}
+    .g2{grid-template-columns:1fr}
+    section{padding:52px 0}
+  }
+  @media (max-width:560px){
+    .vs{grid-template-columns:1fr; max-width:none}
+    .arrow{transform:rotate(90deg)}
+    th,td{padding:10px 6px; font-size:13.5px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <span class="pill"><span class="dot"></span> Research project · not investment advice</span>
+    <h1>Pinky tries to pick the stocks<br>that <span class="grad">beat the S&amp;P 500</span>.</h1>
+    <p class="lead">
+      It is a machine-learning model that reads years of price history and, once a month, ranks
+      every stock it follows. It buys the top 10 and holds them until the next month.
+      It leans toward tech and tries to spot big winners early — but it still buys energy,
+      industrials and other sectors when they rank best.
+    </p>
+    <p class="lead" style="color:#fda4af;border-left:2px solid rgba(251,113,133,.5);padding-left:14px"
+       id="heroHonesty"></p>
+    <div class="badges" id="heroBadges"></div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <div class="eyebrow">How it works</div>
+    <h2>Six steps, repeated every month</h2>
+    <p class="lead">Nothing here is hand-picked. The model only ever sees the past when it makes a choice.</p>
+    <div class="pipe">
+      <div class="step"><span class="n">01</span><b>Price data</b><span class="d">Daily prices for the stocks we follow, plus the S&amp;P 500.</span></div>
+      <div class="step"><span class="n">02</span><b>Features</b><span class="d">Turn raw prices into signals: trend, volatility, strength vs the market.</span></div>
+      <div class="step"><span class="n">03</span><b>Walk-forward training</b><span class="d">Train on the past, test on the next unseen stretch. Repeat. Never peek ahead.</span></div>
+      <div class="step"><span class="n">04</span><b>Ranking</b><span class="d">Each stock gets a score: how much it should beat the index over the next year.</span></div>
+      <div class="step"><span class="n">05</span><b>Top-10 portfolio</b><span class="d">Buy the 10 best, equal amounts, max 60% from any one sector.</span></div>
+      <div class="step"><span class="n">06</span><b>Costs &amp; scoring</b><span class="d">Charge trading costs, then compare honestly against the S&amp;P 500.</span></div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section>
+    <div class="eyebrow">Results</div>
+    <h2>What $10,000 would have done</h2>
+    <p class="lead" id="resultsLead"></p>
+
+    <div class="chartbox">
+      <div class="charthead">
+        <div style="font-size:13px;color:var(--muted)">Growth of $10,000 · after trading costs</div>
+        <div class="toggle">
+          <button id="btnLin" class="on">Linear</button>
+          <button id="btnLog">Log</button>
+        </div>
+      </div>
+      <div class="svgwrap">
+        <div id="chart"></div>
+        <div class="tip" id="tip"></div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px;padding:6px 18px">
+      <table>
+        <thead><tr><th>Strategy</th><th>Growth per year</th><th>Worst drop</th><th>$10,000 became</th></tr></thead>
+        <tbody id="statsRows"></tbody>
+      </table>
+    </div>
+    <p class="note" id="statsNote"></p>
+
+    <!-- REALITY CHECK -->
+    <div class="reality">
+      <h3>Reality check: the big number is not real</h3>
+      <p>
+        The list of stocks was chosen <em>today</em>, so it already contains companies we now know did
+        brilliantly. Remove just five of them — <span id="winnerList"></span> — from both the training
+        data and the test, and most of the advantage disappears.
+      </p>
+      <div class="vs">
+        <div class="vsb">
+          <div class="big" style="color:var(--cyan)" id="bigA"></div>
+          <div class="cap">per year, with the five winners in the list</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="vsb">
+          <div class="big" style="color:var(--violet)" id="bigB"></div>
+          <div class="cap">per year, with them removed</div>
+        </div>
+      </div>
+      <p class="note" id="realityNote"></p>
+    </div>
+  </section>
+
+  <!-- SECTORS -->
+  <section>
+    <div class="eyebrow">What it buys</div>
+    <h2>Tech-heavy, but not tech-only</h2>
+    <p class="lead" id="sectorLead"></p>
+    <div class="card" style="margin-top:22px"><div id="sectorChart"></div></div>
+    <p class="note">Average share of the 10 monthly picks, by sector. The 60% cap forces the model out of tech once it holds six tech names.</p>
+  </section>
+
+  <!-- BIG WINNERS -->
+  <section>
+    <div class="eyebrow">Is it actually skill?</div>
+    <h2>Better than guessing — by a clear margin</h2>
+    <p class="lead">Two simple tests, both on the full 128-stock list. Random picking is the bar to clear.</p>
+    <div class="grid g2" style="margin-top:22px">
+      <div class="card">
+        <h3>Hit rate of the top 10</h3>
+        <p class="note" style="margin:0 0 14px">How often a pick really lands in the best 10% of stocks for the year.</p>
+        <div id="precChart"></div>
+      </div>
+      <div class="card">
+        <h3>Holding the year's big winners</h3>
+        <p class="note" style="margin:0 0 14px">Share of the year's 20 best stocks the model was actually holding, month by month.</p>
+        <div id="capChart"></div>
+      </div>
+    </div>
+    <p class="note" id="metricsNote"></p>
+  </section>
+
+  <!-- ROADMAP -->
+  <section>
+    <div class="eyebrow">What's next</div>
+    <h2>Fix the data first, then get smarter</h2>
+    <div class="grid g3" style="margin-top:22px">
+      <div class="phase">
+        <span class="tag t1">Phase 1 · in progress</span>
+        <h3>Honest evaluation</h3>
+        <ul>
+          <li>Buy proper historical data (Sharadar), including <b>companies that went bust or got bought</b>.</li>
+          <li>Widen from 128 hand-picked names to <b>~2,500–4,000 liquid US stocks</b>, as they existed at the time.</li>
+          <li>Re-score today's model to get a baseline we can trust.</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <span class="tag t2">Phase 2 · next</span>
+        <h3>Look at the companies</h3>
+        <ul>
+          <li><b>Growth and revenue acceleration</b> — first, and most important.</li>
+          <li>Margins, earnings reactions, R&amp;D spending and returns on capital.</li>
+          <li>Quality and safety checks, plus insider buying.</li>
+          <li>Added one batch at a time; anything that doesn't beat the baseline gets dropped.</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <span class="tag t3">Phase 3 · only if it works</span>
+        <h3>Paper trading</h3>
+        <ul>
+          <li>Publish a monthly picks report.</li>
+          <li>Track it live with fake money for a long stretch.</li>
+          <li>Real money only after that, if ever.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>Research project, not investment advice. Backtests are hypothetical.</strong></p>
+    <p style="margin:0" id="footNote"></p>
+  </footer>
+</div>
+
+<script id="pinky-data" type="application/json">{"meta":{"generated":"2026-09-25","start":"2018-01-04","end":"2025-10-02","months":93,"n_stocks":128,"n_stocks_ex5":123,"top_n":10,"cost_bps":10.0,"sector_cap":0.6,"start_capital":10000.0,"hindsight_winners":["NVDA","SMCI","TSLA","PLTR","AVGO"]},"curves":[{"key":"spy","label":"SPY (S&P 500)","color":"#94a3b8","points":[{"t":"2018-01-04","v":10000.0},{"t":"2018-02-02","v":10141.38},{"t":"2018-03-02","v":9906.85},{"t":"2018-04-03","v":9639.35},{"t":"2018-05-02","v":9729.18},{"t":"2018-06-04","v":10161.67},{"t":"2018-07-03","v":10058.77},{"t":"2018-08-02","v":10485.41},{"t":"2018-09-05","v":10731.96},{"t":"2018-10-02","v":10874.9},{"t":"2018-11-02","v":10141.23},{"t":"2018-12-04","v":10080.06},{"t":"2019-01-03","v":9161.99},{"t":"2019-02-04","v":10203.08},{"t":"2019-03-04","v":10482.2},{"t":"2019-04-02","v":10775.95},{"t":"2019-05-02","v":10972.27},{"t":"2019-06-04","v":10570.96},{"t":"2019-07-02","v":11224.43},{"t":"2019-08-02","v":11080.16},{"t":"2019-09-04","v":11133.93},{"t":"2019-10-02","v":10957.87},{"t":"2019-11-04","v":11692.42},{"t":"2019-12-03","v":11775.35},{"t":"2020-01-03","v":12324.85},{"t":"2020-02-04","v":12579.06},{"t":"2020-03-03","v":11477.35},{"t":"2020-04-02","v":9683.38},{"t":"2020-05-04","v":10903.85},{"t":"2020-06-02","v":11846.3},{"t":"2020-07-02","v":12058.72},{"t":"2020-08-04","v":12747.33},{"t":"2020-09-02","v":13814.82},{"t":"2020-10-02","v":12944.93},{"t":"2020-11-03","v":13029.85},{"t":"2020-12-02","v":14222.59},{"t":"2021-01-05","v":14460.01},{"t":"2021-02-02","v":14857.99},{"t":"2021-03-02","v":15052.31},{"t":"2021-04-05","v":15875.95},{"t":"2021-05-04","v":16237.73},{"t":"2021-06-02","v":16421.74},{"t":"2021-07-02","v":17000.3},{"t":"2021-08-03","v":17291.54},{"t":"2021-09-02","v":17763.46},{"t":"2021-10-04","v":16855.01},{"t":"2021-11-02","v":18162.87},{"t":"2021-12-02","v":17985.91},{"t":"2022-01-04","v":18844.23},{"t":"2022-02-02","v":18047.13},{"t":"2022-03-02","v":17279.23},{"t":"2022-04-04","v":18081.43},{"t":"2022-05-03","v":16481.49},{"t":"2022-06-02","v":16521.47},{"t":"2022-07-05","v":15184.36},{"t":"2022-08-02","v":16221.93},{"t":"2022-09-02","v":15593.03},{"t":"2022-10-04","v":15087.46},{"t":"2022-11-02","v":14963.72},{"t":"2022-12-02","v":16242.67},{"t":"2023-01-04","v":15388.93},{"t":"2023-02-02","v":16713.04},{"t":"2023-03-02","v":15952.34},{"t":"2023-04-04","v":16450.37},{"t":"2023-05-02","v":16537.72},{"t":"2023-06-02","v":17225.25},{"t":"2023-07-05","v":17903.77},{"t":"2023-08-02","v":18186.59},{"t":"2023-09-05","v":18150.63},{"t":"2023-10-03","v":17093.57},{"t":"2023-11-02","v":17465.37},{"t":"2023-12-04","v":18516.72},{"t":"2024-01-03","v":19084.38},{"t":"2024-02-02","v":20124.92},{"t":"2024-03-04","v":20855.67},{"t":"2024-04-02","v":21187.53},{"t":"2024-05-02","v":20623.59},{"t":"2024-06-04","v":21577.52},{"t":"2024-07-02","v":22491.9},{"t":"2024-08-02","v":21831.9},{"t":"2024-09-04","v":22571.37},{"t":"2024-10-02","v":23376.59},{"t":"2024-11-04","v":23415.63},{"t":"2024-12-03","v":24816.93},{"t":"2025-01-03","v":24407.32},{"t":"2025-02-04","v":24812.63},{"t":"2025-03-04","v":23785.13},{"t":"2025-04-02","v":23346.35},{"t":"2025-05-02","v":23438.99},{"t":"2025-06-03","v":24651.96},{"t":"2025-07-02","v":25735.25},{"t":"2025-08-04","v":26179.89},{"t":"2025-09-03","v":26701.28},{"t":"2025-10-02","v":27835.1}],"cagr":0.1413565488626829,"max_dd":-0.2301986651078849,"note":"Just buying the index.","final":27835.1},{"key":"lgbm","label":"Pinky \u00b7 128 stocks","color":"#22d3ee","points":[{"t":"2018-01-04","v":10000.0},{"t":"2018-02-02","v":10099.3},{"t":"2018-03-02","v":10127.06},{"t":"2018-04-03","v":9681.16},{"t":"2018-05-02","v":10377.87},{"t":"2018-06-04","v":11356.85},{"t":"2018-07-03","v":11165.84},{"t":"2018-08-02","v":11416.38},{"t":"2018-09-05","v":11807.95},{"t":"2018-10-02","v":11892.97},{"t":"2018-11-02","v":10701.15},{"t":"2018-12-04","v":10494.28},{"t":"2019-01-03","v":9640.39},{"t":"2019-02-04","v":11078.51},{"t":"2019-03-04","v":11970.51},{"t":"2019-04-02","v":12534.17},{"t":"2019-05-02","v":12671.33},{"t":"2019-06-04","v":11235.39},{"t":"2019-07-02","v":12517.48},{"t":"2019-08-02","v":12347.32},{"t":"2019-09-04","v":12284.29},{"t":"2019-10-02","v":12151.8},{"t":"2019-11-04","v":13764.77},{"t":"2019-12-03","v":13412.44},{"t":"2020-01-03","v":15607.41},{"t":"2020-02-04","v":17276.11},{"t":"2020-03-03","v":15430.98},{"t":"2020-04-02","v":11901.73},{"t":"2020-05-04","v":15357.25},{"t":"2020-06-02","v":16723.41},{"t":"2020-07-02","v":17981.93},{"t":"2020-08-04","v":18583.24},{"t":"2020-09-02","v":19699.35},{"t":"2020-10-02","v":18170.26},{"t":"2020-11-03","v":18257.87},{"t":"2020-12-02","v":23027.99},{"t":"2021-01-05","v":25022.54},{"t":"2021-02-02","v":26144.81},{"t":"2021-03-02","v":28116.21},{"t":"2021-04-05","v":29783.9},{"t":"2021-05-04","v":28529.98},{"t":"2021-06-02","v":29992.34},{"t":"2021-07-02","v":30777.11},{"t":"2021-08-03","v":29720.77},{"t":"2021-09-02","v":29616.51},{"t":"2021-10-04","v":28607.79},{"t":"2021-11-02","v":31780.26},{"t":"2021-12-02","v":30900.41},{"t":"2022-01-04","v":33035.08},{"t":"2022-02-02","v":29940.05},{"t":"2022-03-02","v":28587.59},{"t":"2022-04-04","v":30915.2},{"t":"2022-05-03","v":26029.18},{"t":"2022-06-02","v":26999.55},{"t":"2022-07-05","v":22349.23},{"t":"2022-08-02","v":26634.95},{"t":"2022-09-02","v":24827.93},{"t":"2022-10-04","v":25803.63},{"t":"2022-11-02","v":27643.44},{"t":"2022-12-02","v":30970.28},{"t":"2023-01-04","v":27576.78},{"t":"2023-02-02","v":34476.32},{"t":"2023-03-02","v":34080.24},{"t":"2023-04-04","v":35413.4},{"t":"2023-05-02","v":34510.09},{"t":"2023-06-02","v":47481.68},{"t":"2023-07-05","v":50262.54},{"t":"2023-08-02","v":54028.68},{"t":"2023-09-05","v":53015.64},{"t":"2023-10-03","v":49958.18},{"t":"2023-11-02","v":52556.81},{"t":"2023-12-04","v":55677.02},{"t":"2024-01-03","v":57254.53},{"t":"2024-02-02","v":67830.53},{"t":"2024-03-04","v":81233.86},{"t":"2024-04-02","v":82407.8},{"t":"2024-05-02","v":78013.83},{"t":"2024-06-04","v":82625.41},{"t":"2024-07-02","v":87729.79},{"t":"2024-08-02","v":77589.77},{"t":"2024-09-04","v":80582.97},{"t":"2024-10-02","v":85923.14},{"t":"2024-11-04","v":82330.16},{"t":"2024-12-03","v":98626.58},{"t":"2025-01-03","v":99628.82},{"t":"2025-02-04","v":102217.23},{"t":"2025-03-04","v":94645.83},{"t":"2025-04-02","v":91629.17},{"t":"2025-05-02","v":95767.18},{"t":"2025-06-03","v":103497.31},{"t":"2025-07-02","v":114428.0},{"t":"2025-08-04","v":118330.95},{"t":"2025-09-03","v":117749.68},{"t":"2025-10-02","v":144217.08}],"cagr":0.41153828518913094,"max_dd":-0.32346979392785846,"note":"Looks great. Inflated by hindsight \u2014 see below.","final":144217.08},{"key":"lgbm_ex5","label":"Pinky \u00b7 5 winners removed","color":"#a78bfa","points":[{"t":"2018-01-04","v":10000.0},{"t":"2018-02-02","v":9557.35},{"t":"2018-03-02","v":9491.49},{"t":"2018-04-03","v":8900.11},{"t":"2018-05-02","v":9517.67},{"t":"2018-06-04","v":10281.36},{"t":"2018-07-03","v":9798.86},{"t":"2018-08-02","v":10275.74},{"t":"2018-09-05","v":10555.66},{"t":"2018-10-02","v":10416.44},{"t":"2018-11-02","v":8967.57},{"t":"2018-12-04","v":8519.4},{"t":"2019-01-03","v":7909.73},{"t":"2019-02-04","v":9728.95},{"t":"2019-03-04","v":10088.82},{"t":"2019-04-02","v":10401.39},{"t":"2019-05-02","v":10465.66},{"t":"2019-06-04","v":9474.63},{"t":"2019-07-02","v":10381.16},{"t":"2019-08-02","v":10355.81},{"t":"2019-09-04","v":10380.49},{"t":"2019-10-02","v":9963.96},{"t":"2019-11-04","v":11299.04},{"t":"2019-12-03","v":11076.01},{"t":"2020-01-03","v":12595.44},{"t":"2020-02-04","v":12883.63},{"t":"2020-03-03","v":11627.92},{"t":"2020-04-02","v":8840.41},{"t":"2020-05-04","v":11227.76},{"t":"2020-06-02","v":12389.5},{"t":"2020-07-02","v":12514.67},{"t":"2020-08-04","v":12021.11},{"t":"2020-09-02","v":12405.01},{"t":"2020-10-02","v":11060.61},{"t":"2020-11-03","v":11149.92},{"t":"2020-12-02","v":14905.26},{"t":"2021-01-05","v":15593.19},{"t":"2021-02-02","v":15789.47},{"t":"2021-03-02","v":17595.66},{"t":"2021-04-05","v":19069.27},{"t":"2021-05-04","v":18386.88},{"t":"2021-06-02","v":19614.31},{"t":"2021-07-02","v":19401.71},{"t":"2021-08-03","v":18137.42},{"t":"2021-09-02","v":18121.93},{"t":"2021-10-04","v":17404.86},{"t":"2021-11-02","v":19040.82},{"t":"2021-12-02","v":18903.11},{"t":"2022-01-04","v":20482.27},{"t":"2022-02-02","v":18263.51},{"t":"2022-03-02","v":17598.82},{"t":"2022-04-04","v":17727.12},{"t":"2022-05-03","v":15416.76},{"t":"2022-06-02","v":16227.16},{"t":"2022-07-05","v":13287.54},{"t":"2022-08-02","v":15474.53},{"t":"2022-09-02","v":15055.23},{"t":"2022-10-04","v":15029.86},{"t":"2022-11-02","v":14821.42},{"t":"2022-12-02","v":17191.32},{"t":"2023-01-04","v":16633.91},{"t":"2023-02-02","v":20767.88},{"t":"2023-03-02","v":18962.11},{"t":"2023-04-04","v":19980.35},{"t":"2023-05-02","v":19647.72},{"t":"2023-06-02","v":22858.31},{"t":"2023-07-05","v":23809.57},{"t":"2023-08-02","v":23931.02},{"t":"2023-09-05","v":24379.28},{"t":"2023-10-03","v":22579.05},{"t":"2023-11-02","v":24013.97},{"t":"2023-12-04","v":25606.4},{"t":"2024-01-03","v":26751.11},{"t":"2024-02-02","v":27231.9},{"t":"2024-03-04","v":28590.76},{"t":"2024-04-02","v":29181.07},{"t":"2024-05-02","v":27864.76},{"t":"2024-06-04","v":29137.59},{"t":"2024-07-02","v":30105.71},{"t":"2024-08-02","v":25976.21},{"t":"2024-09-04","v":27386.99},{"t":"2024-10-02","v":29060.47},{"t":"2024-11-04","v":29009.27},{"t":"2024-12-03","v":30340.7},{"t":"2025-01-03","v":27780.91},{"t":"2025-02-04","v":29016.64},{"t":"2025-03-04","v":27113.75},{"t":"2025-04-02","v":26292.09},{"t":"2025-05-02","v":26736.9},{"t":"2025-06-03","v":28197.12},{"t":"2025-07-02","v":32268.77},{"t":"2025-08-04","v":31609.36},{"t":"2025-09-03","v":33334.26},{"t":"2025-10-02","v":39554.14}],"cagr":0.19434626366077512,"max_dd":-0.35126651084897254,"note":"The honest version. Retrained without NVDA, SMCI, TSLA, PLTR, AVGO.","final":39554.14},{"key":"mom_ex5","label":"Naive momentum \u00b7 5 winners removed","color":"#f59e0b","points":[{"t":"2018-01-04","v":10000.0},{"t":"2018-02-02","v":10393.18},{"t":"2018-03-02","v":10567.22},{"t":"2018-04-03","v":9969.98},{"t":"2018-05-02","v":10389.74},{"t":"2018-06-04","v":11522.77},{"t":"2018-07-03","v":11089.05},{"t":"2018-08-02","v":11467.52},{"t":"2018-09-05","v":11723.59},{"t":"2018-10-02","v":12091.03},{"t":"2018-11-02","v":10615.31},{"t":"2018-12-04","v":10410.76},{"t":"2019-01-03","v":9589.71},{"t":"2019-02-04","v":11327.93},{"t":"2019-03-04","v":11796.92},{"t":"2019-04-02","v":12408.23},{"t":"2019-05-02","v":12324.75},{"t":"2019-06-04","v":12167.72},{"t":"2019-07-02","v":12970.19},{"t":"2019-08-02","v":12978.75},{"t":"2019-09-04","v":13380.86},{"t":"2019-10-02","v":12594.18},{"t":"2019-11-04","v":12948.53},{"t":"2019-12-03","v":12904.38},{"t":"2020-01-03","v":14199.34},{"t":"2020-02-04","v":14698.13},{"t":"2020-03-03","v":13119.45},{"t":"2020-04-02","v":11167.92},{"t":"2020-05-04","v":12915.34},{"t":"2020-06-02","v":13524.57},{"t":"2020-07-02","v":14624.34},{"t":"2020-08-04","v":16683.02},{"t":"2020-09-02","v":17546.14},{"t":"2020-10-02","v":16087.92},{"t":"2020-11-03","v":16029.33},{"t":"2020-12-02","v":16798.55},{"t":"2021-01-05","v":17937.04},{"t":"2021-02-02","v":18569.32},{"t":"2021-03-02","v":18429.61},{"t":"2021-04-05","v":18849.49},{"t":"2021-05-04","v":18745.97},{"t":"2021-06-02","v":20324.0},{"t":"2021-07-02","v":19690.05},{"t":"2021-08-03","v":19231.6},{"t":"2021-09-02","v":19285.68},{"t":"2021-10-04","v":19623.17},{"t":"2021-11-02","v":21660.06},{"t":"2021-12-02","v":20766.08},{"t":"2022-01-04","v":22818.49},{"t":"2022-02-02","v":23116.74},{"t":"2022-03-02","v":21762.3},{"t":"2022-04-04","v":22930.46},{"t":"2022-05-03","v":22140.63},{"t":"2022-06-02","v":23677.5},{"t":"2022-07-05","v":20610.36},{"t":"2022-08-02","v":22083.24},{"t":"2022-09-02","v":22873.8},{"t":"2022-10-04","v":23526.77},{"t":"2022-11-02","v":25359.63},{"t":"2022-12-02","v":25962.37},{"t":"2023-01-04","v":24323.48},{"t":"2023-02-02","v":24554.16},{"t":"2023-03-02","v":24746.93},{"t":"2023-04-04","v":25008.08},{"t":"2023-05-02","v":24644.94},{"t":"2023-06-02","v":25605.87},{"t":"2023-07-05","v":26552.66},{"t":"2023-08-02","v":26689.24},{"t":"2023-09-05","v":28282.54},{"t":"2023-10-03","v":26026.87},{"t":"2023-11-02","v":26804.08},{"t":"2023-12-04","v":29081.26},{"t":"2024-01-03","v":29274.87},{"t":"2024-02-02","v":34088.25},{"t":"2024-03-04","v":36564.47},{"t":"2024-04-02","v":34949.03},{"t":"2024-05-02","v":32675.53},{"t":"2024-06-04","v":35089.01},{"t":"2024-07-02","v":35717.59},{"t":"2024-08-02","v":31912.34},{"t":"2024-09-04","v":33797.35},{"t":"2024-10-02","v":35367.05},{"t":"2024-11-04","v":34204.84},{"t":"2024-12-03","v":37128.67},{"t":"2025-01-03","v":36510.98},{"t":"2025-02-04","v":38910.45},{"t":"2025-03-04","v":35100.72},{"t":"2025-04-02","v":32788.07},{"t":"2025-05-02","v":33897.29},{"t":"2025-06-03","v":34968.99},{"t":"2025-07-02","v":35112.47},{"t":"2025-08-04","v":35229.48},{"t":"2025-09-03","v":34884.46},{"t":"2025-10-02","v":36011.66}],"cagr":0.17996017519185803,"max_dd":-0.24018070784801493,"note":"No machine learning: just buy what went up last year.","final":36011.66}],"extras":{"universe_ew_128":0.18197531863115657,"universe_ew_123":0.16404401590754603,"ridge_ex5_uncapped":0.2632252131739421,"months_beat_spy":0.5483870967741935,"turnover":0.9636131905703862,"cost_drag":0.011574347157210934},"sectors":[{"sector":"Tech/AI","share":0.5258064516129078},{"sector":"Energy","share":0.13440860215053732},{"sector":"Consumer Disc","share":0.08387096774193535},{"sector":"Industrials","share":0.07204301075268808},{"sector":"Materials","share":0.05161290322580644},{"sector":"Healthcare","share":0.04838709677419355},{"sector":"Communication","share":0.03333333333333335},{"sector":"Financials","share":0.02795698924731184},{"sector":"Real Estate","share":0.01720430107526882},{"sector":"Utilities","share":0.005376344086021506}],"metrics":{"full":{"lgbm":{"precision_at_10":0.3172043010752688,"winner_capture":0.24930555555555556},"ridge":{"precision_at_10":0.34086021505376346,"winner_capture":0.2532986111111111},"random":{"precision_at_10":0.0989784946236559,"winner_capture":0.07837673611111111,"seeds":20}},"ex5":{"lgbm":{"precision_at_10":0.29462365591397854,"winner_capture":0.20190972222222223},"ridge":{"precision_at_10":0.3301075268817204,"winner_capture":0.19756944444444446},"random":{"precision_at_10":0.10489247311827954,"winner_capture":0.07951388888888887,"seeds":20}}}}</script>
+<script>
+(function(){
+  "use strict";
+  var D = JSON.parse(document.getElementById('pinky-data').textContent);
+  var M = D.meta, X = D.extras;
+
+  var pct = function(x, d){ return (x*100).toFixed(d===undefined?1:d) + '%'; };
+  var sgn = function(x, d){ return (x>=0?'+':'') + pct(x, d); };
+  var money = function(v){ return '$' + Math.round(v).toLocaleString('en-US'); };
+  var monthYear = function(iso){
+    var p = iso.split('-');
+    var names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return names[parseInt(p[1],10)-1] + ' ' + p[0];
+  };
+  var el = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); };
+
+  /* ---------- hero badges ---------- */
+  var badges = [
+    ['Stocks followed', M.n_stocks],
+    ['Tested over', monthYear(M.start) + ' – ' + monthYear(M.end)],
+    ['Rebalanced', 'Every month'],
+    ['Held at a time', M.top_n + ' stocks'],
+    ['Trading cost charged', M.cost_bps + ' bps per side'],
+    ['Max per sector', Math.round(M.sector_cap*100) + '%']
+  ];
+  el('heroBadges').innerHTML = badges.map(function(b){
+    return '<span class="badge">' + b[0] + ' <b>' + esc(b[1]) + '</b></span>';
+  }).join('');
+
+  var byKey = {};
+  D.curves.forEach(function(c){ byKey[c.key] = c; });
+
+  el('heroHonesty').textContent =
+    'Up front: these are backtests on a list of ' + M.n_stocks + ' stocks picked today, so it is stuffed ' +
+    'with companies we already know did well. The headline ' + sgn(byKey.lgbm.cagr,0) +
+    '/yr falls to ' + sgn(byKey.lgbm_ex5.cagr,0) + '/yr once five of them are taken out. ' +
+    'Nothing here has been traded with real money.';
+
+  el('resultsLead').textContent =
+    'Every strategy below starts with $' + M.start_capital.toLocaleString('en-US') + ' on ' +
+    monthYear(M.start) + ', rebalances monthly, and pays ' + M.cost_bps +
+    ' bps of trading cost on every trade. ' + M.months + ' months in total.';
+
+  /* ---------- line chart ---------- */
+  var W = 900, H = 400, PL = 62, PR = 18, PT = 18, PB = 34;
+  var pts0 = D.curves[0].points;
+  var n = pts0.length;
+  var logMode = false;
+
+  function niceTicks(lo, hi, count){
+    var raw = (hi-lo)/count, mag = Math.pow(10, Math.floor(Math.log(raw)/Math.LN10));
+    var norm = raw/mag, step = mag * (norm>=5?10:norm>=2?5:norm>=1?2:1);
+    var out = [], v = Math.ceil(lo/step)*step;
+    for(; v<=hi+1e-9; v+=step) out.push(v);
+    return out;
+  }
+
+  function drawLine(){
+    var lo = Infinity, hi = -Infinity;
+    D.curves.forEach(function(c){
+      c.points.forEach(function(p){ if(p.v<lo) lo=p.v; if(p.v>hi) hi=p.v; });
+    });
+    var f = logMode ? Math.log : function(v){ return v; };
+    var ylo = logMode ? f(lo*0.92) : 0;
+    var yhi = f(hi*1.06);
+
+    var xAt = function(i){ return PL + i*(W-PL-PR)/(n-1); };
+    var yAt = function(v){ return PT + (yhi - f(v))/(yhi-ylo)*(H-PT-PB); };
+
+    var ticks;
+    if(logMode){
+      ticks = [];
+      var d = Math.pow(10, Math.floor(Math.log(lo)/Math.LN10));
+      for(var t=d; t<=hi*1.06; t*=10){ [1,2,5].forEach(function(m){
+        if(t*m>=lo*0.92 && t*m<=hi*1.06) ticks.push(t*m);
+      }); }
+    } else {
+      ticks = niceTicks(0, hi*1.06, 5);
+    }
+
+    var s = '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Growth of $10,000 by strategy">';
+    s += '<defs><clipPath id="cp"><rect x="'+PL+'" y="0" width="'+(W-PL-PR)+'" height="'+H+'"/></clipPath></defs>';
+
+    ticks.forEach(function(v){
+      var y = yAt(v);
+      if(y < PT-2 || y > H-PB+2) return;
+      s += '<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="#1d2230" stroke-width="1"/>';
+      s += '<text x="'+(PL-10)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#7b8598">'+money(v)+'</text>';
+    });
+
+    var years = {};
+    pts0.forEach(function(p,i){ var y = p.t.slice(0,4); if(!(y in years)) years[y] = i; });
+    Object.keys(years).forEach(function(y){
+      var x = xAt(years[y]);
+      s += '<line x1="'+x+'" y1="'+PT+'" x2="'+x+'" y2="'+(H-PB)+'" stroke="#161b26" stroke-width="1"/>';
+      s += '<text x="'+x+'" y="'+(H-PB+20)+'" text-anchor="middle" font-size="11" fill="#7b8598">'+y+'</text>';
+    });
+
+    D.curves.forEach(function(c){
+      var d = c.points.map(function(p,i){ return (i?'L':'M') + xAt(i).toFixed(1) + ' ' + yAt(p.v).toFixed(1); }).join(' ');
+      s += '<path d="'+d+'" fill="none" stroke="'+c.color+'" stroke-width="'+(c.key==='spy'?2:2.4)+'"'
+         + (c.key==='spy'?' stroke-dasharray="5 4"':'')
+         + ' stroke-linejoin="round" stroke-linecap="round" clip-path="url(#cp)" data-k="'+c.key+'"/>';
+      var last = c.points[c.points.length-1];
+      s += '<circle cx="'+xAt(n-1)+'" cy="'+yAt(last.v)+'" r="3.4" fill="'+c.color+'" data-k="'+c.key+'"/>';
+    });
+
+    s += '<line id="hl" x1="0" y1="'+PT+'" x2="0" y2="'+(H-PB)+'" stroke="#3b4458" stroke-width="1" opacity="0"/>';
+    D.curves.forEach(function(c){
+      s += '<circle class="hd" data-k="'+c.key+'" r="4.5" fill="'+c.color+'" stroke="#080a0f" stroke-width="2" opacity="0"/>';
+    });
+    s += '<rect id="hit" x="'+PL+'" y="'+PT+'" width="'+(W-PL-PR)+'" height="'+(H-PT-PB)+'" fill="transparent"/>';
+    s += '</svg>';
+    el('chart').innerHTML = s;
+
+    var svg = el('chart').querySelector('svg');
+    var tip = el('tip'), hl = svg.querySelector('#hl');
+    var dots = svg.querySelectorAll('.hd');
+
+    function move(ev){
+      var r = svg.getBoundingClientRect();
+      var cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      var vx = (cx - r.left) / r.width * W;
+      var i = Math.round((vx - PL) / ((W-PL-PR)/(n-1)));
+      i = Math.max(0, Math.min(n-1, i));
+      hl.setAttribute('x1', xAt(i)); hl.setAttribute('x2', xAt(i)); hl.setAttribute('opacity','1');
+      var rows = '';
+      D.curves.forEach(function(c){
+        var p = c.points[i];
+        rows += '<div class="tr"><span><i class="sw" style="background:'+c.color+'"></i>'+esc(c.label)+'</span><b>'+money(p.v)+'</b></div>';
+      });
+      tip.innerHTML = '<div class="tt">'+monthYear(pts0[i].t)+'</div>'+rows;
+      tip.style.opacity = '1';
+      dots.forEach(function(dt){
+        var c = byKey[dt.getAttribute('data-k')];
+        dt.setAttribute('cx', xAt(i)); dt.setAttribute('cy', yAt(c.points[i].v)); dt.setAttribute('opacity','1');
+      });
+      var wrap = el('chart').parentNode.getBoundingClientRect();
+      var px = (xAt(i)/W) * wrap.width;
+      var tw = tip.offsetWidth || 210;
+      tip.style.left = Math.max(4, Math.min(wrap.width - tw - 4, px + 16)) + 'px';
+      tip.style.top = '14px';
+    }
+    function leave(){
+      tip.style.opacity='0'; hl.setAttribute('opacity','0');
+      dots.forEach(function(dt){ dt.setAttribute('opacity','0'); });
+    }
+    svg.addEventListener('mousemove', move);
+    svg.addEventListener('touchmove', function(e){ move(e); }, {passive:true});
+    svg.addEventListener('mouseleave', leave);
+    svg.addEventListener('touchend', leave);
+  }
+  drawLine();
+
+  el('btnLin').addEventListener('click', function(){
+    logMode=false; this.classList.add('on'); el('btnLog').classList.remove('on'); drawLine();
+  });
+  el('btnLog').addEventListener('click', function(){
+    logMode=true; this.classList.add('on'); el('btnLin').classList.remove('on'); drawLine();
+  });
+
+  el('legend').innerHTML = D.curves.map(function(c){
+    return '<span class="lg"><i class="sw" style="background:'+c.color+'"></i>'+esc(c.label)+
+           ' <b style="color:'+c.color+'">'+sgn(c.cagr,0)+'/yr</b></span>';
+  }).join('');
+
+  /* ---------- stats table ---------- */
+  el('statsRows').innerHTML = D.curves.map(function(c){
+    return '<tr><td><span class="tick" style="background:'+c.color+'"></span>'+esc(c.label)+
+           '<span class="sub">'+esc(c.note)+'</span></td>'+
+           '<td class="num" style="color:'+c.color+';font-weight:600">'+sgn(c.cagr)+'</td>'+
+           '<td class="num">'+pct(c.max_dd)+'</td>'+
+           '<td class="num">'+money(c.final)+'</td></tr>';
+  }).join('');
+
+  el('statsNote').textContent =
+    '"Worst drop" is the deepest fall from a peak during the test. Every Pinky version fell harder than ' +
+    'the S&P 500 (' + pct(byKey.spy.max_dd) + '), so the extra return came with extra pain. ' +
+    'Simply owning all ' + M.n_stocks + ' stocks equally returned ' + sgn(X.universe_ew_128,0) + '/yr.';
+
+  /* ---------- reality check ---------- */
+  el('winnerList').textContent = M.hindsight_winners.join(', ');
+  el('bigA').textContent = sgn(byKey.lgbm.cagr,0);
+  el('bigB').textContent = sgn(byKey.lgbm_ex5.cagr,0);
+  el('realityNote').innerHTML =
+    'For scale: the S&P 500 did ' + sgn(byKey.spy.cagr,0) + '/yr, owning the remaining ' + M.n_stocks_ex5 +
+    ' stocks equally did ' + sgn(X.universe_ew_123,0) + '/yr, and plain "buy last year\'s winners" momentum did ' +
+    sgn(byKey.mom_ex5.cagr,0) + '/yr. So the honest edge over a naive strategy is about ' +
+    ((byKey.lgbm_ex5.cagr - byKey.mom_ex5.cagr)*100).toFixed(1) +
+    ' points per year — small enough that it could be luck. A simple linear model (Ridge) actually scored higher (' +
+    sgn(X.ridge_ex5_uncapped,0) + '/yr) on the same test, which is another sign the machine learning is not doing much yet.';
+
+  /* ---------- bar charts ---------- */
+  function hBars(target, rows, opts){
+    opts = opts || {};
+    var w = 900, rowH = 34, pad = 8, lw = opts.labelWidth || 150;
+    var h = rows.length*rowH + pad*2;
+    var max = opts.max || Math.max.apply(null, rows.map(function(r){ return r.v; })) * 1.12;
+    var s = '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(opts.aria||'bar chart')+'">';
+    rows.forEach(function(r, i){
+      var y = pad + i*rowH, bh = 17;
+      var bw = Math.max(2, (r.v/max) * (w - lw - 80));
+      s += '<text x="0" y="'+(y+bh-3)+'" font-size="13" fill="#c6cede">'+esc(r.label)+'</text>';
+      s += '<rect x="'+lw+'" y="'+y+'" width="'+(w-lw-80)+'" height="'+bh+'" rx="4" fill="#1a1f2b"/>';
+      s += '<rect x="'+lw+'" y="'+y+'" width="'+bw.toFixed(1)+'" height="'+bh+'" rx="4" fill="'+(r.color||'#22d3ee')+'"/>';
+      s += '<text x="'+(lw+bw+10)+'" y="'+(y+bh-3)+'" font-size="13" font-weight="600" fill="#eef2f8">'+esc(r.text)+'</text>';
+    });
+    s += '</svg>';
+    el(target).innerHTML = s;
+  }
+
+  var secMax = D.sectors[0].share;
+  hBars('sectorChart', D.sectors.map(function(r){
+    return {
+      label: r.sector,
+      v: r.share,
+      text: pct(r.share,0),
+      color: r.sector.indexOf('Tech') === 0 ? '#22d3ee' : '#3f7f8f'
+    };
+  }), {max: secMax*1.15, labelWidth: 150, aria: 'Average share of picks by sector'});
+
+  var top = D.sectors[0], second = D.sectors[1];
+  el('sectorLead').textContent =
+    'On average ' + pct(top.share,0) + ' of the monthly picks are ' + top.sector +
+    ' names, with ' + second.sector + ' the next biggest at ' + pct(second.share,0) +
+    '. A hard 60% cap stops the portfolio from becoming one big tech bet.';
+
+  var mf = D.metrics.full;
+  hBars('precChart', [
+    {label:'Pinky (LightGBM)', v:mf.lgbm.precision_at_10,  text:pct(mf.lgbm.precision_at_10,0),  color:'#22d3ee'},
+    {label:'Simple model (Ridge)', v:mf.ridge.precision_at_10, text:pct(mf.ridge.precision_at_10,0), color:'#a78bfa'},
+    {label:'Random picking', v:mf.random.precision_at_10, text:pct(mf.random.precision_at_10,0), color:'#4b5566'}
+  ], {labelWidth:210, aria:'Hit rate of top 10 picks'});
+
+  hBars('capChart', [
+    {label:'Pinky (LightGBM)', v:mf.lgbm.winner_capture,  text:pct(mf.lgbm.winner_capture,0),  color:'#22d3ee'},
+    {label:'Simple model (Ridge)', v:mf.ridge.winner_capture, text:pct(mf.ridge.winner_capture,0), color:'#a78bfa'},
+    {label:'Random picking', v:mf.random.winner_capture, text:pct(mf.random.winner_capture,0), color:'#4b5566'}
+  ], {labelWidth:210, aria:'Share of the year\'s biggest winners held'});
+
+  var me = D.metrics.ex5;
+  el('metricsNote').textContent =
+    'Random picking is the average of ' + mf.random.seeds + ' random-score runs. These two tests are the ' +
+    'most encouraging thing here — but they run on the same survivorship-biased list. With the five known ' +
+    'winners removed, the hit rate is ' + pct(me.lgbm.precision_at_10,0) + ' and winner capture ' +
+    pct(me.lgbm.winner_capture,0) + '. Note the simple Ridge model does just as well, so the fancier ' +
+    'machine learning is not adding much yet.';
+
+  el('footNote').textContent =
+    'Pinky is a personal experiment. All figures are computed from walk-forward out-of-sample predictions on ' +
+    M.n_stocks + ' stocks, ' + monthYear(M.start) + '–' + monthYear(M.end) + ', ' + M.months +
+    ' monthly periods, net of ' + M.cost_bps + ' bps per side. The stock list was chosen in ' +
+    M.generated.slice(0,4) + ', so it is biased toward companies that survived and did well. ' +
+    'No live money has ever been traded. Page generated ' + M.generated + '.';
+})();
+</script>
+</body>
+</html>
