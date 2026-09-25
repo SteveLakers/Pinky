@@ -30,7 +30,15 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 - **Phase 1 — honest evaluation: in progress.**
 - **Blocked on user:** create free Sharadar account → put `SHARADAR_API_KEY=...` in `.env` (gitignored) → check bundle price at checkout.
 - Current model (128 stocks, price-only) is **not trustworthy** — results inflated by survivorship/hindsight.
+- **Showcase page done:** `showcase/index.html` — shareable one-page visual (offline, self-contained, honest caveats up front).
 - Local `main` has commits **not yet pushed** to GitHub (check `git status`; push when user says).
+
+### Open items
+
+- [ ] User: Sharadar free account + API key in `.env`; check bundle price
+- [ ] Push unpushed commits to GitHub (awaiting OK)
+- [ ] Optional: host showcase online (e.g., Vercel) — would be public; needs user OK on content
+- [ ] Next hard task (Sharadar pipeline) → **stop and ask user to switch to the highest model first**
 
 ## User goals & expectations
 
@@ -136,6 +144,8 @@ Random = mean of 20 random-score runs (matches theory: 0.10 and 10/128 ≈ 0.08)
 - `data/reference/` — S&P 500 files + yfinance coverage probe created by another chat (untracked; not used by code)
 - `artifacts/`, `models/` — outputs (gitignored)
 - `docs/` — `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`, `WALKFORWARD_RESULTS.md`
+- `AGENTS.md` — short instructions for any agent tool (read project.md, highest models, stop-and-ask rule)
+- `.cursor/rules/` — `pinky-rules`, `communication`, `graphify`, `read-project-md`, `strong-models`
 - `graphify-out/` — knowledge graph
 
 ## Working notes
@@ -145,5 +155,6 @@ Random = mean of 20 random-score runs (matches theory: 0.10 and 10/128 ≈ 0.08)
 - Re-pull data: `PYTHONPATH=. python scripts/pull_data.py`
 - Rebuild features / labels / dataset: `PYTHONPATH=. python scripts/build_features.py` (then `build_labels.py`, `build_dataset.py`)
 - Train/eval: `PYTHONPATH=. python scripts/train_walkforward.py` (add `--ex-winners` to drop hindsight winners)
+- Rebuild showcase: `PYTHONPATH=. python scripts/build_showcase.py` (after new results)
 - Git: commit before big changes; push to private GitHub https://github.com/steveonshit/Pinky (`origin/main`) only when user says
 - Graphify CLI path: `/Users/hqschool/Library/Python/3.12/bin`; after code changes run `graphify update .`
