@@ -1,6 +1,6 @@
 # Pinky
 
-Local stock-prediction project. Goal: predict which stocks beat the S&P 500 (**SPY**), and by how much — not whether a stock simply goes up.
+Local stock-prediction project. Goal: find stocks that beat the S&P 500 (**SPY**) — ideally catch future big winners ("the next NVDA/TSLA") early. Not "will it go up."
 
 ## Rules (always on)
 
@@ -16,141 +16,116 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 7. **Stress-test your thinking.** Always consider whether what you’re doing or saying is the best approach. If not, say so. You won’t be mad.
 8. **Actively hunt for mistakes.** Continuously check statements, assumptions, plans, and requests for errors, gaps, or weaker approaches. When found, tell you right away — no waiting, soft-pedaling, or silence.
 9. **Every new chat:** agent must read `project.md` first.
-## Status
+10. **Strong models for hard tasks** (`.cursor/rules/strong-models.mdc`).
+11. **One chat at a time** on Pinky — parallel chats overwrite each other's work.
 
-- **Step 3–5c done** — data, features, labels, train-ready dataset, walk-forward/purge
-- **Step 6 (first train) done** — v1 FAIL vs Ridge
-- **Step 6b (fixes 1–5) done** — CS normalize, fewer features, 1y focus, tuned LightGBM
-  - 1y IC: LightGBM now beats Ridge (88% of folds)
-  - 1y top-5: still slightly behind Ridge → soft bar still **FAIL / MIXED**
-- **Step 6c (v3) done** — 128-stock balanced universe + trading-cost portfolio backtest
-  - Backtest (2018–2025, 10 bps/side, monthly top-10): LightGBM **+41%/yr** vs SPY +14%
-  - **Inflated by survivorship/hindsight** — ex top-5 winners: +25%/yr; naive momentum ex winners: +18%
-  - Ridge ≈ LightGBM (Ridge slightly better) → soft bar **FAIL**
-  - Picks ~63% Tech/AI → consider sector caps
-- **Step 6d (v4) done** — 40% sector cap + Ridge/LightGBM rank blend
-  - Cap: Tech/AI picks 63% → 38%; costs 5–11%/yr raw CAGR
-  - Ex top-5 winners: LightGBM capped +26%, Blend uncapped +28.5%, Ridge capped +20%, momentum +18%, SPY +14%
-  - No clear winner (gaps within noise); LightGBM most robust under cap
-- **Step 6e (v4.1) done** — cap loosened to **60%** (user wants a bit more risk, **no leverage**)
-  - LightGBM top-10 capped 60%: **+41%/yr**, max DD -32%, Tech/AI 53% of picks
-  - Ex top-5 winners: +27%/yr
-  - Risk: tech concentration; user is bullish on tech next few years
-- **v4 ex5 test done** — removed NVDA/SMCI/TSLA/PLTR/AVGO from train + test (123 stocks)
-  - LightGBM capped: +41% → **+19%/yr**; Ridge uncapped **+26%**; momentum +18%; equal-weight +16%; SPY +14%
-  - Ridge now beats LightGBM → v4 "LightGBM most robust" no longer holds
-  - Real edge is small; most of the +41% came from 5 hindsight winners
-  - Run: `PYTHONPATH=. python scripts/train_walkforward.py --ex-winners`
-  - Report: `docs/WALKFORWARD_RESULTS.md`
-- **Phase 1 (honest evaluation) — in progress**, decisions (2026-09-25):
-  - Data vendor: **Sharadar** Core US Equities Bundle (delisted prices from 1998, point-in-time fundamentals, S&P 500 history, insiders/institutions). Build on free Dow-30 sample first; user subscribes after. Price to confirm at checkout.
-  - Universe: **all liquid US stocks**, point-in-time (price > $5, 21d avg $ volume > $5M) → ~2,500–4,000 names
-  - First company features: **growth + revenue acceleration**
-  - Budget: flexible (more than $20/mo OK); lots of time/compute available
-  - Free fallback: `data/universe/` S&P 500 membership from github.com/fja05680/sp500 (yfinance only covers ~22% of departed members → not enough)
-  - Done: `top_{h}` top-decile label (`labels.add_top_decile_labels`), `metrics.precision_at_k`, `metrics.winner_capture` (time-weighted), `HOLDOUT_START = 2022-01-01` (locked final test)
-  - Baseline on current 128 (v4 preds): precision@10 LightGBM 0.32 / Ridge 0.34 / random 0.12; winner capture 0.25 / 0.25 / 0.07
-- Architecture locked in `docs/ARCHITECTURE.md`
-- GitHub: **private** https://github.com/steveonshit/Pinky
-- Branch: `main` (tracking `origin/main`)
-- **Graphify:** graph current
+## Where we are (2026-09-25)
 
-## What it will do
+- **Phase 1 — honest evaluation: in progress.**
+- **Blocked on user:** create free Sharadar account → put `SHARADAR_API_KEY=...` in `.env` (gitignored) → check bundle price at checkout.
+- Current model (128 stocks, price-only) is **not trustworthy** — results inflated by survivorship/hindsight.
+- Local `main` is **4 commits ahead** of GitHub (push when user says).
 
-For each stock and horizon, output:
+## Key findings so far
 
-- Expected excess return vs SPY
-- Probability of beating SPY
-- Honest confidence range
+| Test (1y signal, monthly top-10, 10 bps, 2018–Oct 2025) | CAGR |
+|---|---|
+| SPY | +14% |
+| LightGBM, 60% sector cap, 128 stocks | +41% |
+| Same, **NVDA/SMCI/TSLA/PLTR/AVGO removed from train + test** | **+19%** |
+| Ridge (uncapped), same 5 removed | +26% |
+| Naive 12-1 momentum, same 5 removed | +18% |
+| Equal-weight all 123 remaining | +16% |
 
-Horizons:
+- Most of the +41% came from 5 hindsight winners. Real edge is small.
+- Ridge beats LightGBM once winners are removed.
+- Max drawdown worse than SPY for all models (−31% to −35% vs −23%).
+- Only ~8 independent years of data (2016+, overlapping 1y labels) → not enough to learn subtle patterns.
+- Features are price-only → can only see winners after they're obvious.
+- Honest target for a good model: **~2–5%/yr over SPY**, not +41%. ~30–40% chance the honest edge is ~zero.
+- Full history: `docs/WALKFORWARD_RESULTS.md` (v1 → v4 ex5).
 
-- 3 months
-- Half year
-- 1 year
-- 2 years
+## Decisions
 
-## Planned stack (v1)
+- **Data:** Sharadar Core US Equities Bundle (prices incl. delisted from 1998, point-in-time fundamentals from 1990, S&P 500 history, insiders, institutions). Build on free Dow-30 sample first. Budget flexible (more than $20/mo OK).
+- **Universe:** all liquid US stocks, point-in-time (price > $5, 21-day avg dollar volume > $5M) → ~2,500–4,000 names.
+- **Risk:** no leverage (account can't). Sector cap 60%. User is bullish on tech.
+- **Main signal:** LightGBM for now (Ridge is the baseline to beat; revisit after Phase 1).
+- **Locked holdout:** `HOLDOUT_START = 2022-01-01` — never used for choosing models/features; score once at the end.
+- **Training:** only when user says so. User has lots of time/compute.
 
-- Data: yfinance
-- Models: LightGBM (+ simple linear baseline)
-- Universe: **128 liquid stocks**, sector-balanced
-- Validation: walk-forward (no random train/test splits)
-- Training: only when you explicitly say so
+## Roadmap
 
-## Current universe
+**Phase 1 — honest evaluation**
+- [x] Top-decile label `top_{h}` (`labels.add_top_decile_labels`)
+- [x] Metrics: `metrics.precision_at_k`, `metrics.winner_capture` (time-weighted)
+- [x] Locked 2022+ holdout constant
+- [x] Free S&P 500 membership history (`data/universe/`, from github.com/fja05680/sp500)
+- [ ] Sharadar loader (free sample → full bundle)
+- [ ] Point-in-time liquid universe back to 1998
+- [ ] Rebuild features/labels/dataset on new universe; coverage logging
+- [ ] Re-score current price-only model → honest baseline
 
-- Benchmark: `SPY`
-- Helpers: `IWM`, `^VIX`, `^TNX`, `^IRX`
-- Stocks: **128** across 11 sectors (`pinky/config.py` → `UNIVERSE_BY_SECTOR`)
-  - Tech/AI 32 (25%), Healthcare/Financials/Industrials 14 each, Consumer Disc 12, Staples 10, Energy 8, Materials/Utilities/Real Estate/Communication 6 each
-- Known bias: today's names only (survivorship) — delisted losers missing
+**Phase 2 — company data (what to look at)**, added in batches, keep only what beats baseline:
+1. **Growth + revenue acceleration** ← first
+2. Margin expansion
+3. Price strength (momentum, 52-week-high proximity, vs sector)
+4. Earnings reactions / surprises
+5. Reinvestment (R&D/revenue, ROIC)
+6. Quality / safety (debt, cash burn, accruals, dilution)
+7. Insiders + institutions
+8. Industry tailwind
+9. Valuation (context only — don't screen out growth)
+10. Analyst revisions (expensive; later)
+
+**Phase 3 — only if Phase 2 works:** position sizing, monthly picks report, live paper-trading log.
+
+## Baseline metrics (current 128-stock v4 preds, inflated)
+
+| | LightGBM | Ridge | Random |
+|---|---|---|---|
+| precision@10 (picks that end up top-10%) | 0.32 | 0.34 | 0.12 |
+| Winner capture (time holding year's top-20) | 0.25 | 0.25 | 0.07 |
 
 ## Portfolio backtest defaults
 
 - Monthly rebalance, equal-weight top-10, **10 bps per side** (1 bp = 0.01%)
 - Sector cap: max **60%** of picks per sector (`BACKTEST_MAX_SECTOR_SHARE`)
-- No leverage (user's account can't use margin)
-- Main signal: LightGBM
-- Signals compared: LightGBM, Ridge, Blend (avg daily rank), naive momentum
 - Signal at day D close, trade at D+1 close
+- Signals compared: LightGBM, Ridge, Blend (avg daily rank), naive momentum
 - Settings in `pinky/config.py` (`BACKTEST_*`)
+
+## Current (old) universe
+
+- 128 stocks across 11 sectors (`pinky/config.py` → `UNIVERSE_BY_SECTOR`), Tech/AI 25%
+- Benchmark `SPY`; helpers `IWM`, `^VIX`, `^TNX`, `^IRX`
+- Data: yfinance, 2015+ — to be replaced in Phase 1
 
 ## Repo layout
 
-- `pinky/config.py` — tickers + paths + warmup
+- `pinky/config.py` — universe, paths, backtest settings, `HOLDOUT_START`, `HINDSIGHT_WINNERS`
 - `pinky/data_pull.py` — yfinance download → parquet
 - `pinky/raw_io.py` — load raw bars
-- `pinky/features.py` — `build_bfm_prediction_features()` + universe panel
-- `pinky/labels.py` — excess return + beat labels vs SPY
-- `pinky/dataset.py` — join features + labels (train-ready)
-- `pinky/preprocess.py` — CS z-score + correlated-feature drop
-- `pinky/train.py` — walk-forward train/eval
-- `pinky/metrics.py` — IC / basket / calibration metrics
-- `pinky/backtest.py` — tradeable monthly top-N backtest with costs + stress tests
-- `scripts/build_features.py` — run the feature build
-- `scripts/build_labels.py` — run label build
-- `scripts/build_dataset.py` — build train-ready dataset
-- `scripts/summarize_walkforward.py` — print fold/purge summary
-- `data/raw/*.parquet` — downloaded bars (gitignored)
-- `data/features/features_panel.parquet` — feature matrix (gitignored)
-- `data/labels/labels_panel.parquet` — label matrix (gitignored)
-- `data/dataset/train_dataset.parquet` — joined train-ready table (gitignored)
-- `requirements.txt` / `.venv/` — Python deps
-- `README.md` — public overview (what / how / what’s shared vs private)
-- `docs/ARCHITECTURE.md` — design and build plan
-- `docs/PRD.md` — product requirements
-- `docs/EVAL.md` — short pre-trust eval checklist
-- `docs/WALKFORWARD_RESULTS.md` — first training results (honest)
-- `.cursor/rules/` — Cursor agent rules (Pinky-only; review personal prefs before public push)
-- `project.md` — this overview
-- `graphify-out/` — knowledge graph output
-
-## Build order
-
-1. Lock design — done
-2. Architecture doc — done
-3. Data pull — **done (small set)**
-4. Feature builder — **done (v1)**
-5. Labels vs SPY — **done (v1)**
-6. Train-ready dataset + walk-forward/purge — **done**
-7. Train models — **first run done** (LightGBM did not beat linear baseline)
-8. Improve model / features — **in progress** (v2 prep, v3 universe + cost backtest, v4 sector cap + blend done)
-9. API / UI only after models prove useful
+- `pinky/features.py` — price features per stock
+- `pinky/labels.py` — excess/beat labels vs SPY + top-decile label
+- `pinky/dataset.py` — join features + labels
+- `pinky/preprocess.py` — cross-sectional z-score + correlated-feature drop
+- `pinky/walkforward.py` — expanding walk-forward folds + label purge
+- `pinky/train.py` — train/eval (Ridge, LightGBM, Blend), report, `--ex-winners` runs
+- `pinky/metrics.py` — IC, top-N, precision@k, winner capture, calibration
+- `pinky/backtest.py` — monthly top-N backtest, costs, sector cap, stress tests
+- `scripts/` — `pull_data`, `build_features`, `build_labels`, `build_dataset`, `train_walkforward`, `summarize_walkforward`
+- `data/` — all gitignored (`raw`, `features`, `labels`, `dataset`, `universe`, `sharadar`)
+- `data/reference/` — S&P 500 files + yfinance coverage probe created by another chat (untracked; not used by code)
+- `artifacts/`, `models/` — outputs (gitignored)
+- `docs/` — `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`, `WALKFORWARD_RESULTS.md`
+- `graphify-out/` — knowledge graph
 
 ## Working notes
 
-- Run and develop locally on this computer
 - Activate venv: `source .venv/bin/activate`
 - Re-pull data: `PYTHONPATH=. python scripts/pull_data.py`
-- Rebuild features: `PYTHONPATH=. python scripts/build_features.py`
-- Rebuild labels: `PYTHONPATH=. python scripts/build_labels.py`
-- Rebuild dataset: `PYTHONPATH=. python scripts/build_dataset.py`
-- Fold summary: `PYTHONPATH=. python scripts/summarize_walkforward.py`
+- Rebuild features / labels / dataset: `PYTHONPATH=. python scripts/build_features.py` (then `build_labels.py`, `build_dataset.py`)
 - Train/eval: `PYTHONPATH=. python scripts/train_walkforward.py` (add `--ex-winners` to drop hindsight winners)
-- Hard tasks: use strongest available AI model (`.cursor/rules/strong-models.mdc`)
-- Use Git to save local versions (`add` → `commit`) before big changes
-- Push to private GitHub (`origin/main`) when you say so
-- Keep `project.md` current after meaningful progress
-- Graphify CLI path (if `graphify` not found): `/Users/hqschool/Library/Python/3.12/bin`
-- After code lands: `graphify update .` (no API key). For docs: need an API key + `graphify extract .`
+- Git: commit before big changes; push to private GitHub https://github.com/steveonshit/Pinky (`origin/main`) only when user says
+- Graphify CLI path: `/Users/hqschool/Library/Python/3.12/bin`; after code changes run `graphify update .`
