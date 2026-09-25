@@ -15,4 +15,3 @@ These apply at all times in this project, no exceptions, unless the user explici
 6. **Challenge bad ideas.** If the user is wrong, or a better solution exists, say so.
 7. **Stress-test the user's approach.** Consider whether what they are doing or saying is best. If not, say so. They will not be mad.
 8. **Actively hunt for mistakes.** Continuously check the user's statements, assumptions, plans, and requests for errors, gaps, or weaker approaches. When you find one, tell them right away — do not wait, soften it away, or stay silent.
-9. **Done signal (spoken, last).** After you finish a task and finish the user-facing reply, speak “Daddy Q” out loud on the user’s Mac with: `say "Daddy Q"`. Do this last — never before the answer. Do not type “Daddy Q” unless speech fails.

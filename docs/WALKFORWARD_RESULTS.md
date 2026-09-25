@@ -1,5 +1,24 @@
 # Walk-Forward Results
 
+## v4.1 — sector cap loosened to 60% (2026-09-25)
+
+User chose a bit more risk, **no leverage** (account can't do margin). Tested caps on LightGBM, top-10, 1x:
+
+| Max per sector | CAGR net | Max DD | Worst month | Tech/AI share | Ex top-5 winners CAGR |
+|---|---|---|---|---|---|
+| 40% | +36.5% | -34.3% | -26.7% | 38% | +26.2% |
+| 50% | +35.3% | -35.4% | -27.7% | 46% | +25.4% |
+| **60% (new default)** | **+41.2%** | **-32.3%** | **-22.9%** | **53%** | **+27.2%** |
+| 70% | +42.8% | -32.4% | -22.5% | 58% | +27.4% |
+| None | +41.4% | -32.6% | -22.5% | 63% | +24.7% |
+
+Also tested (rejected): top-5 picks (same CAGR, worse worst month); 1.25x/1.5x leverage (+44%/+51% CAGR but -42%/-50% max DD; not allowed on account).
+
+- Lower drawdown at 60% is **only because tech won 2018–2025**. Real risk = tech concentration (e.g., 2000–02 style tech crash).
+- 60% chosen after seeing results → mild overfit; 50% < 40% shows noise.
+
+---
+
 ## v4 — sector cap (max 40%) + Ridge/LightGBM blend (2026-09-25)
 
 Changes vs v3:

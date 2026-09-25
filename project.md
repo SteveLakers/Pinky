@@ -16,8 +16,6 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 7. **Stress-test your thinking.** Always consider whether what you’re doing or saying is the best approach. If not, say so. You won’t be mad.
 8. **Actively hunt for mistakes.** Continuously check statements, assumptions, plans, and requests for errors, gaps, or weaker approaches. When found, tell you right away — no waiting, soft-pedaling, or silence.
 9. **Every new chat:** agent must read `project.md` first.
-10. **Done signal:** when finished with a task and the reply, speak `Daddy Q` out loud last (`say "Daddy Q"`) — not first, and don’t just type it.
-
 ## Status
 
 - **Step 3–5c done** — data, features, labels, train-ready dataset, walk-forward/purge
@@ -34,6 +32,10 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
   - Cap: Tech/AI picks 63% → 38%; costs 5–11%/yr raw CAGR
   - Ex top-5 winners: LightGBM capped +26%, Blend uncapped +28.5%, Ridge capped +20%, momentum +18%, SPY +14%
   - No clear winner (gaps within noise); LightGBM most robust under cap
+- **Step 6e (v4.1) done** — cap loosened to **60%** (user wants a bit more risk, **no leverage**)
+  - LightGBM top-10 capped 60%: **+41%/yr**, max DD -32%, Tech/AI 53% of picks
+  - Ex top-5 winners: +27%/yr
+  - Risk: tech concentration; user is bullish on tech next few years
   - Report: `docs/WALKFORWARD_RESULTS.md`
 - Architecture locked in `docs/ARCHITECTURE.md`
 - GitHub: **private** https://github.com/steveonshit/Pinky
@@ -74,7 +76,9 @@ Horizons:
 ## Portfolio backtest defaults
 
 - Monthly rebalance, equal-weight top-10, **10 bps per side** (1 bp = 0.01%)
-- Optional sector cap: max **40%** of picks per sector (`BACKTEST_MAX_SECTOR_SHARE`)
+- Sector cap: max **60%** of picks per sector (`BACKTEST_MAX_SECTOR_SHARE`)
+- No leverage (user's account can't use margin)
+- Main signal: LightGBM
 - Signals compared: LightGBM, Ridge, Blend (avg daily rank), naive momentum
 - Signal at day D close, trade at D+1 close
 - Settings in `pinky/config.py` (`BACKTEST_*`)

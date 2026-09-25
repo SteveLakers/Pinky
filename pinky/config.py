@@ -81,7 +81,7 @@ TICKER_SECTOR = {t: s for s, tickers in UNIVERSE_BY_SECTOR.items() for t in tick
 BACKTEST_TOP_N = 10          # equal-weight top-N picks
 BACKTEST_COST_BPS = 10.0     # cost per side (buy or sell), 1 bp = 0.01%
 BACKTEST_REBALANCE = "M"     # monthly
-BACKTEST_MAX_SECTOR_SHARE = 0.40  # max share of picks from one sector (0.40 of 10 = 4 names)
+BACKTEST_MAX_SECTOR_SHARE = 0.60  # max share of picks from one sector (0.60 of 10 = 6 names)
 
 # Back-compat alias used by older scripts/imports
 STARTER_STOCKS = UNIVERSE_STOCKS
