@@ -1,6 +1,9 @@
 # Pinky
 
-Local stock-prediction project. Goal: find stocks that beat the S&P 500 (**SPY**) — ideally catch future big winners ("the next NVDA/TSLA") early. Not "will it go up."
+Local stock-prediction project. **Goal: predict stocks that will perform well and make us profit** — beat the S&P 500 (**SPY**).
+
+- **Favor tech**, and especially **finding future big winners** early ("the next NVDA/TSLA").
+- **Still buy other sectors** (energy, industrials, etc.) when they're the best picks — not tech-only.
 
 ## Rules (always on)
 
@@ -16,9 +19,9 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 7. **Stress-test your thinking.** Always consider whether what you’re doing or saying is the best approach. If not, say so. You won’t be mad.
 8. **Actively hunt for mistakes.** Continuously check statements, assumptions, plans, and requests for errors, gaps, or weaker approaches. When found, tell you right away — no waiting, soft-pedaling, or silence.
 9. **Every new chat:** agent must read `project.md` first.
-10. **Always lean toward higher AI models.** When in doubt, use the stronger one; hard tasks → strongest available. Cost is not a reason to downgrade (`.cursor/rules/strong-models.mdc`).
-    - User runs Cursor on **Auto**; agent can't change the main model → **remind user to switch to the highest model before hard tasks**.
-    - On Auto, agent hands hard sub-work to subagents on the strongest model.
+10. **HIGHEST MODELS — top priority, all agents.** Go very heavy on higher/highest models for reasoning, planning, decisions, and thinking. Token cost doesn't matter to the user. Never downgrade to save cost (`.cursor/rules/strong-models.mdc`).
+    - User runs Cursor on **Auto**; agents can't change the main model → **always remind the user to switch to the highest model before hard tasks** (one line, top of reply, every time).
+    - Hard sub-work → subagents on the strongest model; copy this rule into every subagent prompt.
 11. **Communication:** simple, plain sentences; bullet points; **ask before large decisions/changes** (`.cursor/rules/communication.mdc`).
 12. **Graphify first:** run `graphify query/explain/path` before exploring code; `graphify update .` after code changes (`.cursor/rules/graphify.mdc`).
 
@@ -31,7 +34,8 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 
 ## User goals & expectations
 
-- Wants a model that's genuinely smart at finding stocks with big potential; catching the next NVDA/TSLA would be ideal.
+- Wants a model that's genuinely smart at finding stocks that perform well and make profit; catching the next NVDA/TSLA would be ideal.
+- Likes tech most, but also buys other sectors (e.g., energy) — portfolio should not be tech-only.
 - First asked for ~10%/month (≈ +214%/yr) — explained that's unrealistic (best fund ever ≈ 40%/yr). Realistic aim: beat SPY by a few %/yr, reliably.
 - Accepts a bit more risk (60% sector cap), **no leverage**. Bullish on tech.
 - Budget flexible for data (a couple hundred $ to start, more OK). Lots of time/compute.

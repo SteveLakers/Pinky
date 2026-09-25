@@ -1,14 +1,23 @@
 ---
-description: Prefer strong AI models; always lean toward higher models
+description: HIGHEST PRIORITY — use the highest AI models; remind user to switch up
 alwaysApply: true
 ---
 
-# Prefer strong models
+# Use the highest models (applies to EVERY agent and subagent)
 
-- **Default: lean toward higher models.** The user is always more willing to use a stronger model than a weaker one. When in doubt, pick the stronger one. Cost is not a reason to downgrade.
-- Hard tasks (model/training design, debugging tricky results, deep code/research reviews, architecture decisions, data pipelines) → delegate to subagents on the strongest available model (latest top-tier Claude Opus thinking-high or latest GPT).
-- Fast/cheap models only for trivial lookups.
-- Say which model was used and for what.
-- The main chat model is set by the user in Cursor (currently **Auto**); the agent can't change it.
-- **Remind the user** to switch Cursor from Auto to the highest model **before any hard task starts** (e.g., "This is a hard task — consider switching from Auto to the top model."). Do this every time, briefly.
-- While on Auto, the agent **can** still pick models for subagents: hand hard sub-work to a subagent on the strongest model instead of doing it on the Auto model.
+The user explicitly wants this, and does not care about token cost: "I don't care about spending more tokens, I got money."
+
+## Default
+- **Go very heavy on higher/highest models** for reasoning, planning, decision making, thinking, research, debugging, reviews, data pipelines, and model/training design.
+- When in doubt → pick the **highest** model. Never downgrade to save cost or time.
+- Fast/cheap models only for trivial lookups (e.g., find a file).
+
+## Subagents
+- Hard or thinking-heavy sub-work → subagent on the **strongest available model** (latest top-tier Claude Opus thinking-high, or latest top GPT).
+- **Copy this rule into every subagent prompt** so subagents also follow it.
+- Tell the user which model was used and for what.
+
+## Remind the user (mandatory)
+- The user runs Cursor on **Auto**; agents cannot change the main chat model.
+- **Before any hard task** (planning, big decisions, new pipelines, training design, debugging tricky results, reviews): remind the user to **switch from Auto to the highest model** — at the top of the reply, one short line, every time.
+- Also remind when a conversation turns hard mid-way.
