@@ -1,5 +1,34 @@
 # Walk-Forward Results
 
+## v4 ex5 — hindsight winners removed from train AND test (2026-09-25)
+
+Removed NVDA, SMCI, TSLA, PLTR, AVGO from the universe entirely (123 stocks), retrained, re-backtested.
+Run: `PYTHONPATH=. python scripts/train_walkforward.py --ex-winners` → `artifacts/*_v4_ex5.*`
+
+| Signal (10 bps, top-10) | Uncapped | Capped 60% | With winners (v4.1) |
+|---|---|---|---|
+| LightGBM | +21.0% | +19.4% | +41.2% capped |
+| Ridge | **+26.3%** | **+22.6%** | +43.0% uncapped |
+| Blend | +22.9% | +20.7% | — |
+| Momentum 12-1 | +18.0% | +18.7% | +29.4% |
+
+SPY +14.1%, equal-weight 123 stocks +16.4%. Max DD: all models -31% to -35% (SPY -23%).
+
+- Removing them from **training too** hurts more than only skipping them at pick time (+27% → +19% for LightGBM capped): the model had learned from those winners' patterns.
+- **Ridge now clearly beats LightGBM** (+26% vs +21%). This reverses the v4 read that LightGBM was most robust.
+- Cap hurts every model here (except momentum).
+- LightGBM capped vs 123-stock equal-weight: only **~+3%/yr**; vs naive momentum ~+1%/yr.
+- LightGBM capped had bad years: 2018 (-12.5% vs SPY), 2024 (-24% vs SPY).
+- Fold 7 (latest) top-5 excess is huge (+151%), driven by MU/INTC/MRVL/AMD picks in the data — one period can swing averages.
+
+### Honest read
+
+- The real edge is **much smaller** than v4.1 showed. Most of the +41% came from 5 hindsight stocks.
+- Ridge (simple) is the stronger signal once the winners are gone.
+- Survivorship bias still inflates these numbers.
+
+---
+
 ## v4.1 — sector cap loosened to 60% (2026-09-25)
 
 User chose a bit more risk, **no leverage** (account can't do margin). Tested caps on LightGBM, top-10, 1x:

@@ -75,6 +75,9 @@ UNIVERSE_BY_SECTOR: dict[str, list[str]] = {
 
 UNIVERSE_STOCKS = [t for tickers in UNIVERSE_BY_SECTOR.values() for t in tickers]
 
+# Best total-return names over the 2018–2025 test window (known only in hindsight).
+HINDSIGHT_WINNERS = ["NVDA", "SMCI", "TSLA", "PLTR", "AVGO"]
+
 TICKER_SECTOR = {t: s for s, tickers in UNIVERSE_BY_SECTOR.items() for t in tickers}
 
 # Portfolio backtest (tradeable, net of costs)

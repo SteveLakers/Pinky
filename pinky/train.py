@@ -352,11 +352,16 @@ def _write_summary(
     all_metrics: pd.DataFrame,
     path: Path,
     preds_by_h: dict[str, pd.DataFrame] | None = None,
+    exclude: list[str] | None = None,
+    run_name: str = VERSION,
 ) -> None:
+    exclude = exclude or []
+    n_stocks = len(set(UNIVERSE_STOCKS) - set(exclude))
     lines = [
-        f"# Pinky Walk-Forward Training Report ({VERSION})",
+        f"# Pinky Walk-Forward Training Report ({run_name})",
         "",
-        f"Universe: {len(UNIVERSE_STOCKS)} stocks, sector-balanced (Tech/AI ~25%).",
+        f"Universe: {n_stocks} stocks, sector-balanced (Tech/AI ~25%).",
+        *([f"Removed from universe (train + test): {', '.join(exclude)}."] if exclude else []),
         "Prep: cross-sectional z-score + correlated-feature drop + regularized LightGBM.",
         "Validation: expanding walk-forward + label purge (no random splits).",
         "Baseline to beat: **Ridge**.",
@@ -396,7 +401,7 @@ def _write_summary(
         ]
 
     if preds_by_h:
-        prices = default_prices()
+        prices = default_prices().drop(columns=exclude, errors="ignore")
         for horizon, preds in preds_by_h.items():
             lines += _backtest_lines(horizon, preds, prices)
 
@@ -406,16 +411,26 @@ def _write_summary(
 def run_all(
     horizons: list[str] | None = None,
     save: bool = True,
+    exclude: list[str] | None = None,
+    tag: str = "",
 ) -> pd.DataFrame:
-    """Run walk-forward training. Default focus: 1y."""
+    """Run walk-forward training. Default focus: 1y.
+
+    `exclude` drops tickers from train and test; `tag` keeps that run's outputs separate.
+    """
     horizons = horizons or list(DEFAULT_HORIZONS)
+    exclude = exclude or []
+    run_name = f"{VERSION}_{tag}" if tag else VERSION
     df = load_dataset()
+    if exclude:
+        df = df[~df["Ticker"].isin(exclude)].reset_index(drop=True)
+        print(f"[universe] removed {exclude} → {df['Ticker'].nunique()} stocks")
     parts = []
     last_by_h = {}
     preds_by_h = {}
 
     for h in horizons:
-        print(f"\n=== Training horizon {h} ({VERSION}) ===")
+        print(f"\n=== Training horizon {h} ({run_name}) ===")
         metrics, last, preds = run_horizon(df, h)
         parts.append(metrics)
         last_by_h[h] = last
@@ -426,15 +441,15 @@ def run_all(
     if save:
         ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
         MODELS_DIR.mkdir(parents=True, exist_ok=True)
-        metrics_path = ARTIFACTS_DIR / f"walkforward_metrics_{VERSION}.csv"
+        metrics_path = ARTIFACTS_DIR / f"walkforward_metrics_{run_name}.csv"
         all_metrics.to_csv(metrics_path, index=False)
         for h, preds in preds_by_h.items():
-            preds.to_parquet(ARTIFACTS_DIR / f"oos_preds_{h}_{VERSION}.parquet", index=False)
-        summary_path = ARTIFACTS_DIR / f"walkforward_summary_{VERSION}.md"
-        _write_summary(all_metrics, summary_path, preds_by_h)
+            preds.to_parquet(ARTIFACTS_DIR / f"oos_preds_{h}_{run_name}.parquet", index=False)
+        summary_path = ARTIFACTS_DIR / f"walkforward_summary_{run_name}.md"
+        _write_summary(all_metrics, summary_path, preds_by_h, exclude, run_name)
 
         for h, pack in last_by_h.items():
-            out = MODELS_DIR / h
+            out = MODELS_DIR / (f"{h}_{tag}" if tag else h)
             out.mkdir(parents=True, exist_ok=True)
             joblib.dump(pack["lgbm_return"], out / "lgbm_return.joblib")
             joblib.dump(pack["lgbm_beat"], out / "lgbm_beat.joblib")
@@ -450,7 +465,7 @@ def run_all(
             p = pack["lgbm_beat"].predict_proba(x)[:, 1]
             y = test["beat_1y"].to_numpy(dtype=float)
             calibration_table(y, p).to_csv(
-                ARTIFACTS_DIR / f"calibration_1y_last_fold_{VERSION}.csv", index=False
+                ARTIFACTS_DIR / f"calibration_1y_last_fold_{run_name}.csv", index=False
             )
 
         print(f"\nWrote {metrics_path}")

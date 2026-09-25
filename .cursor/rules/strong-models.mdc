@@ -1,0 +1,11 @@
+---
+description: Use strong AI models for hard tasks
+alwaysApply: true
+---
+
+# Use strong models for hard work
+
+- For hard tasks (model training design, debugging tricky results, deep code/research reviews, architecture decisions), delegate to subagents on the strongest available model. Don't default to cheap/fast models to save cost.
+- Pick the latest top-tier model from the available list (e.g., latest Claude Opus thinking-high or latest GPT); use fast models only for simple lookups.
+- Say which model was used and for what.
+- Note: the agent cannot change the main chat model; the user picks that in Cursor.

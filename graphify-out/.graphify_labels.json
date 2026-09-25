@@ -1,7 +1,7 @@
 {
   "0": "Pinky Architecture Plan",
-  "1": "data_pull.py",
-  "2": "dataset.py",
+  "1": "dataset.py",
+  "2": "walkforward.py",
   "3": "Pinky",
   "4": "__init__.py",
   "5": "Pinky PRD (Product Requirements Document)",
@@ -10,5 +10,5 @@
   "8": "preprocess.py",
   "9": "train.py",
   "10": "backtest.py",
-  "11": "v3 — bigger balanced universe + trading-cost backtest (2026-09-25)"
+  "11": "Walk-Forward Results"
 }

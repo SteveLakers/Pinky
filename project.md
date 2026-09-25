@@ -36,6 +36,11 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
   - LightGBM top-10 capped 60%: **+41%/yr**, max DD -32%, Tech/AI 53% of picks
   - Ex top-5 winners: +27%/yr
   - Risk: tech concentration; user is bullish on tech next few years
+- **v4 ex5 test done** — removed NVDA/SMCI/TSLA/PLTR/AVGO from train + test (123 stocks)
+  - LightGBM capped: +41% → **+19%/yr**; Ridge uncapped **+26%**; momentum +18%; equal-weight +16%; SPY +14%
+  - Ridge now beats LightGBM → v4 "LightGBM most robust" no longer holds
+  - Real edge is small; most of the +41% came from 5 hindsight winners
+  - Run: `PYTHONPATH=. python scripts/train_walkforward.py --ex-winners`
   - Report: `docs/WALKFORWARD_RESULTS.md`
 - Architecture locked in `docs/ARCHITECTURE.md`
 - GitHub: **private** https://github.com/steveonshit/Pinky
@@ -134,7 +139,8 @@ Horizons:
 - Rebuild labels: `PYTHONPATH=. python scripts/build_labels.py`
 - Rebuild dataset: `PYTHONPATH=. python scripts/build_dataset.py`
 - Fold summary: `PYTHONPATH=. python scripts/summarize_walkforward.py`
-- Train/eval: `PYTHONPATH=. python scripts/train_walkforward.py`
+- Train/eval: `PYTHONPATH=. python scripts/train_walkforward.py` (add `--ex-winners` to drop hindsight winners)
+- Hard tasks: use strongest available AI model (`.cursor/rules/strong-models.mdc`)
 - Use Git to save local versions (`add` → `commit`) before big changes
 - Push to private GitHub (`origin/main`) when you say so
 - Keep `project.md` current after meaningful progress
