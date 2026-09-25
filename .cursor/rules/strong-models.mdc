@@ -9,4 +9,6 @@ alwaysApply: true
 - Hard tasks (model/training design, debugging tricky results, deep code/research reviews, architecture decisions, data pipelines) → delegate to subagents on the strongest available model (latest top-tier Claude Opus thinking-high or latest GPT).
 - Fast/cheap models only for trivial lookups.
 - Say which model was used and for what.
-- The main chat model is set by the user in Cursor (currently **Auto**); the agent can't change it. For big sessions, suggest the user pick a top model manually.
+- The main chat model is set by the user in Cursor (currently **Auto**); the agent can't change it.
+- **Remind the user** to switch Cursor from Auto to the highest model **before any hard task starts** (e.g., "This is a hard task — consider switching from Auto to the top model."). Do this every time, briefly.
+- While on Auto, the agent **can** still pick models for subagents: hand hard sub-work to a subagent on the strongest model instead of doing it on the Auto model.

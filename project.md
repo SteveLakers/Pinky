@@ -17,13 +17,24 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 8. **Actively hunt for mistakes.** Continuously check statements, assumptions, plans, and requests for errors, gaps, or weaker approaches. When found, tell you right away — no waiting, soft-pedaling, or silence.
 9. **Every new chat:** agent must read `project.md` first.
 10. **Always lean toward higher AI models.** When in doubt, use the stronger one; hard tasks → strongest available. Cost is not a reason to downgrade (`.cursor/rules/strong-models.mdc`).
+    - User runs Cursor on **Auto**; agent can't change the main model → **remind user to switch to the highest model before hard tasks**.
+    - On Auto, agent hands hard sub-work to subagents on the strongest model.
+11. **Communication:** simple, plain sentences; bullet points; **ask before large decisions/changes** (`.cursor/rules/communication.mdc`).
+12. **Graphify first:** run `graphify query/explain/path` before exploring code; `graphify update .` after code changes (`.cursor/rules/graphify.mdc`).
 
 ## Where we are (2026-09-25)
 
 - **Phase 1 — honest evaluation: in progress.**
 - **Blocked on user:** create free Sharadar account → put `SHARADAR_API_KEY=...` in `.env` (gitignored) → check bundle price at checkout.
 - Current model (128 stocks, price-only) is **not trustworthy** — results inflated by survivorship/hindsight.
-- Local `main` is **4 commits ahead** of GitHub (push when user says).
+- Local `main` has commits **not yet pushed** to GitHub (check `git status`; push when user says).
+
+## User goals & expectations
+
+- Wants a model that's genuinely smart at finding stocks with big potential; catching the next NVDA/TSLA would be ideal.
+- First asked for ~10%/month (≈ +214%/yr) — explained that's unrealistic (best fund ever ≈ 40%/yr). Realistic aim: beat SPY by a few %/yr, reliably.
+- Accepts a bit more risk (60% sector cap), **no leverage**. Bullish on tech.
+- Budget flexible for data (a couple hundred $ to start, more OK). Lots of time/compute.
 
 ## Key findings so far
 
