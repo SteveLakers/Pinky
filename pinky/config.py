@@ -75,6 +75,10 @@ UNIVERSE_BY_SECTOR: dict[str, list[str]] = {
 
 UNIVERSE_STOCKS = [t for tickers in UNIVERSE_BY_SECTOR.values() for t in tickers]
 
+# Locked final test: dates on/after this are never used for model/feature selection.
+# Score them once, at the very end.
+HOLDOUT_START = "2022-01-01"
+
 # Best total-return names over the 2018–2025 test window (known only in hindsight).
 HINDSIGHT_WINNERS = ["NVDA", "SMCI", "TSLA", "PLTR", "AVGO"]
 

@@ -42,6 +42,14 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
   - Real edge is small; most of the +41% came from 5 hindsight winners
   - Run: `PYTHONPATH=. python scripts/train_walkforward.py --ex-winners`
   - Report: `docs/WALKFORWARD_RESULTS.md`
+- **Phase 1 (honest evaluation) — in progress**, decisions (2026-09-25):
+  - Data vendor: **Sharadar** Core US Equities Bundle (delisted prices from 1998, point-in-time fundamentals, S&P 500 history, insiders/institutions). Build on free Dow-30 sample first; user subscribes after. Price to confirm at checkout.
+  - Universe: **all liquid US stocks**, point-in-time (price > $5, 21d avg $ volume > $5M) → ~2,500–4,000 names
+  - First company features: **growth + revenue acceleration**
+  - Budget: flexible (more than $20/mo OK); lots of time/compute available
+  - Free fallback: `data/universe/` S&P 500 membership from github.com/fja05680/sp500 (yfinance only covers ~22% of departed members → not enough)
+  - Done: `top_{h}` top-decile label (`labels.add_top_decile_labels`), `metrics.precision_at_k`, `metrics.winner_capture` (time-weighted), `HOLDOUT_START = 2022-01-01` (locked final test)
+  - Baseline on current 128 (v4 preds): precision@10 LightGBM 0.32 / Ridge 0.34 / random 0.12; winner capture 0.25 / 0.25 / 0.07
 - Architecture locked in `docs/ARCHITECTURE.md`
 - GitHub: **private** https://github.com/steveonshit/Pinky
 - Branch: `main` (tracking `origin/main`)

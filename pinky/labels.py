@@ -112,6 +112,26 @@ def build_universe_labels(
     return panel
 
 
+def add_top_decile_labels(
+    panel: pd.DataFrame,
+    horizons: list[str] | None = None,
+    frac: float = 0.1,
+) -> pd.DataFrame:
+    """
+    Add `top_{h}` = 1 if the stock's forward excess is in the top `frac` of stocks that day.
+
+    Cross-sectional: must run on the final (point-in-time) universe, not per ticker.
+    Expects `Date` as a column or index level plus `excess_{h}` columns.
+    """
+    horizons = horizons or list(HORIZONS)
+    df = panel.reset_index() if "Date" not in panel.columns else panel.copy()
+    for h in horizons:
+        col = f"excess_{h}"
+        pct = df.groupby("Date")[col].rank(pct=True, ascending=True)
+        df[f"top_{h}"] = np.where(df[col].notna(), (pct > 1.0 - frac).astype(float), np.nan)
+    return df
+
+
 def save_labels(panel: pd.DataFrame, out_dir: Path = DATA_LABELS_DIR) -> Path:
     """Write stacked label panel to parquet."""
     out_dir.mkdir(parents=True, exist_ok=True)
