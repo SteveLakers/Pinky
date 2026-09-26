@@ -25,20 +25,23 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 11. **Communication:** simple, plain sentences; bullet points; **ask before large decisions/changes** (`.cursor/rules/communication.mdc`).
 12. **Graphify first:** run `graphify query/explain/path` before exploring code; `graphify update .` after code changes (`.cursor/rules/graphify.mdc`).
 
-## Where we are (2026-09-25)
+## Where we are (2026-09-26)
 
-- **Phase 1 — honest evaluation: in progress.**
-- **Blocked on user:** create free Sharadar account → put `SHARADAR_API_KEY=...` in `.env` (gitignored) → check bundle price at checkout.
-- Current model (128 stocks, price-only) is **not trustworthy** — results inflated by survivorship/hindsight.
-- **Showcase page done:** `showcase/index.html` — shareable one-page visual (offline, self-contained, honest caveats up front).
-- Local `main` has commits **not yet pushed** to GitHub (check `git status`; push when user says).
+- **Phase 1 — honest evaluation: done (dev window 2001–2020).**
+- Sharadar bundle active; full history pulled to `data/sharadar/` (never commit — license).
+- **Honest baseline: the price-only model has no reliable edge on the realistic universe.** Ridge ≈ market; LightGBM loses money (picks volatile "lottery tickets"). See Key findings.
+- Old +41% / +19% results were inflated by survivorship + hindsight (128 of today's big names).
+- **Next: Phase 2** — company data, growth + revenue acceleration first.
+- `showcase/index.html` still shows the **old 128-stock numbers** — needs an update decision.
+- Local `main` has commits **not yet pushed** to GitHub (push only when user says).
 
 ### Open items
 
-- [ ] User: Sharadar free account + API key in `.env`; check bundle price
 - [ ] Push unpushed commits to GitHub (awaiting OK)
+- [ ] Showcase: update to honest v5 numbers? (ask user)
 - [ ] Optional: host showcase online (e.g., Vercel) — would be public; needs user OK on content
-- [ ] Next hard task (Sharadar pipeline) → **stop and ask user to switch to the highest model first**
+- [ ] Phase 2 is a hard design task → **user on the highest model before starting**
+- [ ] Approve the Phase 2 model fixes (see Roadmap)
 
 ## User goals & expectations
 
@@ -49,6 +52,27 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 - Budget flexible for data (a couple hundred $ to start, more OK). Lots of time/compute.
 
 ## Key findings so far
+
+### Honest baseline — v5_pit (2026-09-26)
+
+Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly top-10, 10 bps, **Jan 2001 → Feb 2020** (19 walk-forward test years; 2022+ holdout untouched).
+
+| Signal | CAGR | Max DD | Precision@10 | Winner capture |
+|---|---|---|---|---|
+| SPY | +6.9% | −52% | — | — |
+| Equal-weight whole universe | +7.5% | — | 0.10 (random) | 0.005 (random) |
+| Ridge | +7.6% | −47% | 0.08 | 0.019 |
+| Blend | +0.6% | −68% | 0.10 | 0.028 |
+| LightGBM | **−8.0%** | −87% | 0.15 | 0.027 |
+| Naive 12-1 momentum | −1.4% | −84% | 0.17 | 0.048 |
+
+- 60% sector cap barely changes anything here (picks already spread out).
+- LightGBM's picks: 1.5× random chance of a top-10% winner, but 2.6× the normal chance of losing >50% vs SPY. **Price data predicts how much a stock moves, not which way.**
+- Ridge picks calm, rising stocks → about market return, smaller drawdowns.
+- Different window than the old tests below (2001–2020 vs 2018–2025) — not directly comparable.
+- Report: `artifacts/walkforward_summary_v5_pit.md`; history: `docs/WALKFORWARD_RESULTS.md`.
+
+### Old 128-stock results (inflated — kept for reference)
 
 | Test (1y signal, monthly top-10, 10 bps, 2018–Oct 2025) | CAGR |
 |---|---|
@@ -69,11 +93,15 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 
 ## Decisions
 
-- **Data:** Sharadar Core US Equities Bundle (prices incl. delisted from 1998, point-in-time fundamentals from 1990, S&P 500 history, insiders, institutions). Build on free Dow-30 sample first. Budget flexible (more than $20/mo OK).
-- **Universe:** all liquid US stocks, point-in-time (price > $5, 21-day avg dollar volume > $5M) → ~2,500–4,000 names.
+- **Data:** Sharadar Core US Equities Bundle — active. Direct API, bulk tables (prices incl. delisted from 1998, fundamentals, S&P 500 history, corporate actions, daily valuation metrics, events). Key in `.env` (gitignored, never print it).
+- **Fundamentals:** only As-Reported dimensions **ARQ / ART / ARY** — dated by SEC filing date (point-in-time). MR* rows are dated at quarter-end → ~2.5 months of future leak. Never use MR*.
+- **Universe (`pinky/universe.py`):** each day, stocks with price ≥ $5 and 21-day avg dollar volume ≥ $5M (nominal $). Common stock + ADRs + Canadian; no preferreds, no secondary share classes, no SPACs (SIC 6770); NYSE / NASDAQ / NYSE American only. Result: **1,200–2,850 stocks per day, 11,561 distinct** (1998–2026). Fewer than the ~2,500–4,000 first estimated because $5M is not inflation-adjusted.
+- **Delistings:** exit value is reinvested in SPY. Bankruptcy / liquidation / regulatory delistings also take **−30%** on the last price (Shumway 1997). No stock silently drops out.
+- **Dataset rows:** weekly (every 5th trading day); folds use the daily calendar. Stocks need 1y of price history to be scored (same as before — hides new IPOs for a year; fix in Phase 2).
+- **Sectors:** new universe uses Sharadar sectors (current classification) for the cap. The custom "Tech/AI" bucket only applies to the old 128-stock universe.
 - **Risk:** no leverage (account can't). Sector cap 60%. User is bullish on tech.
-- **Main signal:** LightGBM for now (Ridge is the baseline to beat; revisit after Phase 1).
-- **Locked holdout:** `HOLDOUT_START = 2022-01-01` — never used for choosing models/features; score once at the end.
+- **Main signal:** undecided. On the honest data Ridge ≈ market and LightGBM loses money. Revisit in Phase 2.
+- **Locked holdout:** `HOLDOUT_START = 2022-01-01`. Dev runs only use rows whose label ends before it (`train.dev_rows`). Score the holdout once, at the very end.
 - **Training:** only when user says so. User has lots of time/compute.
 
 ## Roadmap
@@ -83,10 +111,16 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 - [x] Metrics: `metrics.precision_at_k`, `metrics.winner_capture` (time-weighted)
 - [x] Locked 2022+ holdout constant
 - [x] Free S&P 500 membership history (`data/universe/`, from github.com/fja05680/sp500)
-- [ ] Sharadar loader (free sample → full bundle)
-- [ ] Point-in-time liquid universe back to 1998
-- [ ] Rebuild features/labels/dataset on new universe; coverage logging
-- [ ] Re-score current price-only model → honest baseline
+- [x] Sharadar loader + full bulk pull (`pinky/sharadar.py`)
+- [x] Point-in-time liquid universe back to 1998 (`pinky/universe.py`)
+- [x] Rebuild features/labels/dataset on new universe (`pinky/pit_dataset.py`)
+- [x] Re-score current price-only model → honest baseline (v5_pit)
+
+**Phase 2 model fixes (proposed from Phase 1 findings — need user OK):**
+- Train on each day's **return rank** instead of raw return (a few +5,000% stocks pull LightGBM toward lottery tickets).
+- Scale features by **daily rank** instead of z-score (one bad tick can squash a whole day).
+- Let stocks **without 1y of history** be scored (so a new PLTR isn't invisible for a year).
+- Add **size** (market cap) as a feature.
 
 **Phase 2 — company data (what to look at)**, added in batches, keep only what beats baseline:
 1. **Growth + revenue acceleration** ← first
@@ -102,7 +136,11 @@ Mirrored in `.cursor/rules/` so Cursor loads them every Pinky chat.
 
 **Phase 3 — only if Phase 2 works:** position sizing, monthly picks report, live paper-trading log.
 
-## Baseline metrics (current 128-stock v4 preds, inflated)
+## Baseline metrics
+
+Honest (v5_pit): see Key findings table (precision@10, winner capture).
+
+Old 128-stock v4 preds (inflated):
 
 | | LightGBM | Ridge | Random |
 |---|---|---|---|
@@ -119,28 +157,32 @@ Random = mean of 20 random-score runs (matches theory: 0.10 and 10/128 ≈ 0.08)
 - Signals compared: LightGBM, Ridge, Blend (avg daily rank), naive momentum
 - Settings in `pinky/config.py` (`BACKTEST_*`)
 
-## Current (old) universe
+## Old (legacy) universe
 
 - 128 stocks across 11 sectors (`pinky/config.py` → `UNIVERSE_BY_SECTOR`), Tech/AI 25%
 - Benchmark `SPY`; helpers `IWM`, `^VIX`, `^TNX`, `^IRX`
-- Data: yfinance, 2015+ — to be replaced in Phase 1
+- Data: yfinance, 2015+ — replaced by the Sharadar point-in-time universe (still runnable without `--pit`)
 
 ## Repo layout
 
-- `pinky/config.py` — universe, paths, backtest settings, `HOLDOUT_START`, `HINDSIGHT_WINNERS`
-- `pinky/data_pull.py` — yfinance download → parquet
+- `pinky/config.py` — universe rules, paths, backtest settings, `HOLDOUT_START`, `HINDSIGHT_WINNERS`
+- `pinky/sharadar.py` — Sharadar API: bulk download → parquet, small queries (key never printed)
+- `pinky/universe.py` — point-in-time universe panels + delisting-aware total-return panel (`tr`), sectors, SPY
+- `pinky/pit_dataset.py` — weekly features + labels on the point-in-time universe
+- `pinky/data_pull.py` — yfinance download → parquet (legacy)
 - `pinky/raw_io.py` — load raw bars
 - `pinky/features.py` — price features per stock
 - `pinky/labels.py` — excess/beat labels vs SPY + top-decile label
 - `pinky/dataset.py` — join features + labels
 - `pinky/preprocess.py` — cross-sectional z-score + correlated-feature drop
 - `pinky/walkforward.py` — expanding walk-forward folds + label purge
-- `pinky/train.py` — train/eval (Ridge, LightGBM, Blend), report, `--ex-winners` runs
+- `pinky/train.py` — train/eval (Ridge, LightGBM, Blend), report, `--ex-winners` and `--pit` runs
 - `pinky/metrics.py` — IC, top-N, precision@k, winner capture, calibration
 - `pinky/backtest.py` — monthly top-N backtest, costs, sector cap, stress tests
-- `scripts/` — `pull_data`, `build_features`, `build_labels`, `build_dataset`, `train_walkforward`, `summarize_walkforward`, `build_showcase`
+- `scripts/` — `pull_sharadar`, `pull_data`, `build_features`, `build_labels`, `build_dataset`, `train_walkforward`, `summarize_walkforward`, `build_showcase`
 - `showcase/index.html` — generated one-page visual summary (self-contained, offline; rebuild with `PYTHONPATH=. python scripts/build_showcase.py`). All numbers computed from `artifacts/oos_preds_1y_v4*.parquet`; leads with the +41% → +19% survivorship caveat.
 - `data/` — all gitignored (`raw`, `features`, `labels`, `dataset`, `universe`, `sharadar`)
+- `data/sharadar/` — vendor tables (`*.parquet`), `zips/` (raw downloads), `panels/` (Date × Ticker), `derived/pit_dataset.parquet`. ~6 GB. Never commit or share.
 - `data/reference/` — S&P 500 files + yfinance coverage probe created by another chat (untracked; not used by code)
 - `artifacts/`, `models/` — outputs (gitignored)
 - `docs/` — `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`, `WALKFORWARD_RESULTS.md`
@@ -152,9 +194,12 @@ Random = mean of 20 random-score runs (matches theory: 0.10 and 10/128 ≈ 0.08)
 
 - Suggestion: use one chat at a time on Pinky (parallel chats can overwrite each other's edits)
 - Activate venv: `source .venv/bin/activate`
-- Re-pull data: `PYTHONPATH=. python scripts/pull_data.py`
-- Rebuild features / labels / dataset: `PYTHONPATH=. python scripts/build_features.py` (then `build_labels.py`, `build_dataset.py`)
-- Train/eval: `PYTHONPATH=. python scripts/train_walkforward.py` (add `--ex-winners` to drop hindsight winners)
+- **Sharadar pipeline (current):**
+  1. Pull: `PYTHONPATH=. python scripts/pull_sharadar.py` (all tables; ~10 min, needs network)
+  2. Universe panels: `PYTHONPATH=. python -m pinky.universe` (~1 min)
+  3. Dataset: `PYTHONPATH=. python -m pinky.pit_dataset` (~1 min)
+  4. Train/eval: `PYTHONPATH=. python scripts/train_walkforward.py --pit` (~8 min)
+- Legacy (128 stocks, yfinance): `pull_data.py` → `build_features.py` → `build_labels.py` → `build_dataset.py` → `train_walkforward.py` (add `--ex-winners` to drop hindsight winners)
 - Rebuild showcase: `PYTHONPATH=. python scripts/build_showcase.py` (after new results)
 - Git: commit before big changes; push to private GitHub https://github.com/steveonshit/Pinky (`origin/main`) only when user says
 - Graphify CLI path: `/Users/hqschool/Library/Python/3.12/bin`; after code changes run `graphify update .`

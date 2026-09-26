@@ -80,12 +80,16 @@ def iter_walk_forward_folds(
     min_train_days: int = WF_MIN_TRAIN_DAYS,
     test_days: int = WF_TEST_DAYS,
     step_days: int = WF_STEP_DAYS,
+    calendar: pd.DatetimeIndex | None = None,
 ):
     """
     Yield purged walk-forward folds for one horizon.
 
     Train = all rows with Date < test_start (then purged).
     Test = [test_start, test_end] and must have a non-null label for this horizon.
+
+    `calendar` is the daily trading calendar that all day counts refer to. Pass it when
+    rows are sampled (e.g. weekly); by default the dates in `df` are the calendar.
     """
     if horizon not in HORIZONS:
         raise ValueError(f"Unknown horizon {horizon!r}; expected one of {list(HORIZONS)}")
@@ -94,7 +98,10 @@ def iter_walk_forward_folds(
     excess_col = f"excess_{horizon}"
     beat_col = f"beat_{horizon}"
 
-    calendar = _trading_calendar(df)
+    if calendar is None:
+        calendar = _trading_calendar(df)
+    else:
+        calendar = calendar[(calendar >= df["Date"].min()) & (calendar <= df["Date"].max())]
     if len(calendar) < min_train_days + test_days:
         raise ValueError(
             f"Not enough trading days ({len(calendar)}) for "

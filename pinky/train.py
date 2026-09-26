@@ -9,6 +9,9 @@ v2 prep:
 
 v3: saves out-of-sample predictions and adds a tradeable cost-aware backtest to the report.
 v4: Ridge/LightGBM rank blend + sector-capped portfolio backtest.
+v5: `pit=True` runs on the Sharadar point-in-time universe (delisted stocks included,
+    weekly rows, daily calendar for folds) and never touches the 2022+ holdout.
+    Report adds precision@10 and winner capture.
 """
 
 from __future__ import annotations
@@ -37,8 +40,11 @@ from pinky.config import (
     BACKTEST_COST_BPS,
     BACKTEST_MAX_SECTOR_SHARE,
     BACKTEST_TOP_N,
+    HOLDOUT_START,
     HORIZONS,
     PROJECT_ROOT,
+    UNIVERSE_MIN_DOLLAR_VOLUME,
+    UNIVERSE_MIN_PRICE,
     UNIVERSE_STOCKS,
 )
 from pinky.dataset import load_dataset
@@ -46,11 +52,15 @@ from pinky.metrics import (
     brier_score,
     calibration_table,
     daily_rank_ic,
+    precision_at_k,
     top_decile_hit_rate,
     top_n_basket_excess,
     universe_mean_excess,
+    winner_capture,
 )
+from pinky.pit_dataset import load_pit_dataset
 from pinky.preprocess import prepare_fold_frames
+from pinky.universe import backtest_prices, benchmark_closeadj, sector_map
 from pinky.walkforward import WalkForwardFold, iter_walk_forward_folds
 
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
@@ -59,7 +69,7 @@ MODELS_DIR = PROJECT_ROOT / "models"
 # Primary focus after v1 failure
 DEFAULT_HORIZONS = ["1y"]
 
-VERSION = "v4"
+VERSION = "v5"
 PRED_COLS = [
     "pred_excess_ridge",
     "pred_excess_lgbm",
@@ -200,21 +210,29 @@ def _eval_prepared(
         if not (np.isnan(row["top5_excess_lgbm"]) or np.isnan(row["top5_excess_ridge"]))
         else False
     )
-    preds = test[["Date", "Ticker", excess_col, beat_col, *PRED_COLS]].assign(
+    extra = [c for c in (f"stock_fwd_{horizon}", f"top_{horizon}") if c in test.columns]
+    preds = test[["Date", "Ticker", excess_col, beat_col, *extra, *PRED_COLS]].assign(
         fold_id=fold.fold_id
     )
     return row, preds
 
 
+def dev_rows(df: pd.DataFrame, horizon: str, calendar: pd.DatetimeIndex) -> pd.DataFrame:
+    """Rows whose label window ends before HOLDOUT_START, so the holdout stays unseen."""
+    pos = calendar.searchsorted(pd.Timestamp(HOLDOUT_START))
+    cutoff = calendar[pos - HORIZONS[horizon]]
+    return df[df["Date"] < cutoff]
+
+
 def run_horizon(
-    df: pd.DataFrame, horizon: str
+    df: pd.DataFrame, horizon: str, calendar: pd.DatetimeIndex | None = None
 ) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
     """Train/eval all folds for one horizon with CS prep + tuned LightGBM."""
     rows = []
     pred_parts = []
     last_models: dict = {}
 
-    for fold in iter_walk_forward_folds(df, horizon):
+    for fold in iter_walk_forward_folds(df, horizon, calendar=calendar):
         train_cs, test_cs, fcols = prepare_fold_frames(fold.train, fold.test)
         x_tr, y_tr = _xy_return(train_cs, fcols, horizon)
         x_tb, y_tb = _xy_beat(train_cs, fcols, horizon)
@@ -262,7 +280,49 @@ def _fmt_pct(x: float) -> str:
     return f"{100 * x:+.1f}%"
 
 
-def _backtest_lines(horizon: str, preds: pd.DataFrame, prices: pd.DataFrame) -> list[str]:
+def _ranking_lines(horizon: str, preds: pd.DataFrame, mom: pd.DataFrame) -> list[str]:
+    """Does the model find the future top decile / the year's biggest winners?"""
+    top_col, fwd_col = f"top_{horizon}", f"stock_fwd_{horizon}"
+    if top_col not in preds or fwd_col not in preds:
+        return []
+    k, n_win = BACKTEST_TOP_N, 20
+    mom = mom.merge(preds[["Date", "Ticker", top_col, fwd_col]], on=["Date", "Ticker"])
+    avg_n = preds.groupby("Date").size().mean()
+    lines = [
+        f"## Finding winners `{horizon}` (out-of-sample, monthly)",
+        "",
+        f"- **Precision@{k}**: share of the top-{k} picks that land in the future top 10%.",
+        f"- **Winner capture**: each year's {n_win} biggest winners — share of months each "
+        f"sat in the monthly top-{k}.",
+        "",
+        f"| Signal | Precision@{k} | Winner capture |",
+        "|---|---|---|",
+    ]
+    for name, frame, col in [
+        ("LightGBM", preds, "pred_excess_lgbm"),
+        ("Ridge", preds, "pred_excess_ridge"),
+        ("Blend", preds, "pred_excess_blend"),
+        ("Momentum 12-1 (naive)", mom, "mom_12_1"),
+    ]:
+        p = precision_at_k(frame, col, top_col, k=k)
+        w = winner_capture(frame, col, fwd_col, k=k, n_winners=n_win)
+        lines.append(f"| {name} | {p:.3f} | {w:.3f} |")
+    lines += [
+        f"| Random (expected) | 0.100 | {k / avg_n:.3f} |",
+        "",
+        f"Average stocks to choose from per date: {avg_n:,.0f}.",
+        "",
+    ]
+    return lines
+
+
+def _backtest_lines(
+    horizon: str,
+    preds: pd.DataFrame,
+    prices: pd.DataFrame,
+    sectors: dict[str, str] | None = None,
+    mom: pd.DataFrame | None = None,
+) -> list[str]:
     excess_col = f"excess_{horizon}"
     lines = [
         f"## Portfolio backtest `{horizon}` signal (out-of-sample, tradeable)",
@@ -277,7 +337,7 @@ def _backtest_lines(horizon: str, preds: pd.DataFrame, prices: pd.DataFrame) -> 
         "Turnover/mo | Cost drag/yr | Max DD | Max DD SPY |",
         "|---|---|---|---|---|---|---|---|---|---|",
     ]
-    mom = momentum_scores(preds, prices)
+    mom = mom if mom is not None else momentum_scores(preds, prices)
     winners = set(top_winners(prices, preds["Date"].min(), preds["Date"].max()))
     cap = BACKTEST_MAX_SECTOR_SHARE
     signals = [
@@ -299,7 +359,13 @@ def _backtest_lines(horizon: str, preds: pd.DataFrame, prices: pd.DataFrame) -> 
     for model, frame, col, excl, max_share in runs:
         for bps in [BACKTEST_COST_BPS, 25.0]:
             bt = run_backtest(
-                frame, col, prices, cost_bps=bps, exclude=excl, max_sector_share=max_share
+                frame,
+                col,
+                prices,
+                cost_bps=bps,
+                exclude=excl,
+                max_sector_share=max_share,
+                sectors=sectors,
             )
             s = summarize_backtest(bt)
             if bps == BACKTEST_COST_BPS:
@@ -335,13 +401,13 @@ def _backtest_lines(horizon: str, preds: pd.DataFrame, prices: pd.DataFrame) -> 
         lines.append("")
 
     for model in ["LightGBM", "LightGBM capped", "Blend capped"]:
-        share = pick_sector_share(main_bt[model])
+        share = pick_sector_share(main_bt[model], sectors)
         lines += [f"### {model} average pick share by sector", ""]
         lines += [f"- {sec}: {100 * v:.0f}%" for sec, v in share.items()]
         lines.append("")
 
     for name, col in [("LightGBM", "pred_excess_lgbm"), ("Blend", "pred_excess_blend")]:
-        wic = within_sector_ic(preds, col, excess_col)
+        wic = within_sector_ic(preds, col, excess_col, sectors)
         lines += [f"### {name} rank IC inside each sector (`{horizon}`)", ""]
         lines += [f"- {sec}: {v:.3f}" for sec, v in wic.items()]
         lines.append("")
@@ -354,13 +420,18 @@ def _write_summary(
     preds_by_h: dict[str, pd.DataFrame] | None = None,
     exclude: list[str] | None = None,
     run_name: str = VERSION,
+    universe_desc: str | None = None,
+    prices: pd.DataFrame | None = None,
+    sectors: dict[str, str] | None = None,
 ) -> None:
     exclude = exclude or []
-    n_stocks = len(set(UNIVERSE_STOCKS) - set(exclude))
+    if universe_desc is None:
+        n_stocks = len(set(UNIVERSE_STOCKS) - set(exclude))
+        universe_desc = f"{n_stocks} stocks, sector-balanced (Tech/AI ~25%)."
     lines = [
         f"# Pinky Walk-Forward Training Report ({run_name})",
         "",
-        f"Universe: {n_stocks} stocks, sector-balanced (Tech/AI ~25%).",
+        f"Universe: {universe_desc}",
         *([f"Removed from universe (train + test): {', '.join(exclude)}."] if exclude else []),
         "Prep: cross-sectional z-score + correlated-feature drop + regularized LightGBM.",
         "Validation: expanding walk-forward + label purge (no random splits).",
@@ -401,9 +472,12 @@ def _write_summary(
         ]
 
     if preds_by_h:
-        prices = default_prices().drop(columns=exclude, errors="ignore")
+        prices = prices if prices is not None else default_prices()
+        prices = prices.drop(columns=exclude, errors="ignore")
         for horizon, preds in preds_by_h.items():
-            lines += _backtest_lines(horizon, preds, prices)
+            mom = momentum_scores(preds, prices)
+            lines += _ranking_lines(horizon, preds, mom)
+            lines += _backtest_lines(horizon, preds, prices, sectors, mom)
 
     path.write_text("\n".join(lines))
 
@@ -413,25 +487,43 @@ def run_all(
     save: bool = True,
     exclude: list[str] | None = None,
     tag: str = "",
+    pit: bool = False,
 ) -> pd.DataFrame:
     """Run walk-forward training. Default focus: 1y.
 
     `exclude` drops tickers from train and test; `tag` keeps that run's outputs separate.
+    `pit` uses the Sharadar point-in-time universe and only dev rows (holdout untouched).
     """
     horizons = horizons or list(DEFAULT_HORIZONS)
     exclude = exclude or []
+    calendar = prices = sectors = universe_desc = None
+    if pit:
+        tag = f"pit_{tag}" if tag else "pit"
+        df = load_pit_dataset()
+        calendar = pd.DatetimeIndex(benchmark_closeadj().index)
+        prices = backtest_prices()
+        sectors = sector_map()
+    else:
+        df = load_dataset()
     run_name = f"{VERSION}_{tag}" if tag else VERSION
-    df = load_dataset()
     if exclude:
         df = df[~df["Ticker"].isin(exclude)].reset_index(drop=True)
         print(f"[universe] removed {exclude} → {df['Ticker'].nunique()} stocks")
+    if pit:
+        universe_desc = (
+            f"point-in-time liquid US stocks (price ≥ ${UNIVERSE_MIN_PRICE:.0f}, "
+            f"≥ ${UNIVERSE_MIN_DOLLAR_VOLUME / 1e6:.0f}M/day traded), delisted stocks included, "
+            f"{df['Ticker'].nunique():,} distinct stocks. Rows sampled weekly. "
+            f"Dev only: labels end before {HOLDOUT_START} (holdout untouched)."
+        )
     parts = []
     last_by_h = {}
     preds_by_h = {}
 
     for h in horizons:
         print(f"\n=== Training horizon {h} ({run_name}) ===")
-        metrics, last, preds = run_horizon(df, h)
+        df_h = dev_rows(df, h, calendar) if pit else df
+        metrics, last, preds = run_horizon(df_h, h, calendar=calendar)
         parts.append(metrics)
         last_by_h[h] = last
         preds_by_h[h] = preds
@@ -446,7 +538,16 @@ def run_all(
         for h, preds in preds_by_h.items():
             preds.to_parquet(ARTIFACTS_DIR / f"oos_preds_{h}_{run_name}.parquet", index=False)
         summary_path = ARTIFACTS_DIR / f"walkforward_summary_{run_name}.md"
-        _write_summary(all_metrics, summary_path, preds_by_h, exclude, run_name)
+        _write_summary(
+            all_metrics,
+            summary_path,
+            preds_by_h,
+            exclude,
+            run_name,
+            universe_desc=universe_desc,
+            prices=prices,
+            sectors=sectors,
+        )
 
         for h, pack in last_by_h.items():
             out = MODELS_DIR / (f"{h}_{tag}" if tag else h)

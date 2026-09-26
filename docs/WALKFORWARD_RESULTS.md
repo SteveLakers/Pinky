@@ -1,5 +1,51 @@
 # Walk-Forward Results
 
+## v5_pit — honest baseline on the point-in-time universe (2026-09-26)
+
+Same price-only model (13 stock features; 12 after the correlation drop), new data:
+Sharadar point-in-time liquid US universe (price ≥ $5, ≥ $5M/day), delisted stocks included
+(delisting-aware returns), weekly rows, 19 test years 2001–2019 (+ early 2020 in the backtest).
+Dev only — labels end before 2022-01-01; the holdout is untouched.
+Run: `PYTHONPATH=. python scripts/train_walkforward.py --pit` → `artifacts/*_v5_pit.*`
+
+| Signal (10 bps, top-10, Jan 2001 → Feb 2020) | CAGR | Max DD | Months > SPY | Precision@10 | Winner capture |
+|---|---|---|---|---|---|
+| SPY | +6.9% | −52.1% | — | — | — |
+| Equal-weight universe (~1,940 stocks) | +7.5% | — | — | 0.100 (random) | 0.005 (random) |
+| Ridge | **+7.6%** | −47.4% | 47% | 0.079 | 0.019 |
+| Blend | +0.6% | −68.4% | 43% | 0.104 | 0.028 |
+| LightGBM | −8.0% | −86.9% | 43% | 0.148 | 0.027 |
+| Momentum 12-1 | −1.4% | −83.5% | 48% | 0.169 | 0.048 |
+
+- Mean rank IC: Ridge 0.066, Blend 0.048, LightGBM 0.025. LightGBM beats Ridge on IC in 26% of folds.
+- 60% sector cap changes almost nothing (LightGBM: Technology 21%, Healthcare 17%, no sector near 60%).
+- "Ex top-5 winners" barely changes anything — the universe is no longer hand-picked with hindsight.
+- 25 bps costs: models lose another ~2.8–2.9%/yr (turnover 150–170%/month); momentum 1.7%/yr (turnover 94%).
+- LightGBM (capped) had crushing years vs SPY: 2009 −42.0%, 2011 −47.4%, 2012 −48.5%.
+
+### What the picks look like (monthly top-10, dev window)
+
+| | Volatility (63d, median) | Share ending in top 10% | Share losing > 50% vs SPY | 1y excess (median) |
+|---|---|---|---|---|
+| LightGBM | 49% | 15% | 18% | −10.6% |
+| Ridge | 19% | 8% | 7% | −1.7% |
+| Universe | 32% | 10% | 7% | −2.2% |
+
+### Honest read
+
+- **Price data alone has no reliable edge on a realistic universe.** Ridge ≈ equal-weight market; LightGBM and momentum lose money.
+- LightGBM learned to pick high-volatility stocks: more winners **and** far more blow-ups. Price history predicts the *size* of moves, not the *direction*.
+- The old +41% (and +19% ex-5) came from survivorship (today's 128 big names) + hindsight.
+- Next: Phase 2 company data (growth + revenue acceleration) and model fixes (rank target, rank features, score young stocks, size feature).
+
+### Data checks done
+
+- Labels verified by hand: AAPL 2019 +104%, NVDA 2023 +233%, LEHMQ 2008 −99.9%, ENRNQ 2001 −99% (bankruptcies stay in the data).
+- Fold purge verified: every train label ends before its test year; last dev label ends 2021-12-31.
+- Biggest 1y winners in the data are real (NVAX 2020, GME 2020, QCOM 1999, OKLO 2024). ~195 of 2.8M rows show one-day jumps > 100% on tiny stocks (likely split glitches) — left in for this baseline.
+
+---
+
 ## v4 ex5 — hindsight winners removed from train AND test (2026-09-25)
 
 Removed NVDA, SMCI, TSLA, PLTR, AVGO from the universe entirely (123 stocks), retrained, re-backtested.

@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "pinky/config.py": {
-    "mtime": 1790375216.1961472,
-    "seen": 1790375241.203033,
-    "ast_hash": "31391d07091ff7a58951b170f3a63741",
+    "mtime": 1790464703.0021784,
+    "seen": 1790465683.0613272,
+    "ast_hash": "cd1d65cd9b3aa00356b1cbb8060dce40",
     "semantic_hash": ""
   },
   "pinky/data_pull.py": {
@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "project.md": {
-    "mtime": 1790376487.4943361,
-    "seen": 1790376488.305832,
-    "ast_hash": "0816a6fb1ff961e9256e43fc40a804c6",
+    "mtime": 1790466224.5113685,
+    "seen": 1790466249.2766862,
+    "ast_hash": "e137fefe7c7f26782184a80f75795d68",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -72,15 +72,15 @@
     "semantic_hash": ""
   },
   "pinky/dataset.py": {
-    "mtime": 1790171719.4488382,
-    "seen": 1790171736.4388301,
-    "ast_hash": "5508831a464d1105ff110f86a0d2cd82",
+    "mtime": 1790464961.7649925,
+    "seen": 1790465683.061329,
+    "ast_hash": "d45d271d35bec4239f9f76c2bdde3ab0",
     "semantic_hash": ""
   },
   "pinky/walkforward.py": {
-    "mtime": 1790171720.5146523,
-    "seen": 1790171736.438832,
-    "ast_hash": "1e83aabe30471929753d038d8b62d578",
+    "mtime": 1790464980.1390204,
+    "seen": 1790465683.0613341,
+    "ast_hash": "34379538f44f478fd0e1a2a256a65718",
     "semantic_hash": ""
   },
   "scripts/build_dataset.py": {
@@ -120,15 +120,15 @@
     "semantic_hash": ""
   },
   "pinky/train.py": {
-    "mtime": 1790373616.655279,
-    "seen": 1790373664.257728,
-    "ast_hash": "3e891a36c78bb93d8bb7debf614c0b35",
+    "mtime": 1790465094.042287,
+    "seen": 1790465683.061333,
+    "ast_hash": "5b9c5ec922171bd1b600b9a82a3bc6e9",
     "semantic_hash": ""
   },
   "scripts/train_walkforward.py": {
-    "mtime": 1790373617.720021,
-    "seen": 1790373664.257731,
-    "ast_hash": "04226ef6885d7c37fdc48ddbee2b6b1e",
+    "mtime": 1790465096.9553452,
+    "seen": 1790465683.0613382,
+    "ast_hash": "4c100d3e16af23907cbcb0489cbd95d4",
     "semantic_hash": ""
   },
   "pinky/preprocess.py": {
@@ -138,15 +138,15 @@
     "semantic_hash": ""
   },
   "docs/WALKFORWARD_RESULTS.md": {
-    "mtime": 1790373660.0248387,
-    "seen": 1790373664.2577322,
-    "ast_hash": "1186fff3af890880716a67e52706797b",
+    "mtime": 1790466248.9630287,
+    "seen": 1790466249.276685,
+    "ast_hash": "0106b77c4ef0590b22caf021dd0197dc",
     "semantic_hash": ""
   },
   "pinky/backtest.py": {
-    "mtime": 1790341533.4650047,
-    "seen": 1790341594.2235572,
-    "ast_hash": "cb5afc6d3d471e314125e28e7540ee73",
+    "mtime": 1790465021.5630808,
+    "seen": 1790465683.061326,
+    "ast_hash": "aa34d0eb74f8bae85e4f371fc7c8f685",
     "semantic_hash": ""
   },
   "scripts/build_showcase.py": {
@@ -156,15 +156,39 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1790375916.3232453,
-    "seen": 1790376396.955271,
-    "ast_hash": "9afe8a7091fb42380d6c29608f471fad",
+    "mtime": 1790376512.1410306,
+    "seen": 1790465683.0613382,
+    "ast_hash": "71309de0692d538cd94205c301538917",
     "semantic_hash": ""
   },
   "showcase/index.html": {
     "mtime": 1790376380.896378,
     "seen": 1790376396.955275,
     "ast_hash": "443ad82368368e52045756200fdb29be",
+    "semantic_hash": ""
+  },
+  "pinky/pit_dataset.py": {
+    "mtime": 1790464969.882611,
+    "seen": 1790465683.061331,
+    "ast_hash": "da0fcd10d9edbb95ac6a1ae27d4b8010",
+    "semantic_hash": ""
+  },
+  "pinky/sharadar.py": {
+    "mtime": 1790464876.6219172,
+    "seen": 1790465683.061333,
+    "ast_hash": "4580ff836439be8c2abe3a16109ca03d",
+    "semantic_hash": ""
+  },
+  "pinky/universe.py": {
+    "mtime": 1790465044.38862,
+    "seen": 1790465683.0613341,
+    "ast_hash": "47ff809153973ea4b2d2a5afaa8ffd68",
+    "semantic_hash": ""
+  },
+  "scripts/pull_sharadar.py": {
+    "mtime": 1790464388.6789765,
+    "seen": 1790465683.061337,
+    "ast_hash": "9a8756ead665619afe55b124381c14df",
     "semantic_hash": ""
   }
 }

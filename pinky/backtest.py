@@ -70,17 +70,19 @@ def pick_top(
     score_col: str,
     top_n: int,
     max_sector_share: float | None = None,
+    sectors: dict[str, str] | None = None,
 ) -> list[str]:
     """Top-N tickers by score, optionally capping names per sector."""
     ranked = g.sort_values(score_col, ascending=False)["Ticker"].tolist()
     n = min(top_n, len(ranked))
     if max_sector_share is None:
         return ranked[:n]
+    sectors = sectors or TICKER_SECTOR
     cap = max(1, math.floor(max_sector_share * n + 1e-9))
     counts: dict[str, int] = {}
     picks: list[str] = []
     for t in ranked:
-        s = TICKER_SECTOR.get(t, "Other")
+        s = sectors.get(t, "Other")
         if counts.get(s, 0) >= cap:
             continue
         picks.append(t)
@@ -98,6 +100,7 @@ def run_backtest(
     cost_bps: float = BACKTEST_COST_BPS,
     exclude: set[str] | None = None,
     max_sector_share: float | None = None,
+    sectors: dict[str, str] | None = None,
 ) -> pd.DataFrame:
     """
     One row per holding period (gross, cost, net, SPY, universe, turnover).
@@ -128,7 +131,7 @@ def run_backtest(
         stock_ret = prices.loc[end, g["Ticker"]] / prices.loc[d, g["Ticker"]] - 1.0
         stock_ret = stock_ret.fillna(0.0)
 
-        picks = pick_top(g, score_col, top_n, max_sector_share)
+        picks = pick_top(g, score_col, top_n, max_sector_share, sectors)
         target = pd.Series(1.0 / len(picks), index=picks)
 
         all_names = target.index.union(prev_drift.index)
@@ -211,22 +214,29 @@ def yearly_table(bt: pd.DataFrame) -> pd.DataFrame:
     ).assign(net_minus_spy=lambda t: t["net"] - t["spy"])
 
 
-def pick_sector_share(bt: pd.DataFrame) -> pd.Series:
+def pick_sector_share(bt: pd.DataFrame, sectors: dict[str, str] | None = None) -> pd.Series:
     """Average share of picks per sector (checks tech concentration)."""
+    sectors = sectors or TICKER_SECTOR
     counts: dict[str, float] = {}
     for picks in bt["picks"]:
         names = picks.split(",")
         for t in names:
-            s = TICKER_SECTOR.get(t, "Other")
+            s = sectors.get(t, "Other")
             counts[s] = counts.get(s, 0.0) + 1.0 / len(names)
     return (pd.Series(counts) / len(bt)).sort_values(ascending=False)
 
 
 def momentum_scores(preds: pd.DataFrame, prices: pd.DataFrame, lookback: int = 252) -> pd.DataFrame:
     """Naive baseline: score = trailing 12m return (skip last month), same dates/names as preds."""
-    mom = prices.shift(21) / prices.shift(lookback) - 1.0
+    dates = pd.DatetimeIndex(sorted(preds["Date"].unique()))
+    pos = prices.index.get_indexer(dates)
+    ok = pos >= lookback
+    a = prices.to_numpy(dtype=float)
+    mom = pd.DataFrame(
+        a[pos[ok] - 21] / a[pos[ok] - lookback] - 1.0, index=dates[ok], columns=prices.columns
+    )
+    mom.index.name, mom.columns.name = "Date", "Ticker"
     long = mom.stack().rename("mom_12_1").reset_index()
-    long.columns = ["Date", "Ticker", "mom_12_1"]
     return preds[["Date", "Ticker"]].merge(long, on=["Date", "Ticker"], how="left").dropna()
 
 
@@ -241,9 +251,12 @@ def default_prices() -> pd.DataFrame:
     return load_price_panel([BENCHMARK, *UNIVERSE_STOCKS])
 
 
-def within_sector_ic(preds: pd.DataFrame, score_col: str, actual_col: str) -> pd.Series:
+def within_sector_ic(
+    preds: pd.DataFrame, score_col: str, actual_col: str, sectors: dict[str, str] | None = None
+) -> pd.Series:
     """Mean daily rank IC computed inside each sector (does the model rank within a sector?)."""
-    df = preds.assign(sector=preds["Ticker"].map(TICKER_SECTOR).fillna("Other"))
+    sectors = sectors or TICKER_SECTOR
+    df = preds.assign(sector=preds["Ticker"].map(sectors).fillna("Other"))
     out = {s: daily_rank_ic(g, score_col, actual_col) for s, g in df.groupby("sector")}
     return pd.Series(out).sort_values(ascending=False)
 

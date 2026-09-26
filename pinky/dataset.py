@@ -11,7 +11,7 @@ import pandas as pd
 from pinky.config import DATA_DATASET_DIR, DATA_FEATURES_DIR, DATA_LABELS_DIR, HORIZONS
 
 
-LABEL_PREFIXES = ("excess_", "beat_", "stock_fwd_", "spy_fwd_")
+LABEL_PREFIXES = ("excess_", "beat_", "stock_fwd_", "spy_fwd_", "top_")
 
 
 def feature_columns(df: pd.DataFrame) -> list[str]:

@@ -7,6 +7,7 @@ DATA_RAW_DIR = PROJECT_ROOT / "data" / "raw"
 DATA_FEATURES_DIR = PROJECT_ROOT / "data" / "features"
 DATA_LABELS_DIR = PROJECT_ROOT / "data" / "labels"
 DATA_DATASET_DIR = PROJECT_ROOT / "data" / "dataset"
+DATA_SHARADAR_DIR = PROJECT_ROOT / "data" / "sharadar"  # vendor data; license forbids sharing
 
 # Need this many trading days of history before a row is usable
 FEATURE_WARMUP_DAYS = 252
@@ -74,6 +75,25 @@ UNIVERSE_BY_SECTOR: dict[str, list[str]] = {
 }
 
 UNIVERSE_STOCKS = [t for tickers in UNIVERSE_BY_SECTOR.values() for t in tickers]
+
+# Point-in-time liquid universe (Sharadar). Checked every trading day.
+UNIVERSE_CATEGORIES = {
+    "Domestic Common Stock",
+    "Domestic Common Stock Primary Class",
+    "ADR Common Stock",
+    "ADR Common Stock Primary Class",
+    "Canadian Common Stock",
+    "Canadian Common Stock Primary Class",
+}
+UNIVERSE_EXCHANGES = {"NYSE", "NASDAQ", "NYSEMKT"}
+UNIVERSE_EXCLUDE_SIC = {6770}  # blank-check shells (SPACs)
+UNIVERSE_MIN_PRICE = 5.0  # unadjusted close, $
+UNIVERSE_MIN_DOLLAR_VOLUME = 5e6  # trailing average daily $ traded
+UNIVERSE_ADV_DAYS = 21
+UNIVERSE_START = "1998-01-01"
+# Extra loss on the last price when a stock exits via bankruptcy / liquidation / regulatory
+# delisting (Shumway 1997 finds about -30% for performance-related delistings).
+DELIST_RETURN_PERFORMANCE = -0.30
 
 # Locked final test: dates on/after this are never used for model/feature selection.
 # Score them once, at the very end.
