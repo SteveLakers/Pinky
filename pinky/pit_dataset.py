@@ -7,6 +7,8 @@ Rows: one per (sample date, stock in the universe that day). Sample dates are ev
 Features: the same stock-level price features as the legacy model (features.py).
 The legacy market-wide features are left out: prep drops them before ranking, and
 `rs_*` features equal plain returns after the per-day z-score.
+Plus `history_1y` (share of the last year the stock has traded) and `log_mcap` (size).
+Stocks need ~1 month of prices; younger than 1y, the long-window features are missing.
 
 Labels come from the delisting-aware total-return index (`universe.total_return_panel`),
 so stocks that go bankrupt or get acquired inside the horizon stay in the data.
@@ -26,6 +28,10 @@ DERIVED_DIR = DATA_SHARADAR_DIR / "derived"
 DATASET_PATH = DERIVED_DIR / "pit_dataset.parquet"
 DATASET_SAMPLE_EVERY = 5
 TOP_FRAC = 0.1
+HISTORY_FULL_DAYS = 252
+# Rows missing any of these (< ~1 month of prices) are dropped. Longer-window features
+# may be missing for stocks younger than 1y; prep fills them with the day's middle value.
+SHORT_FEATURES = ["ret_1d", "ret_5d", "ret_21d", "vol_21", "volume_ratio_21", "rsi_14"]
 
 
 def _rsi(close: pd.DataFrame, window: int = 14) -> pd.DataFrame:
@@ -57,6 +63,23 @@ def _wide_features(tr: pd.DataFrame, volume: pd.DataFrame):
     yield "mom_252_skip_21", tr.shift(21) / tr.shift(252) - 1.0
 
 
+def _log_market_cap(dates: pd.DatetimeIndex) -> pd.DataFrame:
+    """Date, Ticker, log_mcap from Sharadar DAILY. Point-in-time: shares update on SEC filing dates."""
+    d = pd.read_parquet(
+        DATA_SHARADAR_DIR / "daily.parquet",
+        columns=["ticker", "date", "marketcap"],
+        filters=[("date", "in", list(dates))],
+    )
+    d = d[d["marketcap"] > 0].drop_duplicates(["ticker", "date"], keep="last")
+    return pd.DataFrame(
+        {
+            "Date": pd.to_datetime(d["date"]).to_numpy(),
+            "Ticker": d["ticker"].astype(str).to_numpy(),
+            "log_mcap": np.log(d["marketcap"].to_numpy(dtype="float64")).astype("float32"),
+        }
+    )
+
+
 def build_pit_dataset(sample_every: int = DATASET_SAMPLE_EVERY) -> pd.DataFrame:
     tr = load_panel("tr")
     universe = load_panel("universe")
@@ -80,6 +103,9 @@ def build_pit_dataset(sample_every: int = DATASET_SAMPLE_EVERY) -> pd.DataFrame:
         fcols.append(name)
 
     px = tr.to_numpy(dtype="float64")
+    history = np.cumsum(np.isfinite(px), axis=0, dtype=np.int32)[rows, c_idx]
+    out["history_1y"] = (np.minimum(history, HISTORY_FULL_DAYS) / HISTORY_FULL_DAYS).astype("float32")
+    del history
     spy = benchmark_closeadj().reindex(dates).ffill().to_numpy()
     for h, days in HORIZONS.items():
         fwd_pos = rows + days
@@ -95,8 +121,13 @@ def build_pit_dataset(sample_every: int = DATASET_SAMPLE_EVERY) -> pd.DataFrame:
         out[f"spy_fwd_{h}"] = spy_fwd.astype("float32")
 
     before = len(out)
-    out = out.dropna(subset=fcols).reset_index(drop=True)
-    print(f"[pit] dropped {before - len(out):,} rows missing features (mostly < 1y of history)")
+    out = out.dropna(subset=SHORT_FEATURES).reset_index(drop=True)
+    print(f"[pit] dropped {before - len(out):,} rows with < ~1 month of prices")
+    print(f"[pit] {(out['history_1y'] < 1.0).sum():,} rows with < 1y of history (long features missing)")
+
+    out = out.merge(_log_market_cap(dates[sample_pos]), on=["Date", "Ticker"], how="left")
+    print(f"[pit] market cap found for {out['log_mcap'].notna().mean():.1%} of rows")
+    fcols += ["history_1y", "log_mcap"]
 
     for h in HORIZONS:
         col = f"excess_{h}"

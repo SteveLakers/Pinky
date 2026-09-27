@@ -1,5 +1,43 @@
 # Walk-Forward Results
 
+## v7_pit — four model fixes, with ablations (2026-09-27)
+
+Same price features and yardstick as v6_pit. Four fixes (each can be switched off with `--without=`):
+- **rank_label:** return models learn each day's return rank (−0.5 … +0.5), not the raw excess return.
+- **rank_features:** features are per-day percentile ranks, not z-scores (outliers can't dominate).
+- **young:** stocks with < 1y of history are scored (+103k rows, 3.5% of dev rows; avg 2,017 stocks per date vs 1,958). New feature `history_1y`.
+- **size:** `log_mcap` from Sharadar DAILY. Point-in-time: 93% of implied share-count changes fall on the SEC filing date, 0.3% at quarter end.
+
+Runs (6 in parallel, 3 threads each, ~13 min): `v7_pit` (all on), one run per fix switched off, and a control with all four off. **The control reproduces v6_pit** (Ridge IC 0.052, Ridge top 10% + buffer +8.7%); its LightGBM top-10 moved −6.2% → −3.4% from tiny differences (thread count, 415 extra rows), so **top-10 CAGRs are noisy by a few %/yr**. Compare with `scripts/compare_runs.py`.
+
+Same window: SPY +7.3%/yr, 2009–2020 +14.5%/yr. Equal-weight universe +8.0% (young stocks included).
+
+| | v6_pit | v7_pit (all 4) | no rank_label | no rank_features | no young | no size |
+|---|---|---|---|---|---|---|
+| Rank IC Ridge / LightGBM / Blend | 0.052 / 0.015 / 0.035 | 0.056 / 0.063 / 0.061 | 0.024 / 0.031 / 0.030 | 0.075 / 0.069 / 0.075 | 0.048 / 0.060 / 0.054 | 0.063 / 0.057 / 0.062 |
+| Rank IC 2009–2020, LightGBM | 0.027 | 0.075 | 0.046 | 0.076 | 0.068 | 0.069 |
+| Top 10% + buffer, Ridge (2009–2020) | **+8.7%** (+12.6%) | +6.8% (+11.8%) | +5.2% (+10.4%) | +8.4% (+12.3%) | +6.8% (+11.8%) | +6.8% (+11.9%) |
+| Top 10% + buffer, LightGBM (2009–2020) | +4.3% (+8.9%) | +7.2% (+13.5%) | +5.8% (+11.6%) | +8.1% (+13.7%) | +7.9% (+13.4%) | +6.3% (+13.1%) |
+| Top-10 + buffer, LightGBM (2009–2020) | −6.2% (−0.5%) | +7.2% (+10.8%) | +7.2% (+15.9%) | +9.5% (+18.8%) | +6.7% (+12.5%) | +0.8% (+9.7%) |
+| LightGBM top-10: big winners / crashes | 14.7% / 18.5% | 3.9% / 2.3% | 13.4% / 8.0% | 4.2% / 2.6% | — | — |
+| Acquired ≤ 6m, top-10 Ridge / LightGBM | 25.2% / 3.3% | 19.4% / 4.7% | 13.1% / 1.7% | **41.0%** / 20.8% | 20.9% / 3.1% | 15.1% / 6.0% |
+
+Big winners = monthly top-10 picks landing in the next year's top 10% (random: 10%). Crashes = trailing SPY by > 50% over the next year (random: ~7%).
+
+- **The rank label is the big lever.** It doubles rank IC (all models ~0.03 → ~0.06; LightGBM 2009–2020 0.046 → 0.075) and turns every model into a **low-volatility picker**: top-10 median volatility 14–16% vs 33% for the universe; picks rarely crash (2–4%) but rarely become big winners (3–4%, below random). LightGBM's worst drop (top-10 + buffer) −89% → −35%.
+- **Without the rank label** (raw target + the other three fixes), LightGBM is the best **winner-finder** so far: 13.4% of its top-10 become big winners (random 10%) and crashes fall from 18.5% (v6) to 8.0%. 11% of its top-10 are stocks younger than 1y. Top-10 + buffer +7.2%/yr (2009–2020 +15.9% vs SPY +14.5%, but top-10 is noisy).
+- **Rank features vs z-scores:** z-scores give higher IC in 2001–2008 only (2009–2020 is equal) and bring back the takeover-target habit (41% of Ridge's top-10 acquired within 6 months): z-scores let the model single out the ultra-calm stocks of pending deals; ranks cap them.
+- **Young stocks:** small IC gain (+0.003 to +0.008), portfolios mixed (within ±1%/yr). Also a correctness fix (new listings are visible).
+- **Size:** helps LightGBM (IC +0.006; top-10 +0.8% → +7.2%), costs Ridge IC −0.007.
+- Hindsight check (v7_pit): removing the window's top-5 winners changes LightGBM top-10 + buffer from +7.2% to +7.8%.
+
+### Honest read
+
+- **Still no edge over SPY.** v7's best broad portfolio (LightGBM top 10% + buffer) makes +7.2%/yr vs SPY +7.3%, and +13.5% vs +14.5% in 2009–2020. **No run passes the Phase 2 bar** (IC > 0.052 **and** top 10% + buffer > +8.7%).
+- The fixes make the ranking better on average and cut crashes, but the rank label points the models at calm stocks, which is the opposite of the goal (big winners). The target choice is open (user decision).
+
+---
+
 ## v6_pit — new yardstick: 2020 tested, holding buffer, wider portfolios (2026-09-26)
 
 Same models and features as v5_pit. Only the evaluation changed:

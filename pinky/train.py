@@ -14,10 +14,14 @@ v5: `pit=True` runs on the Sharadar point-in-time universe (delisted stocks incl
     Report adds precision@10 and winner capture.
 v6: same models, new yardstick — a shorter last fold tests 2020 (COVID crash), holding
     buffer, top-50 / top-10% portfolios, precision@50 / @10%.
+v7: four model fixes for pit runs (`MODEL_FIXES`; each can be switched off with `without`):
+    return models learn each day's return rank, features are per-day percentile ranks,
+    stocks younger than 1y are scored, and size (log market cap) is a feature.
 """
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import joblib
@@ -68,7 +72,7 @@ from pinky.metrics import (
     winner_capture,
 )
 from pinky.pit_dataset import DATASET_PATH, load_pit_dataset
-from pinky.preprocess import prepare_fold_frames
+from pinky.preprocess import cross_section_rank, prepare_fold_frames, ranking_feature_cols
 from pinky.universe import acquisition_dates, backtest_prices, benchmark_closeadj, sector_map
 from pinky.walkforward import WalkForwardFold, iter_walk_forward_folds
 
@@ -79,7 +83,8 @@ MODELS_DIR = PROJECT_ROOT / "models"
 DEFAULT_HORIZONS = ["1y"]
 SPLIT_YEAR = REPORT_SPLIT_YEAR
 
-VERSION = "v6"
+VERSION = "v7"
+MODEL_FIXES = ("rank_label", "rank_features", "young", "size")
 PRED_COLS = [
     "pred_excess_ridge",
     "pred_excess_lgbm",
@@ -89,10 +94,12 @@ PRED_COLS = [
 ]
 
 
-def _xy_return(df: pd.DataFrame, fcols: list[str], horizon: str):
+def _xy_return(df: pd.DataFrame, fcols: list[str], horizon: str, rank_label: bool = False):
     x = df[fcols].to_numpy(dtype=float)
-    y = df[f"excess_{horizon}"].to_numpy(dtype=float)
-    return x, y
+    y = df[f"excess_{horizon}"]
+    if rank_label:
+        y = y.groupby(df["Date"]).rank(pct=True) - 0.5
+    return x, y.to_numpy(dtype=float)
 
 
 def _xy_beat(df: pd.DataFrame, fcols: list[str], horizon: str):
@@ -235,7 +242,11 @@ def dev_rows(df: pd.DataFrame, horizon: str, calendar: pd.DatetimeIndex) -> pd.D
 
 
 def run_horizon(
-    df: pd.DataFrame, horizon: str, calendar: pd.DatetimeIndex | None = None
+    df: pd.DataFrame,
+    horizon: str,
+    calendar: pd.DatetimeIndex | None = None,
+    rank_label: bool = False,
+    zscore: bool = True,
 ) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
     """Train/eval all folds for one horizon with CS prep + tuned LightGBM."""
     rows = []
@@ -243,8 +254,8 @@ def run_horizon(
     last_models: dict = {}
 
     for fold in iter_walk_forward_folds(df, horizon, calendar=calendar):
-        train_cs, test_cs, fcols = prepare_fold_frames(fold.train, fold.test)
-        x_tr, y_tr = _xy_return(train_cs, fcols, horizon)
+        train_cs, test_cs, fcols = prepare_fold_frames(fold.train, fold.test, zscore=zscore)
+        x_tr, y_tr = _xy_return(train_cs, fcols, horizon, rank_label=rank_label)
         x_tb, y_tb = _xy_beat(train_cs, fcols, horizon)
 
         ridge, lgbm_ret = _fit_return_models(x_tr, y_tr)
@@ -539,6 +550,7 @@ def _write_summary(
     prices: pd.DataFrame | None = None,
     sectors: dict[str, str] | None = None,
     acq: pd.Series | None = None,
+    fixes: list[str] | None = None,
 ) -> None:
     exclude = exclude or []
     if universe_desc is None:
@@ -549,7 +561,7 @@ def _write_summary(
         "",
         f"Universe: {universe_desc}",
         *([f"Removed from universe (train + test): {', '.join(exclude)}."] if exclude else []),
-        "Prep: cross-sectional z-score + correlated-feature drop + regularized LightGBM.",
+        _prep_desc(fixes or []),
         "Validation: expanding walk-forward + label purge (no random splits).",
         "Baseline to beat: **Ridge**.",
         "",
@@ -600,6 +612,16 @@ def _write_summary(
     path.write_text("\n".join(lines))
 
 
+def _prep_desc(fixes: list[str]) -> str:
+    parts = [
+        "per-day percentile-rank features" if "rank_features" in fixes else "per-day z-score features",
+        "target = each day's return rank" if "rank_label" in fixes else "target = raw excess return",
+        "stocks < 1y old scored" if "young" in fixes else "stocks need 1y of history",
+        "size feature (log market cap)" if "size" in fixes else "no size feature",
+    ]
+    return "Prep: " + ", ".join(parts) + " + correlated-feature drop + regularized LightGBM."
+
+
 def _pit_universe_desc(n_stocks: int) -> str:
     return (
         f"point-in-time liquid US stocks (price ≥ ${UNIVERSE_MIN_PRICE:.0f}, "
@@ -616,7 +638,9 @@ def rewrite_summary(run_name: str, horizons: list[str] | None = None) -> Path:
     preds_by_h = {
         h: pd.read_parquet(ARTIFACTS_DIR / f"oos_preds_{h}_{run_name}.parquet") for h in horizons
     }
-    n_stocks = pd.read_parquet(DATASET_PATH, columns=["Ticker"])["Ticker"].nunique()
+    config_path = ARTIFACTS_DIR / f"run_config_{run_name}.json"
+    config = json.loads(config_path.read_text()) if config_path.exists() else {}
+    n_stocks = config.get("n_stocks") or pd.read_parquet(DATASET_PATH, columns=["Ticker"])["Ticker"].nunique()
     path = ARTIFACTS_DIR / f"walkforward_summary_{run_name}.md"
     _write_summary(
         metrics,
@@ -627,6 +651,7 @@ def rewrite_summary(run_name: str, horizons: list[str] | None = None) -> Path:
         prices=backtest_prices(),
         sectors=sector_map(),
         acq=acquisition_dates(),
+        fixes=config.get("fixes", []),
     )
     print(f"Wrote {path}")
     return path
@@ -638,22 +663,37 @@ def run_all(
     exclude: list[str] | None = None,
     tag: str = "",
     pit: bool = False,
+    without: list[str] | None = None,
 ) -> pd.DataFrame:
     """Run walk-forward training. Default focus: 1y.
 
     `exclude` drops tickers from train and test; `tag` keeps that run's outputs separate.
     `pit` uses the Sharadar point-in-time universe and only dev rows (holdout untouched).
+    Pit runs use all `MODEL_FIXES` except those in `without` (tagged `no-<fix>`).
+    Legacy runs use none of them.
     """
     horizons = horizons or list(DEFAULT_HORIZONS)
     exclude = exclude or []
+    without = without or []
+    unknown = sorted(set(without) - set(MODEL_FIXES))
+    if unknown:
+        raise ValueError(f"Unknown fixes {unknown}; expected some of {list(MODEL_FIXES)}")
+    fixes = [f for f in MODEL_FIXES if f not in without] if pit else []
     calendar = prices = sectors = universe_desc = acq = None
     if pit:
-        tag = f"pit_{tag}" if tag else "pit"
+        tag = "_".join(["pit", *([tag] if tag else []), *[f"no-{f}" for f in without]])
         df = load_pit_dataset()
         calendar = pd.DatetimeIndex(benchmark_closeadj().index)
         prices = backtest_prices()
         sectors = sector_map()
         acq = acquisition_dates()
+        if "young" not in fixes:
+            df = df[df["history_1y"] >= 1.0].drop(columns="history_1y")
+        if "size" not in fixes:
+            df = df.drop(columns="log_mcap")
+        if "rank_features" in fixes:
+            df = cross_section_rank(df, ranking_feature_cols(df))
+        df = df.reset_index(drop=True)
     else:
         df = load_dataset()
     run_name = f"{VERSION}_{tag}" if tag else VERSION
@@ -662,6 +702,7 @@ def run_all(
         print(f"[universe] removed {exclude} → {df['Ticker'].nunique()} stocks")
     if pit:
         universe_desc = _pit_universe_desc(df["Ticker"].nunique())
+        print(f"[fixes] on: {fixes or 'none'} | off: {without or 'none'}")
     parts = []
     last_by_h = {}
     preds_by_h = {}
@@ -669,7 +710,13 @@ def run_all(
     for h in horizons:
         print(f"\n=== Training horizon {h} ({run_name}) ===")
         df_h = dev_rows(df, h, calendar) if pit else df
-        metrics, last, preds = run_horizon(df_h, h, calendar=calendar)
+        metrics, last, preds = run_horizon(
+            df_h,
+            h,
+            calendar=calendar,
+            rank_label="rank_label" in fixes,
+            zscore="rank_features" not in fixes,
+        )
         parts.append(metrics)
         last_by_h[h] = last
         preds_by_h[h] = preds
@@ -683,6 +730,9 @@ def run_all(
         all_metrics.to_csv(metrics_path, index=False)
         for h, preds in preds_by_h.items():
             preds.to_parquet(ARTIFACTS_DIR / f"oos_preds_{h}_{run_name}.parquet", index=False)
+        (ARTIFACTS_DIR / f"run_config_{run_name}.json").write_text(
+            json.dumps({"version": VERSION, "fixes": fixes, "n_stocks": int(df["Ticker"].nunique())})
+        )
         summary_path = ARTIFACTS_DIR / f"walkforward_summary_{run_name}.md"
         _write_summary(
             all_metrics,
@@ -694,6 +744,7 @@ def run_all(
             prices=prices,
             sectors=sectors,
             acq=acq,
+            fixes=fixes,
         )
 
         for h, pack in last_by_h.items():

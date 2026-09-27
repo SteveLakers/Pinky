@@ -1,7 +1,7 @@
 """
 Feature prep for ranking models.
 
-1) Cross-sectional z-score by Date (grade stocks on a curve each day)
+1) Cross-sectional z-score or percentile rank by Date (grade stocks on a curve each day)
 2) Drop highly correlated features (fit on train only — no test peeking)
 """
 
@@ -56,6 +56,23 @@ def cross_section_zscore(
     return out
 
 
+def cross_section_rank(
+    df: pd.DataFrame,
+    cols: list[str] | None = None,
+) -> pd.DataFrame:
+    """
+    For each Date, percentile-rank selected columns across tickers, centered on 0 (-0.5 … +0.5).
+
+    Outliers can't dominate. Missing values become 0 (the middle of the day).
+    Uses only each day's cross-section, so it can run once before the walk-forward split.
+    """
+    out = df.copy()
+    cols = cols or ranking_feature_cols(out)
+    ranks = out[["Date", *cols]].replace([np.inf, -np.inf], np.nan).groupby("Date")[cols].rank(pct=True)
+    out[cols] = (ranks - 0.5).fillna(0.0).astype("float32")
+    return out
+
+
 def drop_correlated_features(
     train: pd.DataFrame,
     cols: list[str],
@@ -95,12 +112,15 @@ def prepare_fold_frames(
     train: pd.DataFrame,
     test: pd.DataFrame,
     corr_threshold: float = 0.92,
+    zscore: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
     """
-    Apply CS z-score to train/test, then select de-correlated feature set from train.
+    Apply CS z-score to train/test (skip with `zscore=False` if features are already
+    ranked), then select de-correlated feature set from train.
     """
     base_cols = ranking_feature_cols(train)
-    train_cs = cross_section_zscore(train, cols=base_cols)
-    test_cs = cross_section_zscore(test, cols=base_cols)
-    kept = drop_correlated_features(train_cs, base_cols, threshold=corr_threshold)
-    return train_cs, test_cs, kept
+    if zscore:
+        train = cross_section_zscore(train, cols=base_cols)
+        test = cross_section_zscore(test, cols=base_cols)
+    kept = drop_correlated_features(train, base_cols, threshold=corr_threshold)
+    return train, test, kept
