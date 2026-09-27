@@ -12,6 +12,8 @@ v4: Ridge/LightGBM rank blend + sector-capped portfolio backtest.
 v5: `pit=True` runs on the Sharadar point-in-time universe (delisted stocks included,
     weekly rows, daily calendar for folds) and never touches the 2022+ holdout.
     Report adds precision@10 and winner capture.
+v6: same models, new yardstick — a shorter last fold tests 2020 (COVID crash), holding
+    buffer, top-50 / top-10% portfolios, precision@50 / @10%.
 """
 
 from __future__ import annotations
@@ -33,13 +35,17 @@ from pinky.backtest import (
     run_backtest,
     summarize_backtest,
     top_winners,
+    with_cost,
     within_sector_ic,
     yearly_table,
 )
 from pinky.config import (
+    BACKTEST_BUFFER_MULT,
     BACKTEST_COST_BPS,
     BACKTEST_MAX_SECTOR_SHARE,
+    BACKTEST_TOP_FRAC,
     BACKTEST_TOP_N,
+    BACKTEST_WIDE_TOP_N,
     HOLDOUT_START,
     HORIZONS,
     PROJECT_ROOT,
@@ -69,7 +75,7 @@ MODELS_DIR = PROJECT_ROOT / "models"
 # Primary focus after v1 failure
 DEFAULT_HORIZONS = ["1y"]
 
-VERSION = "v5"
+VERSION = "v6"
 PRED_COLS = [
     "pred_excess_ridge",
     "pred_excess_lgbm",
@@ -285,18 +291,19 @@ def _ranking_lines(horizon: str, preds: pd.DataFrame, mom: pd.DataFrame) -> list
     top_col, fwd_col = f"top_{horizon}", f"stock_fwd_{horizon}"
     if top_col not in preds or fwd_col not in preds:
         return []
-    k, n_win = BACKTEST_TOP_N, 20
+    k, wide_k, frac, n_win = BACKTEST_TOP_N, BACKTEST_WIDE_TOP_N, BACKTEST_TOP_FRAC, 20
     mom = mom.merge(preds[["Date", "Ticker", top_col, fwd_col]], on=["Date", "Ticker"])
     avg_n = preds.groupby("Date").size().mean()
     lines = [
         f"## Finding winners `{horizon}` (out-of-sample, monthly)",
         "",
-        f"- **Precision@{k}**: share of the top-{k} picks that land in the future top 10%.",
+        "- **Precision**: share of the top picks that land in the future top 10% "
+        f"(top-{k}, top-{wide_k}, and the top {frac:.0%} of each date's stocks).",
         f"- **Winner capture**: each year's {n_win} biggest winners — share of months each "
         f"sat in the monthly top-{k}.",
         "",
-        f"| Signal | Precision@{k} | Winner capture |",
-        "|---|---|---|",
+        f"| Signal | Precision@{k} | Precision@{wide_k} | Precision@{frac:.0%} | Winner capture |",
+        "|---|---|---|---|---|",
     ]
     for name, frame, col in [
         ("LightGBM", preds, "pred_excess_lgbm"),
@@ -305,10 +312,12 @@ def _ranking_lines(horizon: str, preds: pd.DataFrame, mom: pd.DataFrame) -> list
         ("Momentum 12-1 (naive)", mom, "mom_12_1"),
     ]:
         p = precision_at_k(frame, col, top_col, k=k)
+        p_wide = precision_at_k(frame, col, top_col, k=wide_k)
+        p_frac = precision_at_k(frame, col, top_col, frac=frac)
         w = winner_capture(frame, col, fwd_col, k=k, n_winners=n_win)
-        lines.append(f"| {name} | {p:.3f} | {w:.3f} |")
+        lines.append(f"| {name} | {p:.3f} | {p_wide:.3f} | {p_frac:.3f} | {w:.3f} |")
     lines += [
-        f"| Random (expected) | 0.100 | {k / avg_n:.3f} |",
+        f"| Random (expected) | 0.100 | 0.100 | 0.100 | {k / avg_n:.3f} |",
         "",
         f"Average stocks to choose from per date: {avg_n:,.0f}.",
         "",
@@ -322,73 +331,102 @@ def _backtest_lines(
     prices: pd.DataFrame,
     sectors: dict[str, str] | None = None,
     mom: pd.DataFrame | None = None,
-) -> list[str]:
+) -> tuple[list[str], pd.DataFrame]:
+    """Report lines + one stats row per (signal, portfolio)."""
     excess_col = f"excess_{horizon}"
+    n, wide_n, frac = BACKTEST_TOP_N, BACKTEST_WIDE_TOP_N, BACKTEST_TOP_FRAC
+    cap, buf, bps_hi = BACKTEST_MAX_SECTOR_SHARE, BACKTEST_BUFFER_MULT, 25.0
+    mom = mom if mom is not None else momentum_scores(preds, prices)
+    signals = {
+        "LightGBM": (preds, "pred_excess_lgbm"),
+        "Ridge": (preds, "pred_excess_ridge"),
+        "Blend": (preds, "pred_excess_blend"),
+        "Momentum 12-1": (mom, "mom_12_1"),
+    }
+    capped = {"max_sector_share": cap}
+    buffered = {"max_sector_share": cap, "buffer_mult": buf}
+    main = f"Top-{n} + buffer"
+    portfolios = {
+        f"Top-{n} (v5 rules)": {"top_n": n},
+        f"Top-{n}": {"top_n": n, **capped},
+        main: {"top_n": n, **buffered},
+        f"Top-{wide_n}": {"top_n": wide_n, **capped},
+        f"Top-{wide_n} + buffer": {"top_n": wide_n, **buffered},
+        f"Top {frac:.0%}": {"top_frac": frac, **capped},
+        f"Top {frac:.0%} + buffer": {"top_frac": frac, **buffered},
+    }
+    bts = {
+        (sig, port): run_backtest(frame, col, prices, sectors=sectors, **kw)
+        for sig, (frame, col) in signals.items()
+        for port, kw in portfolios.items()
+    }
+    stats = {key: summarize_backtest(bt) for key, bt in bts.items()}
+    stats_hi = {key: summarize_backtest(with_cost(bt, bps_hi)) for key, bt in bts.items()}
+
+    ref = stats[("Ridge", main)]
     lines = [
         f"## Portfolio backtest `{horizon}` signal (out-of-sample, tradeable)",
         "",
-        f"- Monthly rebalance, equal-weight top-{BACKTEST_TOP_N}, "
-        f"cost **{BACKTEST_COST_BPS:.0f} bps per side** on real turnover.",
-        f"- Signal is the `{horizon}` forecast; holding is 1 month (re-ranked monthly).",
-        f"- **Capped** = no sector above {100 * BACKTEST_MAX_SECTOR_SHARE:.0f}% of picks.",
+        f"- Monthly rebalance, equal weight, cost **{BACKTEST_COST_BPS:.0f} bps per side** on "
+        f"real turnover; the {bps_hi:.0f} bps figure re-prices the same trades.",
+        f"- Signal is the `{horizon}` forecast, re-ranked monthly.",
+        f"- Sector cap: no sector above {cap:.0%} of picks (all rows except *v5 rules*).",
+        f"- **Buffer**: a holding is kept while it ranks in the top {buf:g}× N "
+        f"(top-{n} → top {buf * n:.0f}).",
+        f"- **Top {frac:.0%}**: the top {frac:.0%} of each date's stocks "
+        "(size follows the universe).",
         "- **Blend** = average of daily Ridge and LightGBM percentile ranks.",
         "",
-        "| Model | Cost bps | CAGR net | CAGR SPY | CAGR univ EW | Months > SPY | "
-        "Turnover/mo | Cost drag/yr | Max DD | Max DD SPY |",
-        "|---|---|---|---|---|---|---|---|---|---|",
-    ]
-    mom = mom if mom is not None else momentum_scores(preds, prices)
-    winners = set(top_winners(prices, preds["Date"].min(), preds["Date"].max()))
-    cap = BACKTEST_MAX_SECTOR_SHARE
-    signals = [
-        ("LightGBM", preds, "pred_excess_lgbm"),
-        ("Ridge", preds, "pred_excess_ridge"),
-        ("Blend", preds, "pred_excess_blend"),
-        ("Momentum 12-1 (naive)", mom, "mom_12_1"),
-    ]
-    runs = [(name, frame, col, None, None) for name, frame, col in signals]
-    runs += [(f"{name} capped", frame, col, None, cap) for name, frame, col in signals]
-    runs += [
-        (f"{name} ex top-5 winners", frame, col, winners, None) for name, frame, col in signals
-    ]
-    runs += [
-        (f"{name} capped ex top-5 winners", frame, col, winners, cap)
-        for name, frame, col in signals
-    ]
-    main_bt = {}
-    for model, frame, col, excl, max_share in runs:
-        for bps in [BACKTEST_COST_BPS, 25.0]:
-            bt = run_backtest(
-                frame,
-                col,
-                prices,
-                cost_bps=bps,
-                exclude=excl,
-                max_sector_share=max_share,
-                sectors=sectors,
-            )
-            s = summarize_backtest(bt)
-            if bps == BACKTEST_COST_BPS:
-                main_bt[model] = bt
-            lines.append(
-                f"| {model} | {bps:.0f} | {_fmt_pct(s['cagr_net'])} | {_fmt_pct(s['cagr_spy'])} | "
-                f"{_fmt_pct(s['cagr_universe_ew'])} | {100 * s['months_beat_spy']:.0f}% | "
-                f"{100 * s['avg_monthly_turnover']:.0f}% | {_fmt_pct(-s['annual_cost_drag'])} | "
-                f"{_fmt_pct(s['max_dd_net'])} | {_fmt_pct(s['max_dd_spy'])} |"
-            )
-    s = summarize_backtest(main_bt["LightGBM"])
-    lines += [
-        "",
-        f"Window: {s['start']} → {s['end']} ({s['months']} months). "
+        f"Window: {ref['start']} → {ref['end']} ({ref['months']} months). "
         "Trades fill at next day's close.",
-        f"Top-5 winners over the window (hindsight stress test): {', '.join(sorted(winners))}.",
+        f"Same window — SPY: CAGR {_fmt_pct(ref['cagr_spy'])}, max DD "
+        f"{_fmt_pct(ref['max_dd_spy'])}. Equal-weight universe: CAGR "
+        f"{_fmt_pct(ref['cagr_universe_ew'])}.",
         "",
     ]
+    header = "| Portfolio | " + " | ".join(signals) + " |"
+    rule = "|---|" + "---|" * len(signals)
+    tables = [
+        (
+            f"CAGR net of {BACKTEST_COST_BPS:.0f} bps ({bps_hi:.0f} bps in brackets)",
+            lambda k: f"{_fmt_pct(stats[k]['cagr_net'])} ({_fmt_pct(stats_hi[k]['cagr_net'])})",
+        ),
+        ("Months beating SPY", lambda k: f"{100 * stats[k]['months_beat_spy']:.0f}%"),
+        (
+            "Turnover per month (buys + sells)",
+            lambda k: f"{100 * stats[k]['avg_monthly_turnover']:.0f}%",
+        ),
+        ("Max drawdown", lambda k: _fmt_pct(stats[k]["max_dd_net"])),
+    ]
+    for title, cell in tables:
+        lines += [f"### {title}", "", header, rule]
+        for port in portfolios:
+            lines.append(f"| {port} | " + " | ".join(cell((sig, port)) for sig in signals) + " |")
+        lines.append("")
 
-    for model in ["LightGBM capped", "Blend capped"]:
-        yt = yearly_table(main_bt[model])
+    winners = set(top_winners(prices, preds["Date"].min(), preds["Date"].max()))
+    lines += [
+        f"### {main} without the window's top-5 winners (hindsight stress test)",
+        "",
+        f"Removed: {', '.join(sorted(winners))}.",
+        "",
+        "| Signal | CAGR net | CAGR net, winners removed |",
+        "|---|---|---|",
+    ]
+    for sig, (frame, col) in signals.items():
+        bt = run_backtest(
+            frame, col, prices, exclude=winners, sectors=sectors, **portfolios[main]
+        )
+        lines.append(
+            f"| {sig} | {_fmt_pct(stats[(sig, main)]['cagr_net'])} | "
+            f"{_fmt_pct(summarize_backtest(bt)['cagr_net'])} |"
+        )
+    lines.append("")
+
+    for sig in ["Ridge", "LightGBM"]:
+        yt = yearly_table(bts[(sig, main)])
         lines += [
-            f"### {model} by year (net of {BACKTEST_COST_BPS:.0f} bps)",
+            f"### {sig}, {main}, by year (net of {BACKTEST_COST_BPS:.0f} bps)",
             "",
             "| Year | Net | SPY | Univ EW | Net − SPY |",
             "|---|---|---|---|---|",
@@ -400,18 +438,34 @@ def _backtest_lines(
             )
         lines.append("")
 
-    for model in ["LightGBM", "LightGBM capped", "Blend capped"]:
-        share = pick_sector_share(main_bt[model], sectors)
-        lines += [f"### {model} average pick share by sector", ""]
+    for sig in ["Ridge", "LightGBM"]:
+        share = pick_sector_share(bts[(sig, main)], sectors)
+        lines += [f"### {sig}, {main}: average pick share by sector", ""]
         lines += [f"- {sec}: {100 * v:.0f}%" for sec, v in share.items()]
         lines.append("")
 
-    for name, col in [("LightGBM", "pred_excess_lgbm"), ("Blend", "pred_excess_blend")]:
+    for name, col in [
+        ("LightGBM", "pred_excess_lgbm"),
+        ("Ridge", "pred_excess_ridge"),
+        ("Blend", "pred_excess_blend"),
+    ]:
         wic = within_sector_ic(preds, col, excess_col, sectors)
         lines += [f"### {name} rank IC inside each sector (`{horizon}`)", ""]
         lines += [f"- {sec}: {v:.3f}" for sec, v in wic.items()]
         lines.append("")
-    return lines
+
+    table = pd.DataFrame(
+        [
+            {
+                "signal": sig,
+                "portfolio": port,
+                **stats[(sig, port)],
+                f"cagr_net_{bps_hi:.0f}bps": stats_hi[(sig, port)]["cagr_net"],
+            }
+            for sig, port in bts
+        ]
+    )
+    return lines, table
 
 
 def _write_summary(
@@ -477,7 +531,9 @@ def _write_summary(
         for horizon, preds in preds_by_h.items():
             mom = momentum_scores(preds, prices)
             lines += _ranking_lines(horizon, preds, mom)
-            lines += _backtest_lines(horizon, preds, prices, sectors, mom)
+            bt_lines, bt_table = _backtest_lines(horizon, preds, prices, sectors, mom)
+            lines += bt_lines
+            bt_table.to_csv(path.parent / f"backtest_stats_{horizon}_{run_name}.csv", index=False)
 
     path.write_text("\n".join(lines))
 

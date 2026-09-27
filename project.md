@@ -7,28 +7,39 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-09-26**, end of session. Phase 1 code commit: `c0cdfe7`.
+Last updated **2026-09-26**, late session. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): see `git log`.
 
 **State**
-- Phase 1 (honest evaluation) is **done**. Phase 2 has **not started**.
-- Honest result: the price-only model has **no reliable edge** (Ridge ≈ market, LightGBM loses money). Details in Key findings.
-- 13 local commits are **not pushed** (check: `git log origin/main..main --oneline`). Push only when the user says.
+- Phase 1 (honest evaluation): **done**.
+- Phase 2 **step 1 — new yardstick (v6_pit): done.** Same price-only models; 2020 now tested; holding buffer; top-50 / top 10% portfolios. Still **no reliable edge** (see Key findings).
+- **Next, in order (all approved by the user):**
+  1. **Update the showcase** with v6_pit numbers (user chose "after step 1"). Lead with the honest result.
+  2. **Step 2 — the four model fixes** → compare to v6_pit.
+  3. **Step 3 — company data batch 1** → compare to step 2.
+- Local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
-**Waiting on the user — ask these first, don't assume answers**
-1. Which Phase 2 model fixes to add (list under Roadmap). Recommended: all four.
-2. Showcase page still shows the old inflated +41%. Update now (recommended), after Phase 2, or leave?
-3. OK to push to GitHub?
+**User decisions (2026-09-26)**
+- Phase 2 model fixes: **all four approved** (list under Roadmap).
+- Evaluation fixes approved and done in v6_pit: holding buffer, 2020 test block, top-50 / top 10% reports.
+- User wants **company data features**, not just price — that is the core of Phase 2.
+- Build **step by step** so we can tell what helps. Showcase update **after step 1**. GitHub: **don't push yet**.
+- User confirmed the highest model for Phase 2 (2026-09-26). New chats: ask again before hard work (Rule 10).
 
-**Before Phase 2 work:** it's a hard task → ask the user to confirm they're on the **highest model** (Rule 10).
+**Step 2 notes (model fixes)**
+- Fixes go in `pit_dataset.py` / `preprocess.py` / `train.py`.
+- Size feature: log market cap from `data/sharadar/daily.parquet` (`marketcap`, daily).
+- Bump `train.VERSION` (v7) so outputs don't overwrite v6_pit.
 
-**Proposed Phase 2 first batch (confirm with user before building)**
+**Step 3 notes (company data batch 1)**
 1. New `pinky/fundamentals.py`: load `data/sharadar/fundamentals.parquet`, **ARQ + ART rows only**. Attach to dataset rows with `merge_asof` on the **filing `date`** (backward, by ticker) → point-in-time.
 2. Growth + revenue acceleration features: quarterly revenue growth vs the same quarter last year, TTM revenue growth, acceleration (this quarter's YoY growth minus last quarter's), gross-profit growth, days since last filing.
    - Find "same quarter last year" by `calendardate`, not by row offset (filings can be missing or late).
-3. Size feature: log market cap from `data/sharadar/daily.parquet` (`marketcap`, daily).
-4. Approved model fixes go in `pit_dataset.py` / `preprocess.py` / `train.py`.
-5. Run `train_walkforward.py --pit` under a new tag; compare to v5_pit; keep only what helps.
-- **Bar to beat (v5_pit):** Ridge +7.6%/yr, rank IC 0.066; SPY +6.9%/yr (2001–2020).
+3. Run `train_walkforward.py --pit` under a new version; compare to the previous step; keep only what helps.
+
+**Bar to beat (v6_pit: Jan 2001 → Jan 2021; SPY +7.3%/yr, equal-weight universe +8.2%/yr)**
+- Ridge rank IC **0.052**; Ridge top 10% + buffer **+8.7%/yr** (+7.8% at 25 bps); Ridge top-10 + buffer +8.3%/yr.
+- Also check: 2009–2020 vs SPY (Ridge trails: +12.6% vs +14.5%/yr) and the takeover share of top picks (Ridge top-10: 25%; base rate 2.2%).
+- Per-portfolio numbers: `artifacts/backtest_stats_1y_v6_pit.csv`.
 - Never touch the 2022+ holdout until the final test.
 
 **Data facts for Phase 2**
@@ -52,7 +63,8 @@ Last updated **2026-09-26**, end of session. Phase 1 code commit: `c0cdfe7`.
 - Sharadar tickers are unique (reused symbols get a suffix, e.g. `CNO1`).
 - ~195 of 2.8M rows show one-day jumps > 100% on tiny stocks (likely split glitches); left in for the baseline.
 - Size: panels are 7,227 days × 17,340 stocks. Dataset build peaks ~14 GB RAM (machine: 48 GB, 18 cores, 1.3 TB free).
-- Untracked `data/reference/` and `graphify-out/2026-09-2*/` come from other chats — leave them alone.
+- Untracked `data/reference/` comes from another chat — leave it alone.
+- `graphify update` backs up the previous graph into a dated folder (`graphify-out/YYYY-MM-DD/`, untracked). Don't commit them.
 - API key safety: never print `.env`. Before a commit, check the staged diff with a count-only `grep -c -F` for the key.
 
 ## Rules (always on)
@@ -85,6 +97,23 @@ Also: **no push** until the user says; **training only when the user says**.
 - Data budget flexible (paying for Sharadar). Lots of time and compute.
 
 ## Key findings
+
+### New yardstick — v6_pit (2026-09-26)
+
+Same price-only models as v5_pit. 2020 now tested (20 folds, backtest Jan 2001 → Jan 2021), holding buffer, wider portfolios. SPY +7.3%/yr, equal-weight universe +8.2%/yr.
+
+| CAGR net of 10 bps (25 bps) | LightGBM | Ridge | Momentum 12-1 |
+|---|---|---|---|
+| Top-10 + buffer | −6.2% (−8.5%) | +8.3% (+5.9%) | −1.6% (−2.7%) |
+| Top-50 + buffer | +2.0% (+0.2%) | +7.7% (+5.9%) | +3.6% (+2.6%) |
+| Top 10% + buffer | +4.3% (+3.1%) | **+8.7% (+7.8%)** | +7.0% (+6.2%) |
+
+- **Still no reliable edge.** Ridge's lead is all from 2001–2008. **2009–2020: Ridge (top 10% + buffer) +12.6%/yr vs SPY +14.5%.**
+- **Ridge's top-10 are mostly takeover targets:** 25% get acquired within 6 months (base rate 2.2%). Calm, steady "pending deal" stocks = accidental merger arbitrage, not winner-finding.
+- **2020 broke every model:** rank IC −0.17 to −0.22 that year. Mean Ridge IC 0.066 → 0.052.
+- **Buffer:** big help for top 10% (turnover 103% → 45%/month); little help for top-10, because top picks fall to a median rank of ~168 within a month (the signal jumps around).
+- Ridge finds fewer big winners than random (precision 0.06–0.08 vs 0.10). Momentum finds the most (0.15–0.17) but concentrated momentum crashes (−84% to −91% drawdowns).
+- Full report: `artifacts/walkforward_summary_v6_pit.md`. History: `docs/WALKFORWARD_RESULTS.md`.
 
 ### Honest baseline — v5_pit (2026-09-26)
 
@@ -124,7 +153,9 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 
 **Phase 1 — honest evaluation: done.** Sharadar pull, point-in-time universe, delisting-aware labels, weekly dataset, top-decile label, precision@10 + winner capture, locked holdout, honest re-score (v5_pit).
 
-**Phase 2 model fixes (from Phase 1 findings — need user OK):**
+**Phase 2 step 1 — evaluation fixes: done (v6_pit).** Holding buffer, 2020 test block, top-50 / top 10% reports.
+
+**Phase 2 model fixes (from Phase 1 findings — all four approved 2026-09-26):**
 - Train on each day's **return rank** instead of raw return (a few +5,000% stocks pull LightGBM toward lottery tickets).
 - Scale features by **daily rank** instead of z-score (one bad tick can squash a whole day).
 - Let stocks **without 1y of history** be scored (so a new PLTR isn't invisible for a year).
@@ -146,9 +177,11 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 
 ## Backtest defaults
 
-- Monthly rebalance, equal-weight top-10, **10 bps per side** (also reported at 25 bps).
-- Sector cap 60% of picks (`BACKTEST_MAX_SECTOR_SHARE`). Signal at day D close, trade at D+1 close.
-- Signals compared: LightGBM, Ridge, Blend (avg daily rank), naive 12-1 momentum. Settings: `pinky/config.py` (`BACKTEST_*`).
+- Monthly rebalance, equal weight, **10 bps per side** (25 bps re-prices the same trades via `backtest.with_cost`).
+- Portfolios: top-10, top-50, top 10% of each date's stocks; each with and without the **holding buffer** (keep a holding while it ranks in the top 3× N, `BACKTEST_BUFFER_MULT`). Main comparison rows: **top-10 + buffer** and **top 10% + buffer**.
+- Sector cap 60% of picks (`BACKTEST_MAX_SECTOR_SHARE`) on all rows except "v5 rules". Signal at day D close, trade at D+1 close.
+- Walk-forward: 1-year test folds; the last fold may be shorter (≥ 63 days, `WF_MIN_LAST_TEST_DAYS`) so 2020 is tested.
+- Signals compared: LightGBM, Ridge, Blend (avg daily rank), naive 12-1 momentum. Settings: `pinky/config.py` (`BACKTEST_*`, `WF_*`).
 
 ## Repo layout
 
@@ -160,12 +193,13 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - `pinky/walkforward.py` — expanding walk-forward folds + label purge (`calendar` param)
 - `pinky/train.py` — Ridge / LightGBM / Blend, report, `pit=True` and `exclude` runs, `dev_rows`
 - `pinky/metrics.py` — IC, top-N, precision@k, winner capture, calibration
-- `pinky/backtest.py` — monthly top-N backtest, costs, sector cap (`sectors` param), stress tests
+- `pinky/backtest.py` — monthly top-N / top-fraction backtest, costs, sector cap (`sectors` param), holding buffer, stress tests
 - Legacy (128 stocks, yfinance): `data_pull.py`, `raw_io.py`, `features.py`, `labels.py`, `dataset.py`
 - `scripts/` — `pull_sharadar`, `train_walkforward`, `build_showcase`, plus legacy build scripts
 - `showcase/index.html` — one-page visual (offline). Still shows the old v4 numbers.
 - `data/sharadar/` (~6 GB, gitignored, never share) — tables (`*.parquet`), `zips/`, `panels/` (Date × Ticker), `spy.parquet`, `derived/pit_dataset.parquet`
-- `artifacts/`, `models/` — outputs (gitignored). `docs/` — `WALKFORWARD_RESULTS.md`, `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`
+- `artifacts/`, `models/` — outputs (gitignored). Per run: `walkforward_summary_<run>.md`, `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`. `models/1y_pit/` holds the latest pit run's last-fold models (overwritten each run).
+- `docs/` — `WALKFORWARD_RESULTS.md`, `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`
 - `AGENTS.md`, `.cursor/rules/` — agent instructions. `graphify-out/` — knowledge graph.
 
 ## Commands
@@ -175,7 +209,8 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
   1. Pull: `python scripts/pull_sharadar.py` (~10 min, needs network)
   2. Universe panels: `python -m pinky.universe` (~1 min)
   3. Dataset: `python -m pinky.pit_dataset` (~1 min)
-  4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min)
+  4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min; output name = `train.VERSION` + `_pit`, currently `v6_pit`)
+  - stdout is buffered when redirected to a file → use `python -u` to watch fold progress in a log.
 - Legacy: `pull_data.py` → `build_features.py` → `build_labels.py` → `build_dataset.py` → `train_walkforward.py` (`--ex-winners` drops hindsight winners)
 - Showcase: `python scripts/build_showcase.py`
 - GitHub (private): https://github.com/steveonshit/Pinky (`origin/main`) — push only when the user says.

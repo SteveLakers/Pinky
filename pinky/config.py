@@ -24,6 +24,7 @@ HORIZONS = {
 WF_MIN_TRAIN_DAYS = 504   # ~2y trading days before first test
 WF_TEST_DAYS = 252        # ~1y test fold
 WF_STEP_DAYS = 252        # slide forward ~1y per fold
+WF_MIN_LAST_TEST_DAYS = 63  # last fold may be shorter (>= ~3 months) so recent data is tested
 
 
 # How far back to pull daily bars (enough room for 2y labels + features later)
@@ -109,6 +110,11 @@ BACKTEST_TOP_N = 10          # equal-weight top-N picks
 BACKTEST_COST_BPS = 10.0     # cost per side (buy or sell), 1 bp = 0.01%
 BACKTEST_REBALANCE = "M"     # monthly
 BACKTEST_MAX_SECTOR_SHARE = 0.60  # max share of picks from one sector (0.60 of 10 = 6 names)
+# Holding buffer: keep a holding until it drops out of the top BUFFER_MULT x N
+# (top-10 -> kept while ranked in the top 30). Fixed up front, not tuned on results.
+BACKTEST_BUFFER_MULT = 3.0
+BACKTEST_WIDE_TOP_N = 50     # wider portfolio for a less noisy read of the signal
+BACKTEST_TOP_FRAC = 0.10     # top-decile portfolio (size varies with the universe)
 
 # Back-compat alias used by older scripts/imports
 STARTER_STOCKS = UNIVERSE_STOCKS

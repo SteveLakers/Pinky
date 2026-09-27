@@ -1,5 +1,45 @@
 # Walk-Forward Results
 
+## v6_pit — new yardstick: 2020 tested, holding buffer, wider portfolios (2026-09-26)
+
+Same models and features as v5_pit. Only the evaluation changed:
+- The last test fold may be shorter than a year (≥ 63 days), so **2020 (COVID crash + rebound) is now tested**. 20 folds; backtest Jan 2001 → Jan 2021 (240 months). Last dev label still ends 2021-12-31.
+- **Holding buffer:** a holding is kept while it ranks in the top 3× N (top-10 → top 30). Fixed up front, not tuned.
+- **Wider portfolios:** top-50 and top 10% (equal weight), plus precision@50 and @10%.
+- All rows use the 60% sector cap except "v5 rules".
+
+Run: `PYTHONPATH=. python scripts/train_walkforward.py --pit` → `artifacts/*_v6_pit.*` and `artifacts/backtest_stats_1y_v6_pit.csv`.
+
+Same window: SPY +7.3%/yr (max DD −52.1%); equal-weight universe +8.2%/yr.
+
+| CAGR net of 10 bps (25 bps) | LightGBM | Ridge | Blend | Momentum 12-1 |
+|---|---|---|---|---|
+| Top-10 (v5 rules) | −6.3% (−9.2%) | +9.1% (+6.1%) | +2.8% (−0.2%) | −1.3% (−3.0%) |
+| Top-10 + buffer | −6.2% (−8.5%) | +8.3% (+5.9%) | +0.7% (−1.8%) | −1.6% (−2.7%) |
+| Top-50 + buffer | +2.0% (+0.2%) | +7.7% (+5.9%) | +5.2% (+3.4%) | +3.6% (+2.6%) |
+| Top 10% + buffer | +4.3% (+3.1%) | **+8.7% (+7.8%)** | +7.2% (+6.2%) | +7.0% (+6.2%) |
+
+| Ranking | LightGBM | Ridge | Blend | Momentum 12-1 | Random |
+|---|---|---|---|---|---|
+| Mean rank IC (20 folds) | 0.015 | 0.052 | 0.035 | — | 0 |
+| Precision@10 | 0.147 | 0.079 | 0.105 | 0.167 | 0.100 |
+| Precision@10% | 0.116 | 0.060 | 0.074 | 0.149 | 0.100 |
+
+- **2020 fold:** rank IC is strongly negative for every model (Ridge −0.22, LightGBM −0.17). Mean IC drops: Ridge 0.066 → 0.052, LightGBM 0.025 → 0.015.
+- **Buffer:** small help for top-10 (Ridge turnover 154% → 124%/month, CAGR slightly lower); big help for top 10% (turnover 103% → 45%; Ridge +6.5% → +8.7%, and +4.5% → +7.8% at 25 bps).
+- **Why the buffer barely helps top-10:** a month after being picked, Ridge's dropped top-10 names sit at a median rank of 168 of ~1,960, and 26% have left the universe. The signal itself jumps around (its inputs are mostly short-term price moves).
+- **Ridge's top-10 are mostly takeover targets:** 25% are acquired within 6 months (base rate 2.2%; LightGBM 3.3%). Pending deals trade calm and steady, which is exactly what Ridge likes. This is accidental merger arbitrage, not winner-finding. Diluted in the top 10% (4.8%). Measured with Sharadar `acquisitionby` (deal completion date).
+- **Ridge's edge is all from 2001–2008.** Top 10% + buffer: 2001–2008 +3.2%/yr vs SPY −2.7%; **2009–2020 +12.6%/yr vs SPY +14.5%** (EW +13.9%). Top-10 + buffer 2009–2020: +8.5% vs +14.5%.
+- Ridge precision is below random (0.06–0.08 vs 0.10): it avoids big winners. Momentum finds the most winners (0.15–0.17), but concentrated momentum portfolios crash (max DD −84% to −91%).
+- Hindsight check: removing the window's top-5 winners (AAPL, MED, MNST, NFLX, NTES) moves CAGR by ≤ 1.2%/yr for every signal.
+
+### Honest read
+
+- **Still no reliable edge.** The best row (Ridge, top 10% + buffer, +1.4%/yr over SPY) comes from 2001–2008; since 2009 it trails SPY.
+- **Bar for Phase 2:** beat Ridge on rank IC (0.052) **and** on top 10% + buffer (+8.7%). Also check 2009–2020 vs SPY and the takeover share of top picks.
+
+---
+
 ## v5_pit — honest baseline on the point-in-time universe (2026-09-26)
 
 Same price-only model (13 stock features; 12 after the correlation drop), new data:

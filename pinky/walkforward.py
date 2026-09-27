@@ -1,7 +1,8 @@
 """
 Walk-forward folds + label-window purge.
 
-- Expanding train window, fixed-length test folds (no random splits).
+- Expanding train window, fixed-length test folds (no random splits). The last fold may
+  be shorter so the most recent data still gets tested.
 - Purge removes train rows whose forward label window overlaps the test period.
 """
 
@@ -11,7 +12,13 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from pinky.config import HORIZONS, WF_MIN_TRAIN_DAYS, WF_STEP_DAYS, WF_TEST_DAYS
+from pinky.config import (
+    HORIZONS,
+    WF_MIN_LAST_TEST_DAYS,
+    WF_MIN_TRAIN_DAYS,
+    WF_STEP_DAYS,
+    WF_TEST_DAYS,
+)
 from pinky.dataset import feature_columns
 
 
@@ -81,12 +88,14 @@ def iter_walk_forward_folds(
     test_days: int = WF_TEST_DAYS,
     step_days: int = WF_STEP_DAYS,
     calendar: pd.DatetimeIndex | None = None,
+    min_last_test_days: int = WF_MIN_LAST_TEST_DAYS,
 ):
     """
     Yield purged walk-forward folds for one horizon.
 
     Train = all rows with Date < test_start (then purged).
     Test = [test_start, test_end] and must have a non-null label for this horizon.
+    The last fold may be shorter than `test_days` (down to `min_last_test_days`).
 
     `calendar` is the daily trading calendar that all day counts refer to. Pass it when
     rows are sampled (e.g. weekly); by default the dates in `df` are the calendar.
@@ -112,9 +121,10 @@ def iter_walk_forward_folds(
     # First test starts after min_train_days of history
     test_start_pos = min_train_days
 
-    while test_start_pos + test_days <= len(calendar):
+    n_days = len(calendar)
+    while test_start_pos + min(test_days, min_last_test_days) <= n_days:
         test_start = calendar[test_start_pos]
-        test_end = calendar[test_start_pos + test_days - 1]
+        test_end = calendar[min(test_start_pos + test_days, n_days) - 1]
         train_start = calendar[0]
         train_end = calendar[test_start_pos - 1]
 

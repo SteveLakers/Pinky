@@ -68,19 +68,27 @@ def _monthly_dates(df: pd.DataFrame) -> pd.DatetimeIndex:
     return pd.DatetimeIndex(pd.Series(d, index=d).groupby(d.to_period("M")).min())
 
 
-def precision_at_k(df: pd.DataFrame, pred_col: str, top_col: str, k: int = 10) -> float:
+def precision_at_k(
+    df: pd.DataFrame,
+    pred_col: str,
+    top_col: str,
+    k: int = 10,
+    frac: float | None = None,
+) -> float:
     """
     Share of the model's top-k picks that end up in the future top decile.
 
+    `frac` uses the top fraction of each date's stocks instead of a fixed k.
     Sampled monthly. Random picking scores ~0.10 with a 10% top label.
     """
     months = set(_monthly_dates(df))
     vals = []
     for d, g in df[df["Date"].isin(months)].groupby("Date"):
         g = g.dropna(subset=[top_col])
-        if len(g) < k:
+        n = max(1, int(np.ceil(frac * len(g)))) if frac else k
+        if len(g) < n:
             continue
-        vals.append(float(g.nlargest(k, pred_col)[top_col].mean()))
+        vals.append(float(g.nlargest(n, pred_col)[top_col].mean()))
     return float(np.mean(vals)) if vals else float("nan")
 
 

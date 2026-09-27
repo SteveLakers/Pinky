@@ -2,9 +2,11 @@
 Tradeable portfolio backtest on out-of-sample (walk-forward test) predictions.
 
 - Rebalance on the first test day of each month.
-- Hold equal-weight top-N by model score until the next rebalance.
+- Hold equal-weight top-N by model score until the next rebalance
+  (N fixed, or a fraction of each date's stocks).
 - Optional sector cap: no sector may exceed `max_sector_share` of picks
   (skip to the next-best name in another sector).
+- Optional holding buffer: a holding is kept while it ranks in the top `buffer_mult` x N.
 - Costs: `cost_bps` per side on every dollar traded (buys + sells),
   using drifted weights, so only real turnover is charged.
 - Compare to SPY and to an equal-weight universe basket over the same windows.
@@ -71,10 +73,21 @@ def pick_top(
     top_n: int,
     max_sector_share: float | None = None,
     sectors: dict[str, str] | None = None,
+    held: set[str] | None = None,
+    hold_rank: int | None = None,
 ) -> list[str]:
-    """Top-N tickers by score, optionally capping names per sector."""
+    """
+    Top-N tickers by score, optionally capping names per sector.
+
+    With `held` and `hold_rank`, current holdings still ranked in the top `hold_rank`
+    are kept first; the remaining slots go to the best-ranked other names.
+    """
     ranked = g.sort_values(score_col, ascending=False)["Ticker"].tolist()
     n = min(top_n, len(ranked))
+    if held and hold_rank:
+        keep = [t for t in ranked[:hold_rank] if t in held]
+        kept = set(keep)
+        ranked = keep + [t for t in ranked if t not in kept]
     if max_sector_share is None:
         return ranked[:n]
     sectors = sectors or TICKER_SECTOR
@@ -101,11 +114,15 @@ def run_backtest(
     exclude: set[str] | None = None,
     max_sector_share: float | None = None,
     sectors: dict[str, str] | None = None,
+    top_frac: float | None = None,
+    buffer_mult: float | None = None,
 ) -> pd.DataFrame:
     """
     One row per holding period (gross, cost, net, SPY, universe, turnover).
 
     Signal at close of rebalance day D; trade at close of D+1 (no same-close fill).
+    `top_frac` holds the top fraction of each date's stocks instead of `top_n`.
+    `buffer_mult` keeps a holding while it ranks in the top `buffer_mult` x N.
     """
     calendar = prices.index
     rebal = monthly_rebalance_dates(preds["Date"])
@@ -131,7 +148,12 @@ def run_backtest(
         stock_ret = prices.loc[end, g["Ticker"]] / prices.loc[d, g["Ticker"]] - 1.0
         stock_ret = stock_ret.fillna(0.0)
 
-        picks = pick_top(g, score_col, top_n, max_sector_share, sectors)
+        n = max(1, math.ceil(top_frac * len(g))) if top_frac else top_n
+        hold_rank = math.ceil(buffer_mult * n) if buffer_mult else None
+        picks = pick_top(
+            g, score_col, n, max_sector_share, sectors,
+            held=set(prev_drift.index), hold_rank=hold_rank,
+        )
         target = pd.Series(1.0 / len(picks), index=picks)
 
         all_names = target.index.union(prev_drift.index)
@@ -167,6 +189,13 @@ def run_backtest(
         )
 
     return pd.DataFrame(rows)
+
+
+def with_cost(bt: pd.DataFrame, cost_bps: float) -> pd.DataFrame:
+    """Same trades re-priced at another cost level (picks and turnover don't depend on cost)."""
+    cost = bt["turnover"] * cost_bps / 1e4
+    net = (1.0 - cost) * (1.0 + bt["gross"]) - 1.0
+    return bt.assign(cost=cost, net=net, net_minus_spy=net - bt["spy"])
 
 
 def _cagr(period_rets: pd.Series, start: pd.Timestamp, end: pd.Timestamp) -> float:
@@ -271,6 +300,7 @@ __all__ = [
     "run_backtest",
     "summarize_backtest",
     "top_winners",
+    "with_cost",
     "within_sector_ic",
     "yearly_table",
 ]
