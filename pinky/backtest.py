@@ -191,6 +191,17 @@ def run_backtest(
     return pd.DataFrame(rows)
 
 
+def between_years(bt: pd.DataFrame, first: int | None = None, last: int | None = None) -> pd.DataFrame:
+    """Holding periods that start in [first, last] (either end open)."""
+    year = bt["start"].dt.year
+    mask = pd.Series(True, index=bt.index)
+    if first is not None:
+        mask &= year >= first
+    if last is not None:
+        mask &= year <= last
+    return bt[mask]
+
+
 def with_cost(bt: pd.DataFrame, cost_bps: float) -> pd.DataFrame:
     """Same trades re-priced at another cost level (picks and turnover don't depend on cost)."""
     cost = bt["turnover"] * cost_bps / 1e4
@@ -291,6 +302,7 @@ def within_sector_ic(
 
 
 __all__ = [
+    "between_years",
     "default_prices",
     "load_price_panel",
     "momentum_scores",

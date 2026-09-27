@@ -1,9 +1,11 @@
 """
 Build a self-contained one-page showcase for Pinky.
 
-Reads the real walk-forward predictions in `artifacts/`, re-runs the portfolio
-backtests, and writes `showcase/index.html` with every number embedded as JSON.
+Reads saved walk-forward predictions in `artifacts/` — the honest point-in-time run (`RUN`)
+plus the old 128-stock run (`OLD_RUN`) for the "why +41% was not real" section — re-runs
+the portfolio backtests, and writes `showcase/index.html` with every number embedded as JSON.
 No training, no network, no CDNs: the page renders offline with inline SVG.
+Only aggregate results are embedded (no vendor price data).
 
 Run: PYTHONPATH=. python scripts/build_showcase.py
 """
@@ -24,26 +26,38 @@ import numpy as np
 import pandas as pd
 
 from pinky.backtest import (
+    between_years,
     default_prices,
     momentum_scores,
     pick_sector_share,
     run_backtest,
     summarize_backtest,
+    with_cost,
 )
 from pinky.config import (
+    BACKTEST_BUFFER_MULT,
     BACKTEST_COST_BPS,
     BACKTEST_MAX_SECTOR_SHARE,
+    BACKTEST_TOP_FRAC,
     BACKTEST_TOP_N,
     HINDSIGHT_WINNERS,
+    HOLDOUT_START,
     PROJECT_ROOT,
+    REPORT_SPLIT_YEAR,
+    UNIVERSE_MIN_DOLLAR_VOLUME,
+    UNIVERSE_MIN_PRICE,
 )
-from pinky.labels import add_top_decile_labels
-from pinky.metrics import precision_at_k, winner_capture
+from pinky.metrics import acquired_share, precision_at_k, winner_capture
+from pinky.pit_dataset import DATASET_PATH
+from pinky.universe import acquisition_dates, backtest_prices, sector_map
 
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
 OUT_DIR = PROJECT_ROOT / "showcase"
+RUN = "v6_pit"
+OLD_RUN = "v4"
 START_CAPITAL = 10_000.0
-RANDOM_SEEDS = 20
+HIGH_COST_BPS = 25.0
+CRASH_EXCESS = -0.5  # a pick "crashes" if it trails SPY by more than 50% over the next year
 
 
 def equity_curve(bt: pd.DataFrame, col: str) -> list[dict]:
@@ -56,125 +70,196 @@ def equity_curve(bt: pd.DataFrame, col: str) -> list[dict]:
     return pts
 
 
-def ranking_metrics(preds: pd.DataFrame) -> dict:
-    """precision@10 and winner capture for LightGBM, Ridge and random picking."""
-    df = add_top_decile_labels(preds.copy(), ["1y"])
+def period_cagr(bt: pd.DataFrame, col: str, first: int | None = None, last: int | None = None) -> float:
+    b = between_years(bt, first, last)
+    years = (b["end"].iloc[-1] - b["start"].iloc[0]).days / 365.25
+    return float((1.0 + b[col]).prod() ** (1.0 / years) - 1.0)
 
-    out = {}
-    for name, col in [("lgbm", "pred_excess_lgbm"), ("ridge", "pred_excess_ridge")]:
-        out[name] = {
-            "precision_at_10": precision_at_k(df, col, "top_1y", k=BACKTEST_TOP_N),
-            "winner_capture": winner_capture(df, col, "excess_1y", k=BACKTEST_TOP_N),
+
+def max_drawdown(bt: pd.DataFrame, col: str) -> float:
+    curve = (1.0 + bt[col]).cumprod()
+    return float((curve / curve.cummax() - 1.0).min())
+
+
+def make_curve(key: str, label: str, color: str, bt: pd.DataFrame, col: str, note: str) -> dict:
+    points = equity_curve(bt, col)
+    return {
+        "key": key,
+        "label": label,
+        "color": color,
+        "note": note,
+        "points": points,
+        "final": points[-1]["v"],
+        "cagr": period_cagr(bt, col),
+        "cagr_pre": period_cagr(bt, col, last=REPORT_SPLIT_YEAR - 1),
+        "cagr_post": period_cagr(bt, col, first=REPORT_SPLIT_YEAR),
+        "max_dd": max_drawdown(bt, col),
+    }
+
+
+def skill_metrics(preds: pd.DataFrame, mom: pd.DataFrame, acq: pd.Series) -> dict:
+    """Hit rate, crash rate, buyout rate and winner capture of the monthly top-10."""
+    n = BACKTEST_TOP_N
+    preds = preds.assign(
+        crash=np.where(preds["excess_1y"].isna(), np.nan, preds["excess_1y"] < CRASH_EXCESS)
+    )
+    mom = mom.merge(
+        preds[["Date", "Ticker", "top_1y", "stock_fwd_1y", "crash"]], on=["Date", "Ticker"]
+    )
+    signals = {
+        "lgbm": (preds, "pred_excess_lgbm"),
+        "ridge": (preds, "pred_excess_ridge"),
+        "mom": (mom, "mom_12_1"),
+    }
+    out = {
+        name: {
+            "precision": precision_at_k(frame, col, "top_1y", k=n),
+            "crash": precision_at_k(frame, col, "crash", k=n),
+            "acquired": acquired_share(frame, col, acq, k=n),
+            "winner_capture": winner_capture(frame, col, "stock_fwd_1y", k=n),
         }
-
-    prec, cap = [], []
-    for seed in range(RANDOM_SEEDS):
-        df["_rand"] = np.random.default_rng(seed).random(len(df))
-        prec.append(precision_at_k(df, "_rand", "top_1y", k=BACKTEST_TOP_N))
-        cap.append(winner_capture(df, "_rand", "excess_1y", k=BACKTEST_TOP_N))
+        for name, (frame, col) in signals.items()
+    }
+    avg_n = preds.groupby("Date").size().mean()
     out["random"] = {
-        "precision_at_10": float(np.mean(prec)),
-        "winner_capture": float(np.mean(cap)),
-        "seeds": RANDOM_SEEDS,
+        "precision": precision_at_k(preds, "pred_excess_ridge", "top_1y", frac=1.0),
+        "crash": precision_at_k(preds, "pred_excess_ridge", "crash", frac=1.0),
+        "acquired": acquired_share(preds, "pred_excess_ridge", acq, frac=1.0),
+        "winner_capture": n / avg_n,
     }
     return out
 
 
-def build_data() -> dict:
-    preds = pd.read_parquet(ARTIFACTS_DIR / "oos_preds_1y_v4.parquet")
-    preds_ex5 = pd.read_parquet(ARTIFACTS_DIR / "oos_preds_1y_v4_ex5.parquet")
+def buyout_split(
+    preds: pd.DataFrame, col: str, acq: pd.Series, vol: pd.DataFrame, k: int, days: int = 183
+) -> dict:
+    """Monthly top-k picks: the ones bought out within `days` vs the rest."""
+    d = preds["Date"]
+    monthly = preds[d.isin(set(d.groupby(d.dt.to_period("M")).min()))]
+    top = monthly.sort_values(col, ascending=False).groupby("Date").head(k)
+    deal = top["Ticker"].map(acq)
+    top = top.assign(bought=(deal > top["Date"]) & (deal <= top["Date"] + pd.Timedelta(days=days)))
+    top = top.merge(vol, on=["Date", "Ticker"], how="left")
 
+    def stats(part: pd.DataFrame) -> dict:
+        excess = part["excess_1y"].dropna().astype(float)
+        return {
+            "n": int(len(part)),
+            "vol": float(part["vol_63"].median()),
+            "crash": float((excess < CRASH_EXCESS).mean()),
+            "excess": float(excess.mean()),
+        }
+
+    return {"bought": stats(top[top["bought"]]), "other": stats(top[~top["bought"]])}
+
+
+def old_results() -> dict:
+    """The original 128-stock run (survivorship-biased), for the 'what changed' section."""
+    preds = pd.read_parquet(ARTIFACTS_DIR / f"oos_preds_1y_{OLD_RUN}.parquet")
+    preds_ex5 = pd.read_parquet(ARTIFACTS_DIR / f"oos_preds_1y_{OLD_RUN}_ex5.parquet")
     prices = default_prices()
     prices_ex5 = prices.drop(columns=[t for t in HINDSIGHT_WINNERS if t in prices.columns])
-
     cap = BACKTEST_MAX_SECTOR_SHARE
-    bt_lgbm = run_backtest(preds, "pred_excess_lgbm", prices, max_sector_share=cap)
-    bt_lgbm_ex5 = run_backtest(preds_ex5, "pred_excess_lgbm", prices_ex5, max_sector_share=cap)
-    bt_ridge_ex5 = run_backtest(preds_ex5, "pred_excess_ridge", prices_ex5)
-    mom_ex5 = momentum_scores(preds_ex5, prices_ex5)
-    bt_mom_ex5 = run_backtest(mom_ex5, "mom_12_1", prices_ex5)
+    s = summarize_backtest(run_backtest(preds, "pred_excess_lgbm", prices, max_sector_share=cap))
+    s_ex5 = summarize_backtest(
+        run_backtest(preds_ex5, "pred_excess_lgbm", prices_ex5, max_sector_share=cap)
+    )
+    return {
+        "n_stocks": int(preds["Ticker"].nunique()),
+        "start": s["start"],
+        "end": s["end"],
+        "cagr": s["cagr_net"],
+        "cagr_ex5": s_ex5["cagr_net"],
+        "cagr_spy": s["cagr_spy"],
+        "winners": list(HINDSIGHT_WINNERS),
+    }
 
-    s_lgbm = summarize_backtest(bt_lgbm)
-    s_lgbm_ex5 = summarize_backtest(bt_lgbm_ex5)
-    s_ridge_ex5 = summarize_backtest(bt_ridge_ex5)
-    s_mom_ex5 = summarize_backtest(bt_mom_ex5)
 
-    # The four curves must share a period grid to be plotted on one axis.
-    for other in (bt_lgbm_ex5, bt_mom_ex5):
-        assert list(bt_lgbm["end"]) == list(other["end"]), "backtest period grids differ"
+def build_data() -> dict:
+    preds = pd.read_parquet(ARTIFACTS_DIR / f"oos_preds_1y_{RUN}.parquet")
+    prices, sectors, acq = backtest_prices(), sector_map(), acquisition_dates()
+    n, frac = BACKTEST_TOP_N, BACKTEST_TOP_FRAC
+    common = {
+        "sectors": sectors,
+        "max_sector_share": BACKTEST_MAX_SECTOR_SHARE,
+        "buffer_mult": BACKTEST_BUFFER_MULT,
+    }
+    bt_broad = run_backtest(preds, "pred_excess_ridge", prices, top_frac=frac, **common)
+    bt_ridge10 = run_backtest(preds, "pred_excess_ridge", prices, top_n=n, **common)
+    bt_lgbm10 = run_backtest(preds, "pred_excess_lgbm", prices, top_n=n, **common)
+    mom = momentum_scores(preds, prices)
+    bt_mom10 = run_backtest(mom, "mom_12_1", prices, top_n=n, **common)
+    vol = pd.read_parquet(DATASET_PATH, columns=["Date", "Ticker", "vol_63"])
+    # The curves must share a period grid to be plotted on one axis.
+    for other in (bt_ridge10, bt_lgbm10):
+        assert list(bt_broad["end"]) == list(other["end"]), "backtest period grids differ"
 
+    avg_n = float(preds.groupby("Date").size().mean())
     curves = [
-        {
-            "key": "spy",
-            "label": "SPY (S&P 500)",
-            "color": "#94a3b8",
-            "points": equity_curve(bt_lgbm, "spy"),
-            "cagr": s_lgbm["cagr_spy"],
-            "max_dd": s_lgbm["max_dd_spy"],
-            "note": "Just buying the index.",
-        },
-        {
-            "key": "lgbm",
-            "label": "Pinky · 128 stocks",
-            "color": "#22d3ee",
-            "points": equity_curve(bt_lgbm, "net"),
-            "cagr": s_lgbm["cagr_net"],
-            "max_dd": s_lgbm["max_dd_net"],
-            "note": "Looks great. Inflated by hindsight — see below.",
-        },
-        {
-            "key": "lgbm_ex5",
-            "label": "Pinky · 5 winners removed",
-            "color": "#a78bfa",
-            "points": equity_curve(bt_lgbm_ex5, "net"),
-            "cagr": s_lgbm_ex5["cagr_net"],
-            "max_dd": s_lgbm_ex5["max_dd_net"],
-            "note": "The honest version. Retrained without NVDA, SMCI, TSLA, PLTR, AVGO.",
-        },
-        {
-            "key": "mom_ex5",
-            "label": "Naive momentum · 5 winners removed",
-            "color": "#f59e0b",
-            "points": equity_curve(bt_mom_ex5, "net"),
-            "cagr": s_mom_ex5["cagr_net"],
-            "max_dd": s_mom_ex5["max_dd_net"],
-            "note": "No machine learning: just buy what went up last year.",
-        },
+        make_curve("spy", "S&P 500 (SPY)", "#94a3b8", bt_broad, "spy", "Just buying the index."),
+        make_curve(
+            "ew", "Own every stock equally", "#34d399", bt_broad, "universe_ew",
+            f"All ~{avg_n:,.0f} stocks in the universe, rebalanced monthly (no trading costs).",
+        ),
+        make_curve(
+            "ridge_broad", f"Ridge · top {frac:.0%}", "#a78bfa", bt_broad, "net",
+            "Best version so far: a simple linear model holding its top 10% of stocks.",
+        ),
+        make_curve(
+            "ridge10", f"Ridge · top {n}", "#f472b6", bt_ridge10, "net",
+            "Same model, only its 10 favorite stocks. Many are takeover targets.",
+        ),
+        make_curve(
+            "lgbm10", f"LightGBM · top {n}", "#22d3ee", bt_lgbm10, "net",
+            "The machine-learning model. It picks volatile “lottery tickets”.",
+        ),
     ]
-    for c in curves:
-        c["final"] = c["points"][-1]["v"]
 
-    sectors = pick_sector_share(bt_lgbm)
-    sector_rows = [{"sector": s, "share": float(v)} for s, v in sectors.items()]
-
+    s = summarize_backtest(bt_broad)
+    years = bt_broad["start"].dt.year
+    sector_rows = [
+        {"sector": sec, "share": float(v)} for sec, v in pick_sector_share(bt_broad, sectors).items()
+    ]
+    high_cost = {
+        key: summarize_backtest(with_cost(bt, HIGH_COST_BPS))["cagr_net"]
+        for key, bt in [("ridge_broad", bt_broad), ("ridge10", bt_ridge10), ("lgbm10", bt_lgbm10)]
+    }
     return {
         "meta": {
             "generated": pd.Timestamp.today().date().isoformat(),
-            "start": s_lgbm["start"],
-            "end": s_lgbm["end"],
-            "months": s_lgbm["months"],
+            "run": RUN,
+            "start": s["start"],
+            "end": s["end"],
+            "months": s["months"],
+            "first_year": int(years.min()),
+            "last_year": int(years.max()),
+            "split_year": REPORT_SPLIT_YEAR,
             "n_stocks": int(preds["Ticker"].nunique()),
-            "n_stocks_ex5": int(preds_ex5["Ticker"].nunique()),
-            "top_n": BACKTEST_TOP_N,
+            "avg_per_date": avg_n,
+            "per_date_min": int(preds.groupby("Date").size().min()),
+            "per_date_max": int(preds.groupby("Date").size().max()),
+            "min_price": UNIVERSE_MIN_PRICE,
+            "min_dollar_volume": UNIVERSE_MIN_DOLLAR_VOLUME,
+            "top_n": n,
+            "top_frac": frac,
+            "buffer_mult": BACKTEST_BUFFER_MULT,
             "cost_bps": BACKTEST_COST_BPS,
-            "sector_cap": cap,
+            "high_cost_bps": HIGH_COST_BPS,
+            "sector_cap": BACKTEST_MAX_SECTOR_SHARE,
             "start_capital": START_CAPITAL,
-            "hindsight_winners": list(HINDSIGHT_WINNERS),
+            "holdout_start": HOLDOUT_START,
+            "crash_excess": CRASH_EXCESS,
         },
         "curves": curves,
-        "extras": {
-            "universe_ew_128": s_lgbm["cagr_universe_ew"],
-            "universe_ew_123": s_lgbm_ex5["cagr_universe_ew"],
-            "ridge_ex5_uncapped": s_ridge_ex5["cagr_net"],
-            "months_beat_spy": s_lgbm_ex5["months_beat_spy"],
-            "turnover": s_lgbm_ex5["avg_monthly_turnover"],
-            "cost_drag": s_lgbm_ex5["annual_cost_drag"],
-        },
+        "high_cost": high_cost,
+        "old": old_results(),
         "sectors": sector_rows,
-        "metrics": {
-            "full": ranking_metrics(preds),
-            "ex5": ranking_metrics(preds_ex5),
+        "skill": skill_metrics(preds, mom, acq),
+        "top10_cagr": {
+            "lgbm": summarize_backtest(bt_lgbm10)["cagr_net"],
+            "mom": summarize_backtest(bt_mom10)["cagr_net"],
         },
+        "buyouts": buyout_split(preds, "pred_excess_ridge", acq, vol, n),
     }
 
 
@@ -307,7 +392,7 @@ HTML_TEMPLATE = """<!doctype html>
     margin-top:26px;
   }
   .reality h3{color:#fda4af; display:flex; align-items:center; gap:9px}
-  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:center; margin:20px 0 6px; max-width:520px}
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:center; margin:20px 0 6px; max-width:560px}
   .vsb{background:rgba(0,0,0,.28); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
   .vsb .big{font-size:32px; font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
   .vsb .cap{font-size:12px; color:var(--muted); margin-top:2px; line-height:1.45}
@@ -352,10 +437,8 @@ HTML_TEMPLATE = """<!doctype html>
     <span class="pill"><span class="dot"></span> Research project · not investment advice</span>
     <h1>Pinky tries to pick the stocks<br>that <span class="grad">beat the S&amp;P 500</span>.</h1>
     <p class="lead">
-      It is a machine-learning model that reads years of price history and, once a month, ranks
-      every stock it follows. It buys the top 10 and holds them until the next month.
-      It leans toward tech and tries to spot big winners early — but it still buys energy,
-      industrials and other sectors when they rank best.
+      Once a month it ranks the liquid US stocks and buys the best-ranked ones. The aim is to spot
+      big winners early. Tech is the sector we like most, but the model can buy any sector.
     </p>
     <p class="lead" style="color:#fda4af;border-left:2px solid rgba(251,113,133,.5);padding-left:14px"
        id="heroHonesty"></p>
@@ -368,12 +451,12 @@ HTML_TEMPLATE = """<!doctype html>
     <h2>Six steps, repeated every month</h2>
     <p class="lead">Nothing here is hand-picked. The model only ever sees the past when it makes a choice.</p>
     <div class="pipe">
-      <div class="step"><span class="n">01</span><b>Price data</b><span class="d">Daily prices for the stocks we follow, plus the S&amp;P 500.</span></div>
-      <div class="step"><span class="n">02</span><b>Features</b><span class="d">Turn raw prices into signals: trend, volatility, strength vs the market.</span></div>
-      <div class="step"><span class="n">03</span><b>Walk-forward training</b><span class="d">Train on the past, test on the next unseen stretch. Repeat. Never peek ahead.</span></div>
-      <div class="step"><span class="n">04</span><b>Ranking</b><span class="d">Each stock gets a score: how much it should beat the index over the next year.</span></div>
-      <div class="step"><span class="n">05</span><b>Top-10 portfolio</b><span class="d">Buy the 10 best, equal amounts, max 60% from any one sector.</span></div>
-      <div class="step"><span class="n">06</span><b>Costs &amp; scoring</b><span class="d">Charge trading costs, then compare honestly against the S&amp;P 500.</span></div>
+      <div class="step"><span class="n">01</span><b>Honest data</b><span class="d">Daily prices for every US stock, including companies that later went bust or were bought.</span></div>
+      <div class="step"><span class="n">02</span><b>Liquid universe</b><span class="d" id="stepUniverse"></span></div>
+      <div class="step"><span class="n">03</span><b>Features</b><span class="d">Price signals only, so far: trend, momentum, volatility, volume.</span></div>
+      <div class="step"><span class="n">04</span><b>Walk-forward</b><span class="d">Train on the past, test on the next unseen year. Repeat. Never peek ahead.</span></div>
+      <div class="step"><span class="n">05</span><b>Portfolio</b><span class="d">Buy the top-ranked stocks in equal amounts, max 60% per sector. Keep a holding while it stays near the top.</span></div>
+      <div class="step"><span class="n">06</span><b>Costs &amp; scoring</b><span class="d">Charge trading costs, then compare with the S&amp;P 500 and with owning every stock.</span></div>
     </div>
   </section>
 
@@ -400,7 +483,10 @@ HTML_TEMPLATE = """<!doctype html>
 
     <div class="card" style="margin-top:16px;padding:6px 18px">
       <table>
-        <thead><tr><th>Strategy</th><th>Growth per year</th><th>Worst drop</th><th>$10,000 became</th></tr></thead>
+        <thead><tr>
+          <th>Strategy</th><th>Per year</th><th id="thPre"></th><th id="thPost"></th>
+          <th>Worst drop</th><th>$10,000 became</th>
+        </tr></thead>
         <tbody id="statsRows"></tbody>
       </table>
     </div>
@@ -408,78 +494,83 @@ HTML_TEMPLATE = """<!doctype html>
 
     <!-- REALITY CHECK -->
     <div class="reality">
-      <h3>Reality check: the big number is not real</h3>
-      <p>
-        The list of stocks was chosen <em>today</em>, so it already contains companies we now know did
-        brilliantly. Remove just five of them — <span id="winnerList"></span> — from both the training
-        data and the test, and most of the advantage disappears.
-      </p>
+      <h3>Why the old +41% was not real</h3>
+      <p id="oldText"></p>
       <div class="vs">
         <div class="vsb">
           <div class="big" style="color:var(--cyan)" id="bigA"></div>
-          <div class="cap">per year, with the five winners in the list</div>
+          <div class="cap" id="capA"></div>
         </div>
         <div class="arrow">→</div>
         <div class="vsb">
-          <div class="big" style="color:var(--violet)" id="bigB"></div>
-          <div class="cap">per year, with them removed</div>
+          <div class="big" style="color:#fb7185" id="bigB"></div>
+          <div class="cap" id="capB"></div>
         </div>
       </div>
       <p class="note" id="realityNote"></p>
     </div>
   </section>
 
-  <!-- SECTORS -->
-  <section>
-    <div class="eyebrow">What it buys</div>
-    <h2>Tech-heavy, but not tech-only</h2>
-    <p class="lead" id="sectorLead"></p>
-    <div class="card" style="margin-top:22px"><div id="sectorChart"></div></div>
-    <p class="note">Average share of the 10 monthly picks, by sector. The 60% cap forces the model out of tech once it holds six tech names.</p>
-  </section>
-
-  <!-- BIG WINNERS -->
+  <!-- SKILL -->
   <section>
     <div class="eyebrow">Is it actually skill?</div>
-    <h2>Better than guessing — by a clear margin</h2>
-    <p class="lead">Two simple tests, both on the full 128-stock list. Random picking is the bar to clear.</p>
+    <h2>Finding winners is not the same as making money</h2>
+    <p class="lead" id="skillLead"></p>
     <div class="grid g2" style="margin-top:22px">
       <div class="card">
-        <h3>Hit rate of the top 10</h3>
-        <p class="note" style="margin:0 0 14px">How often a pick really lands in the best 10% of stocks for the year.</p>
+        <h3>Top-10 picks that become big winners</h3>
+        <p class="note" style="margin:0 0 14px">Share of picks that land in the best 10% of stocks over the next year.</p>
         <div id="precChart"></div>
       </div>
       <div class="card">
-        <h3>Holding the year's big winners</h3>
-        <p class="note" style="margin:0 0 14px">Share of the year's 20 best stocks the model was actually holding, month by month.</p>
+        <h3>Top-10 picks that crash</h3>
+        <p class="note" style="margin:0 0 14px">Share of picks that trail the S&amp;P 500 by more than 50% over the next year.</p>
+        <div id="crashChart"></div>
+      </div>
+      <div class="card">
+        <h3>Top-10 picks that get bought out</h3>
+        <p class="note" style="margin:0 0 14px">Share of picks whose company is acquired within 6 months.</p>
+        <div id="acqChart"></div>
+      </div>
+      <div class="card">
+        <h3>Holding the year’s biggest winners</h3>
+        <p class="note" style="margin:0 0 14px">Share of each year’s 20 best stocks held, month by month.</p>
         <div id="capChart"></div>
       </div>
     </div>
-    <p class="note" id="metricsNote"></p>
+    <p class="note" id="skillNote"></p>
+  </section>
+
+  <!-- SECTORS -->
+  <section>
+    <div class="eyebrow">What it buys</div>
+    <h2>Spread across sectors</h2>
+    <p class="lead" id="sectorLead"></p>
+    <div class="card" style="margin-top:22px"><div id="sectorChart"></div></div>
+    <p class="note">Average share of picks by sector. The 60% sector cap is a hard limit, but it rarely comes into play on a universe this wide.</p>
   </section>
 
   <!-- ROADMAP -->
   <section>
-    <div class="eyebrow">What's next</div>
-    <h2>Fix the data first, then get smarter</h2>
+    <div class="eyebrow">What’s next</div>
+    <h2>Price alone is not enough. Next: look at the companies.</h2>
     <div class="grid g3" style="margin-top:22px">
       <div class="phase">
-        <span class="tag t1">Phase 1 · in progress</span>
+        <span class="tag t1">Phase 1 · done</span>
         <h3>Honest evaluation</h3>
         <ul>
-          <li>Buy proper historical data (Sharadar), including <b>companies that went bust or got bought</b>.</li>
-          <li>Widen from 128 hand-picked names to <b>~2,500–4,000 liquid US stocks</b>, as they existed at the time.</li>
-          <li>Re-score today's model to get a baseline we can trust.</li>
+          <li>Proper historical data, including <b>companies that went bust or got bought</b>.</li>
+          <li>Liquid US stocks as they existed at the time: <b id="universeRange"></b>.</li>
+          <li>Result: price data alone gives <b>no reliable edge</b>.</li>
         </ul>
       </div>
       <div class="phase">
-        <span class="tag t2">Phase 2 · next</span>
+        <span class="tag t2">Phase 2 · in progress</span>
         <h3>Look at the companies</h3>
         <ul>
-          <li><b>Growth and revenue acceleration</b> — first, and most important.</li>
-          <li>Margins, earnings reactions, R&amp;D spending and returns on capital.</li>
-          <li>Quality and safety checks, plus insider buying.</li>
-          <li>Added one batch at a time; anything that doesn't beat the baseline gets dropped.</li>
+          <li><b>Done:</b> a stricter yardstick (2020 crash tested, holding buffer, wider portfolios).</li>
+          <li><b>Next:</b> model fixes, then <b>growth and revenue acceleration</b>.</li>
+          <li>Then margins, earnings reactions, R&amp;D, quality and insiders. Anything that doesn’t beat the baseline gets dropped.</li>
         </ul>
       </div>
       <div class="phase">
@@ -505,7 +596,7 @@ HTML_TEMPLATE = """<!doctype html>
 (function(){
   "use strict";
   var D = JSON.parse(document.getElementById('pinky-data').textContent);
-  var M = D.meta, X = D.extras;
+  var M = D.meta, O = D.old, S = D.skill;
 
   var pct = function(x, d){ return (x*100).toFixed(d===undefined?1:d) + '%'; };
   var sgn = function(x, d){ return (x>=0?'+':'') + pct(x, d); };
@@ -518,32 +609,48 @@ HTML_TEMPLATE = """<!doctype html>
   var el = function(id){ return document.getElementById(id); };
   var esc = function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); };
 
-  /* ---------- hero badges ---------- */
+  var byKey = {};
+  D.curves.forEach(function(c){ byKey[c.key] = c; });
+  var spy = byKey.spy, best = byKey.ridge_broad, lgbm = byKey.lgbm10;
+  var span = M.first_year + '–' + M.last_year;
+  var pre = M.first_year + '–' + (M.split_year - 1), post = M.split_year + '–' + M.last_year;
+
+  /* ---------- hero ---------- */
   var badges = [
-    ['Stocks followed', M.n_stocks],
+    ['Stocks tested', M.n_stocks.toLocaleString('en-US')],
+    ['Choices per month', '~' + Math.round(M.avg_per_date).toLocaleString('en-US')],
     ['Tested over', monthYear(M.start) + ' – ' + monthYear(M.end)],
     ['Rebalanced', 'Every month'],
-    ['Held at a time', M.top_n + ' stocks'],
     ['Trading cost charged', M.cost_bps + ' bps per side'],
-    ['Max per sector', Math.round(M.sector_cap*100) + '%']
+    ['Max per sector', Math.round(M.sector_cap*100) + '%'],
+    ['Final test', M.holdout_start.slice(0,4) + '+ locked, untouched']
   ];
   el('heroBadges').innerHTML = badges.map(function(b){
     return '<span class="badge">' + b[0] + ' <b>' + esc(b[1]) + '</b></span>';
   }).join('');
 
-  var byKey = {};
-  D.curves.forEach(function(c){ byKey[c.key] = c; });
-
   el('heroHonesty').textContent =
-    'Up front: these are backtests on a list of ' + M.n_stocks + ' stocks picked today, so it is stuffed ' +
-    'with companies we already know did well. The headline ' + sgn(byKey.lgbm.cagr,0) +
-    '/yr falls to ' + sgn(byKey.lgbm_ex5.cagr,0) + '/yr once five of them are taken out. ' +
+    'Honest result so far: tested on liquid US stocks as they existed at the time, including ' +
+    'companies that went bust or were bought, the current price-only model does not reliably beat ' +
+    'the S&P 500. Its best version made ' + sgn(best.cagr) + '/yr vs ' + sgn(spy.cagr) +
+    ' for the index (' + span + ')' +
+    (best.cagr_post < spy.cagr_post
+      ? ', and all of that lead came before ' + M.split_year + '; since then it trails the index. '
+      : '. ') +
     'Nothing here has been traded with real money.';
 
+  el('stepUniverse').textContent =
+    'Each day, keep US stocks above $' + M.min_price + ' that trade at least $' +
+    (M.min_dollar_volume/1e6) + 'M a day.';
+
   el('resultsLead').textContent =
-    'Every strategy below starts with $' + M.start_capital.toLocaleString('en-US') + ' on ' +
-    monthYear(M.start) + ', rebalances monthly, and pays ' + M.cost_bps +
-    ' bps of trading cost on every trade. ' + M.months + ' months in total.';
+    'Every strategy starts with $' + M.start_capital.toLocaleString('en-US') + ' in ' +
+    monthYear(M.start) + ' and rebalances monthly. The model portfolios pay ' + M.cost_bps +
+    ' bps of trading cost on every trade. ' + M.months + ' months, including the 2001–02 crash, ' +
+    '2008 and the 2020 COVID crash.';
+  el('universeRange').textContent =
+    M.per_date_min.toLocaleString('en-US') + '–' + M.per_date_max.toLocaleString('en-US') +
+    ' scored per test date';
 
   /* ---------- line chart ---------- */
   var W = 900, H = 400, PL = 62, PR = 18, PT = 18, PB = 34;
@@ -594,10 +701,12 @@ HTML_TEMPLATE = """<!doctype html>
 
     var years = {};
     pts0.forEach(function(p,i){ var y = p.t.slice(0,4); if(!(y in years)) years[y] = i; });
-    Object.keys(years).forEach(function(y){
+    Object.keys(years).forEach(function(y, j){
       var x = xAt(years[y]);
       s += '<line x1="'+x+'" y1="'+PT+'" x2="'+x+'" y2="'+(H-PB)+'" stroke="#161b26" stroke-width="1"/>';
-      s += '<text x="'+x+'" y="'+(H-PB+20)+'" text-anchor="middle" font-size="11" fill="#7b8598">'+y+'</text>';
+      if(j % 2 === 0){
+        s += '<text x="'+x+'" y="'+(H-PB+20)+'" text-anchor="middle" font-size="11" fill="#7b8598">'+y+'</text>';
+      }
     });
 
     D.curves.forEach(function(c){
@@ -665,34 +774,48 @@ HTML_TEMPLATE = """<!doctype html>
 
   el('legend').innerHTML = D.curves.map(function(c){
     return '<span class="lg"><i class="sw" style="background:'+c.color+'"></i>'+esc(c.label)+
-           ' <b style="color:'+c.color+'">'+sgn(c.cagr,0)+'/yr</b></span>';
+           ' <b style="color:'+c.color+'">'+sgn(c.cagr,1)+'/yr</b></span>';
   }).join('');
 
   /* ---------- stats table ---------- */
+  el('thPre').textContent = pre;
+  el('thPost').textContent = post;
   el('statsRows').innerHTML = D.curves.map(function(c){
     return '<tr><td><span class="tick" style="background:'+c.color+'"></span>'+esc(c.label)+
            '<span class="sub">'+esc(c.note)+'</span></td>'+
            '<td class="num" style="color:'+c.color+';font-weight:600">'+sgn(c.cagr)+'</td>'+
+           '<td class="num">'+sgn(c.cagr_pre)+'</td>'+
+           '<td class="num">'+sgn(c.cagr_post)+'</td>'+
            '<td class="num">'+pct(c.max_dd)+'</td>'+
            '<td class="num">'+money(c.final)+'</td></tr>';
   }).join('');
 
+  var beatPost = D.curves.filter(function(c){ return c.key !== 'spy' && c.cagr_post > spy.cagr_post; });
   el('statsNote').textContent =
-    '"Worst drop" is the deepest fall from a peak during the test. Every Pinky version fell harder than ' +
-    'the S&P 500 (' + pct(byKey.spy.max_dd) + '), so the extra return came with extra pain. ' +
-    'Simply owning all ' + M.n_stocks + ' stocks equally returned ' + sgn(X.universe_ew_128,0) + '/yr.';
+    '"Per year" is after ' + M.cost_bps + ' bps of trading cost per side (owning every stock is ' +
+    'shown without costs). At ' + M.high_cost_bps + ' bps, Ridge top 10% drops to ' +
+    sgn(D.high_cost.ridge_broad) + '/yr. "Worst drop" is the deepest fall from a peak. ' +
+    (beatPost.length === 0
+      ? 'Since ' + M.split_year + ', none of these strategies beat the S&P 500.'
+      : 'Since ' + M.split_year + ', only ' + beatPost.map(function(c){ return c.label; }).join(', ') +
+        ' beat the S&P 500.');
 
   /* ---------- reality check ---------- */
-  el('winnerList').textContent = M.hindsight_winners.join(', ');
-  el('bigA').textContent = sgn(byKey.lgbm.cagr,0);
-  el('bigB').textContent = sgn(byKey.lgbm_ex5.cagr,0);
-  el('realityNote').innerHTML =
-    'For scale: the S&P 500 did ' + sgn(byKey.spy.cagr,0) + '/yr, owning the remaining ' + M.n_stocks_ex5 +
-    ' stocks equally did ' + sgn(X.universe_ew_123,0) + '/yr, and plain "buy last year\\'s winners" momentum did ' +
-    sgn(byKey.mom_ex5.cagr,0) + '/yr. So the honest edge over a naive strategy is about ' +
-    ((byKey.lgbm_ex5.cagr - byKey.mom_ex5.cagr)*100).toFixed(1) +
-    ' points per year — small enough that it could be luck. A simple linear model (Ridge) actually scored higher (' +
-    sgn(X.ridge_ex5_uncapped,0) + '/yr) on the same test, which is another sign the machine learning is not doing much yet.';
+  el('oldText').textContent =
+    'The first version was tested on ' + O.n_stocks + ' stocks picked today, a list already full of ' +
+    'companies we now know did brilliantly. On that list the model made ' + sgn(O.cagr,0) + '/yr (' +
+    O.start.slice(0,4) + '–' + O.end.slice(0,4) + ', S&P 500: ' + sgn(O.cagr_spy,0) + '). Removing just ' +
+    'five known winners (' + O.winners.join(', ') + ') cut it to ' + sgn(O.cagr_ex5,0) + '/yr. ' +
+    'Then we rebuilt the test properly: the liquid US stocks as they existed at the time, failures included.';
+  el('bigA').textContent = sgn(O.cagr,0);
+  el('capA').textContent = 'per year · ' + O.n_stocks + ' stocks picked today (' +
+    O.start.slice(0,4) + '–' + O.end.slice(0,4) + ')';
+  el('bigB').textContent = sgn(lgbm.cagr,0);
+  el('capB').textContent = 'per year · the same kind of model on liquid US stocks as they existed (' + span + ')';
+  el('realityNote').textContent =
+    'This is survivorship bias: a list picked today leaves out the companies that failed. ' +
+    'Put them back and the machine-learning model loses money. The best honest version (Ridge, top 10%) ' +
+    'made ' + sgn(best.cagr) + '/yr against ' + sgn(spy.cagr) + ' for the S&P 500.';
 
   /* ---------- bar charts ---------- */
   function hBars(target, rows, opts){
@@ -713,6 +836,44 @@ HTML_TEMPLATE = """<!doctype html>
     el(target).innerHTML = s;
   }
 
+  function skillBars(target, key, aria, digits){
+    hBars(target, [
+      {label:'LightGBM (machine learning)', v:S.lgbm[key],  text:pct(S.lgbm[key], digits),  color:'#22d3ee'},
+      {label:'Ridge (simple model)',        v:S.ridge[key], text:pct(S.ridge[key], digits), color:'#f472b6'},
+      {label:'Momentum (buy last year’s winners)', v:S.mom[key], text:pct(S.mom[key], digits), color:'#f59e0b'},
+      {label:'Random picking',              v:S.random[key], text:pct(S.random[key], digits), color:'#4b5566'}
+    ], {labelWidth:290, aria:aria});
+  }
+  skillBars('precChart', 'precision', 'Share of top-10 picks that become big winners', 0);
+  skillBars('crashChart', 'crash', 'Share of top-10 picks that crash', 0);
+  skillBars('acqChart', 'acquired', 'Share of top-10 picks that get bought out', 1);
+  skillBars('capChart', 'winner_capture', 'Share of the year’s biggest winners held', 1);
+
+  var vsRandom = function(a, b, more, fewer){ return a > b ? more : fewer; };
+  var T = D.top10_cagr, B = D.buyouts;
+  el('skillLead').textContent =
+    'LightGBM and plain momentum find more big winners than random picking (' + pct(S.lgbm.precision,0) +
+    ' and ' + pct(S.mom.precision,0) + ' vs ' + pct(S.random.precision,0) + '), but they also pick far ' +
+    'more stocks that crash (' + pct(S.lgbm.crash,0) + ' and ' + pct(S.mom.crash,0) + ' vs ' +
+    pct(S.random.crash,0) + '). Their top-10 portfolios made ' + sgn(T.lgbm) + ' and ' + sgn(T.mom) +
+    ' a year. Ridge crashes ' +
+    vsRandom(S.ridge.crash, S.random.crash, 'a bit more often than random', 'less often than random') +
+    ' (' + pct(S.ridge.crash,0) + ' vs ' + pct(S.random.crash,0) + ') and finds ' +
+    vsRandom(S.ridge.precision, S.random.precision, 'more', 'fewer') + ' big winners than random (' +
+    pct(S.ridge.precision,0) + ' vs ' + pct(S.random.precision,0) + '). And ' + pct(S.ridge.acquired,0) +
+    ' of its favorite stocks get bought ' +
+    'out within 6 months (' + pct(S.random.acquired,1) + ' for a random stock). A company with a deal ' +
+    'pending barely moves (typical volatility ' + pct(B.bought.vol,0) + ' vs ' + pct(B.other.vol,0) +
+    ' for its other picks), and Ridge likes calm stocks. Those picks ' +
+    vsRandom(B.bought.crash, B.other.crash, 'crash more', 'crash less') + ' (' + pct(B.bought.crash,0) +
+    ' vs ' + pct(B.other.crash,0) + '), but on average they return ' + sgn(B.bought.excess) +
+    ' vs the S&P 500 over the next year: a safe place to wait, not a way to find big winners.';
+  el('skillNote').textContent =
+    'All four tests use each month’s top 10 picks, ' + span + '. "Random picking" is what choosing ' +
+    'stocks at random would score on average. Buyouts are checked with later deal dates, so they are ' +
+    'only a diagnostic, never an input to the model.';
+
+  /* ---------- sectors ---------- */
   var secMax = D.sectors[0].share;
   hBars('sectorChart', D.sectors.map(function(r){
     return {
@@ -721,41 +882,25 @@ HTML_TEMPLATE = """<!doctype html>
       text: pct(r.share,0),
       color: r.sector.indexOf('Tech') === 0 ? '#22d3ee' : '#3f7f8f'
     };
-  }), {max: secMax*1.15, labelWidth: 150, aria: 'Average share of picks by sector'});
+  }), {max: secMax*1.15, labelWidth: 190, aria: 'Average share of picks by sector'});
 
   var top = D.sectors[0], second = D.sectors[1];
+  var tech = D.sectors.filter(function(r){ return r.sector.indexOf('Tech') === 0; })[0];
   el('sectorLead').textContent =
-    'On average ' + pct(top.share,0) + ' of the monthly picks are ' + top.sector +
-    ' names, with ' + second.sector + ' the next biggest at ' + pct(second.share,0) +
-    '. A hard 60% cap stops the portfolio from becoming one big tech bet.';
-
-  var mf = D.metrics.full;
-  hBars('precChart', [
-    {label:'Pinky (LightGBM)', v:mf.lgbm.precision_at_10,  text:pct(mf.lgbm.precision_at_10,0),  color:'#22d3ee'},
-    {label:'Simple model (Ridge)', v:mf.ridge.precision_at_10, text:pct(mf.ridge.precision_at_10,0), color:'#a78bfa'},
-    {label:'Random picking', v:mf.random.precision_at_10, text:pct(mf.random.precision_at_10,0), color:'#4b5566'}
-  ], {labelWidth:210, aria:'Hit rate of top 10 picks'});
-
-  hBars('capChart', [
-    {label:'Pinky (LightGBM)', v:mf.lgbm.winner_capture,  text:pct(mf.lgbm.winner_capture,0),  color:'#22d3ee'},
-    {label:'Simple model (Ridge)', v:mf.ridge.winner_capture, text:pct(mf.ridge.winner_capture,0), color:'#a78bfa'},
-    {label:'Random picking', v:mf.random.winner_capture, text:pct(mf.random.winner_capture,0), color:'#4b5566'}
-  ], {labelWidth:210, aria:'Share of the year\\'s biggest winners held'});
-
-  var me = D.metrics.ex5;
-  el('metricsNote').textContent =
-    'Random picking is the average of ' + mf.random.seeds + ' random-score runs. These two tests are the ' +
-    'most encouraging thing here — but they run on the same survivorship-biased list. With the five known ' +
-    'winners removed, the hit rate is ' + pct(me.lgbm.precision_at_10,0) + ' and winner capture ' +
-    pct(me.lgbm.winner_capture,0) + '. Note the simple Ridge model does just as well, so the fancier ' +
-    'machine learning is not adding much yet.';
+    'For the best version so far (Ridge, top 10%), ' + top.sector + ' is the biggest slice at ' +
+    pct(top.share,0) + ' of picks, then ' + second.sector + ' at ' + pct(second.share,0) + '.' +
+    (tech ? ' Technology is only ' + pct(tech.share,0) + '. On price data alone, Ridge favors calm, ' +
+            'low-volatility stocks.' : '');
 
   el('footNote').textContent =
-    'Pinky is a personal experiment. All figures are computed from walk-forward out-of-sample predictions on ' +
-    M.n_stocks + ' stocks, ' + monthYear(M.start) + '–' + monthYear(M.end) + ', ' + M.months +
-    ' monthly periods, net of ' + M.cost_bps + ' bps per side. The stock list was chosen in ' +
-    M.generated.slice(0,4) + ', so it is biased toward companies that survived and did well. ' +
-    'No live money has ever been traded. Page generated ' + M.generated + '.';
+    'Pinky is a personal experiment. Apart from the old ' + O.n_stocks + '-stock test, all figures come ' +
+    'from walk-forward out-of-sample predictions, ' + monthYear(M.start) + '–' + monthYear(M.end) + ', ' +
+    M.months + ' monthly periods; model portfolios are net of ' + M.cost_bps + ' bps per side. ' +
+    'Universe: US stocks above $' + M.min_price + ' trading at least $' + (M.min_dollar_volume/1e6) +
+    'M a day, as they existed at the time, including delisted companies. Stocks need a year of price ' +
+    'history before they are scored. Data from ' + M.holdout_start.slice(0,4) + ' onward is locked for ' +
+    'one final test; the current models never used it. ' +
+    'No live money has ever been traded. Page generated ' + M.generated + ' from run ' + M.run + '.';
 })();
 </script>
 </body>
@@ -773,18 +918,26 @@ def main() -> Path:
 
     print(f"[showcase] wrote {out} ({out.stat().st_size / 1024:.0f} KB)")
     for c in data["curves"]:
-        print(f"  {c['label']:<40} CAGR {c['cagr']:+.2%}  maxDD {c['max_dd']:.1%}  ${c['final']:,.0f}")
+        print(
+            f"  {c['label']:<26} CAGR {c['cagr']:+.2%} | pre {c['cagr_pre']:+.2%} "
+            f"post {c['cagr_post']:+.2%} | maxDD {c['max_dd']:.1%} | ${c['final']:,.0f}"
+        )
+    o = data["old"]
+    print(f"  old 128-stock LightGBM {o['cagr']:+.2%} | ex5 {o['cagr_ex5']:+.2%} | SPY {o['cagr_spy']:+.2%}")
+    for name, m in data["skill"].items():
+        print(
+            f"  {name:<6} precision {m['precision']:.3f} crash {m['crash']:.3f} "
+            f"acquired {m['acquired']:.3f} winner capture {m['winner_capture']:.3f}"
+        )
+    t = data["top10_cagr"]
+    print(f"  top-10 + buffer CAGR: LightGBM {t['lgbm']:+.2%} | momentum {t['mom']:+.2%}")
+    for part, m in data["buyouts"].items():
+        print(
+            f"  Ridge top-10 {part:<7} n {m['n']} vol {m['vol']:.3f} crash {m['crash']:.3f} "
+            f"mean excess {m['excess']:+.4f}"
+        )
     tops = ", ".join("{} {:.0%}".format(r["sector"], r["share"]) for r in data["sectors"][:3])
     print("  top sectors: " + tops)
-    m = data["metrics"]["full"]
-    print(
-        f"  precision@10 lgbm {m['lgbm']['precision_at_10']:.2f} "
-        f"ridge {m['ridge']['precision_at_10']:.2f} random {m['random']['precision_at_10']:.2f}"
-    )
-    print(
-        f"  winner capture lgbm {m['lgbm']['winner_capture']:.2f} "
-        f"ridge {m['ridge']['winner_capture']:.2f} random {m['random']['winner_capture']:.2f}"
-    )
     return out
 
 

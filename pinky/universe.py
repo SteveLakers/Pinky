@@ -61,6 +61,12 @@ def sector_map() -> dict[str, str]:
     return dict(zip(t["ticker"], t["sector"].fillna("Unknown")))
 
 
+def acquisition_dates() -> pd.Series:
+    """Ticker -> completion date of its acquisition (Sharadar `acquisitionby`; first if several)."""
+    a = load("actions", columns=["date", "action", "ticker"])
+    return a[a["action"] == "acquisitionby"].groupby("ticker")["date"].min()
+
+
 def benchmark_closeadj(start: str = UNIVERSE_START) -> pd.Series:
     """SPY adjusted close from Sharadar funds (cached)."""
     path = DATA_SHARADAR_DIR / f"{BENCHMARK.lower()}.parquet"
@@ -180,6 +186,7 @@ def universe_summary(universe: pd.DataFrame) -> pd.DataFrame:
 
 __all__ = [
     "PANELS_DIR",
+    "acquisition_dates",
     "backtest_prices",
     "benchmark_closeadj",
     "build_panels",

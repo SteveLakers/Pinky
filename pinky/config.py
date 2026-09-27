@@ -115,6 +115,8 @@ BACKTEST_MAX_SECTOR_SHARE = 0.60  # max share of picks from one sector (0.60 of 
 BACKTEST_BUFFER_MULT = 3.0
 BACKTEST_WIDE_TOP_N = 50     # wider portfolio for a less noisy read of the signal
 BACKTEST_TOP_FRAC = 0.10     # top-decile portfolio (size varies with the universe)
+# Reports split backtests here: the price-only edge came from 2001–2008 and faded after.
+REPORT_SPLIT_YEAR = 2009
 
 # Back-compat alias used by older scripts/imports
 STARTER_STOCKS = UNIVERSE_STOCKS

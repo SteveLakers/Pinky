@@ -29,6 +29,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from pinky.backtest import (
+    between_years,
     default_prices,
     momentum_scores,
     pick_sector_share,
@@ -49,12 +50,14 @@ from pinky.config import (
     HOLDOUT_START,
     HORIZONS,
     PROJECT_ROOT,
+    REPORT_SPLIT_YEAR,
     UNIVERSE_MIN_DOLLAR_VOLUME,
     UNIVERSE_MIN_PRICE,
     UNIVERSE_STOCKS,
 )
 from pinky.dataset import load_dataset
 from pinky.metrics import (
+    acquired_share,
     brier_score,
     calibration_table,
     daily_rank_ic,
@@ -64,9 +67,9 @@ from pinky.metrics import (
     universe_mean_excess,
     winner_capture,
 )
-from pinky.pit_dataset import load_pit_dataset
+from pinky.pit_dataset import DATASET_PATH, load_pit_dataset
 from pinky.preprocess import prepare_fold_frames
-from pinky.universe import backtest_prices, benchmark_closeadj, sector_map
+from pinky.universe import acquisition_dates, backtest_prices, benchmark_closeadj, sector_map
 from pinky.walkforward import WalkForwardFold, iter_walk_forward_folds
 
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
@@ -74,6 +77,7 @@ MODELS_DIR = PROJECT_ROOT / "models"
 
 # Primary focus after v1 failure
 DEFAULT_HORIZONS = ["1y"]
+SPLIT_YEAR = REPORT_SPLIT_YEAR
 
 VERSION = "v6"
 PRED_COLS = [
@@ -286,7 +290,12 @@ def _fmt_pct(x: float) -> str:
     return f"{100 * x:+.1f}%"
 
 
-def _ranking_lines(horizon: str, preds: pd.DataFrame, mom: pd.DataFrame) -> list[str]:
+def _ranking_lines(
+    horizon: str,
+    preds: pd.DataFrame,
+    mom: pd.DataFrame,
+    acq: pd.Series | None = None,
+) -> list[str]:
     """Does the model find the future top decile / the year's biggest winners?"""
     top_col, fwd_col = f"top_{horizon}", f"stock_fwd_{horizon}"
     if top_col not in preds or fwd_col not in preds:
@@ -294,6 +303,7 @@ def _ranking_lines(horizon: str, preds: pd.DataFrame, mom: pd.DataFrame) -> list
     k, wide_k, frac, n_win = BACKTEST_TOP_N, BACKTEST_WIDE_TOP_N, BACKTEST_TOP_FRAC, 20
     mom = mom.merge(preds[["Date", "Ticker", top_col, fwd_col]], on=["Date", "Ticker"])
     avg_n = preds.groupby("Date").size().mean()
+    acq_head = f" Acquired ≤ 6m, top-{k} | Acquired ≤ 6m, top {frac:.0%} |" if acq is not None else ""
     lines = [
         f"## Finding winners `{horizon}` (out-of-sample, monthly)",
         "",
@@ -301,9 +311,18 @@ def _ranking_lines(horizon: str, preds: pd.DataFrame, mom: pd.DataFrame) -> list
         f"(top-{k}, top-{wide_k}, and the top {frac:.0%} of each date's stocks).",
         f"- **Winner capture**: each year's {n_win} biggest winners — share of months each "
         f"sat in the monthly top-{k}.",
+        *(
+            [
+                "- **Acquired ≤ 6m**: share of top picks whose company is bought out within "
+                "6 months (takeover targets trade calm and steady; they are not future winners)."
+            ]
+            if acq is not None
+            else []
+        ),
         "",
-        f"| Signal | Precision@{k} | Precision@{wide_k} | Precision@{frac:.0%} | Winner capture |",
-        "|---|---|---|---|---|",
+        f"| Signal | Precision@{k} | Precision@{wide_k} | Precision@{frac:.0%} | Winner capture |"
+        + acq_head,
+        "|---|---|---|---|---|" + ("---|---|" if acq is not None else ""),
     ]
     for name, frame, col in [
         ("LightGBM", preds, "pred_excess_lgbm"),
@@ -315,9 +334,18 @@ def _ranking_lines(horizon: str, preds: pd.DataFrame, mom: pd.DataFrame) -> list
         p_wide = precision_at_k(frame, col, top_col, k=wide_k)
         p_frac = precision_at_k(frame, col, top_col, frac=frac)
         w = winner_capture(frame, col, fwd_col, k=k, n_winners=n_win)
-        lines.append(f"| {name} | {p:.3f} | {p_wide:.3f} | {p_frac:.3f} | {w:.3f} |")
+        row = f"| {name} | {p:.3f} | {p_wide:.3f} | {p_frac:.3f} | {w:.3f} |"
+        if acq is not None:
+            a_k = acquired_share(frame, col, acq, k=k)
+            a_frac = acquired_share(frame, col, acq, frac=frac)
+            row += f" {a_k:.1%} | {a_frac:.1%} |"
+        lines.append(row)
+    random_row = f"| Random (expected) | 0.100 | 0.100 | 0.100 | {k / avg_n:.3f} |"
+    if acq is not None:
+        base = acquired_share(preds, "pred_excess_ridge", acq, frac=1.0)
+        random_row += f" {base:.1%} | {base:.1%} |"
     lines += [
-        f"| Random (expected) | 0.100 | 0.100 | 0.100 | {k / avg_n:.3f} |",
+        random_row,
         "",
         f"Average stocks to choose from per date: {avg_n:,.0f}.",
         "",
@@ -404,6 +432,37 @@ def _backtest_lines(
             lines.append(f"| {port} | " + " | ".join(cell((sig, port)) for sig in signals) + " |")
         lines.append("")
 
+    split_rows = []
+    lines += [
+        f"### Before and after {SPLIT_YEAR} (net of {BACKTEST_COST_BPS:.0f} bps)",
+        "",
+        "| Portfolio | Years | " + " | ".join(signals) + " | SPY | Univ EW |",
+        "|---|---|" + "---|" * (len(signals) + 2),
+    ]
+    for port in [main, f"Top {frac:.0%} + buffer"]:
+        for first, last in [(None, SPLIT_YEAR - 1), (SPLIT_YEAR, None)]:
+            sub = {sig: between_years(bts[(sig, port)], first, last) for sig in signals}
+            years = sub["Ridge"]["start"].dt.year
+            label = f"{years.min()}–{years.max()}"
+            part = {sig: summarize_backtest(b) for sig, b in sub.items()}
+            ridge = part["Ridge"]
+            lines.append(
+                f"| {port} | {label} | "
+                + " | ".join(_fmt_pct(part[sig]["cagr_net"]) for sig in signals)
+                + f" | {_fmt_pct(ridge['cagr_spy'])} | {_fmt_pct(ridge['cagr_universe_ew'])} |"
+            )
+            split_rows += [
+                {
+                    "signal": sig,
+                    "portfolio": port,
+                    "period": label,
+                    **part[sig],
+                    f"cagr_net_{bps_hi:.0f}bps": summarize_backtest(with_cost(b, bps_hi))["cagr_net"],
+                }
+                for sig, b in sub.items()
+            ]
+    lines.append("")
+
     winners = set(top_winners(prices, preds["Date"].min(), preds["Date"].max()))
     lines += [
         f"### {main} without the window's top-5 winners (hindsight stress test)",
@@ -459,11 +518,13 @@ def _backtest_lines(
             {
                 "signal": sig,
                 "portfolio": port,
+                "period": "all",
                 **stats[(sig, port)],
                 f"cagr_net_{bps_hi:.0f}bps": stats_hi[(sig, port)]["cagr_net"],
             }
             for sig, port in bts
         ]
+        + split_rows
     )
     return lines, table
 
@@ -477,6 +538,7 @@ def _write_summary(
     universe_desc: str | None = None,
     prices: pd.DataFrame | None = None,
     sectors: dict[str, str] | None = None,
+    acq: pd.Series | None = None,
 ) -> None:
     exclude = exclude or []
     if universe_desc is None:
@@ -530,12 +592,44 @@ def _write_summary(
         prices = prices.drop(columns=exclude, errors="ignore")
         for horizon, preds in preds_by_h.items():
             mom = momentum_scores(preds, prices)
-            lines += _ranking_lines(horizon, preds, mom)
+            lines += _ranking_lines(horizon, preds, mom, acq)
             bt_lines, bt_table = _backtest_lines(horizon, preds, prices, sectors, mom)
             lines += bt_lines
             bt_table.to_csv(path.parent / f"backtest_stats_{horizon}_{run_name}.csv", index=False)
 
     path.write_text("\n".join(lines))
+
+
+def _pit_universe_desc(n_stocks: int) -> str:
+    return (
+        f"point-in-time liquid US stocks (price ≥ ${UNIVERSE_MIN_PRICE:.0f}, "
+        f"≥ ${UNIVERSE_MIN_DOLLAR_VOLUME / 1e6:.0f}M/day traded), delisted stocks included, "
+        f"{n_stocks:,} distinct stocks. Rows sampled weekly. "
+        f"Dev only: labels end before {HOLDOUT_START} (holdout untouched)."
+    )
+
+
+def rewrite_summary(run_name: str, horizons: list[str] | None = None) -> Path:
+    """Rebuild a pit run's report from its saved metrics + predictions (no retraining)."""
+    horizons = horizons or list(DEFAULT_HORIZONS)
+    metrics = pd.read_csv(ARTIFACTS_DIR / f"walkforward_metrics_{run_name}.csv")
+    preds_by_h = {
+        h: pd.read_parquet(ARTIFACTS_DIR / f"oos_preds_{h}_{run_name}.parquet") for h in horizons
+    }
+    n_stocks = pd.read_parquet(DATASET_PATH, columns=["Ticker"])["Ticker"].nunique()
+    path = ARTIFACTS_DIR / f"walkforward_summary_{run_name}.md"
+    _write_summary(
+        metrics,
+        path,
+        preds_by_h,
+        run_name=run_name,
+        universe_desc=_pit_universe_desc(n_stocks),
+        prices=backtest_prices(),
+        sectors=sector_map(),
+        acq=acquisition_dates(),
+    )
+    print(f"Wrote {path}")
+    return path
 
 
 def run_all(
@@ -552,13 +646,14 @@ def run_all(
     """
     horizons = horizons or list(DEFAULT_HORIZONS)
     exclude = exclude or []
-    calendar = prices = sectors = universe_desc = None
+    calendar = prices = sectors = universe_desc = acq = None
     if pit:
         tag = f"pit_{tag}" if tag else "pit"
         df = load_pit_dataset()
         calendar = pd.DatetimeIndex(benchmark_closeadj().index)
         prices = backtest_prices()
         sectors = sector_map()
+        acq = acquisition_dates()
     else:
         df = load_dataset()
     run_name = f"{VERSION}_{tag}" if tag else VERSION
@@ -566,12 +661,7 @@ def run_all(
         df = df[~df["Ticker"].isin(exclude)].reset_index(drop=True)
         print(f"[universe] removed {exclude} → {df['Ticker'].nunique()} stocks")
     if pit:
-        universe_desc = (
-            f"point-in-time liquid US stocks (price ≥ ${UNIVERSE_MIN_PRICE:.0f}, "
-            f"≥ ${UNIVERSE_MIN_DOLLAR_VOLUME / 1e6:.0f}M/day traded), delisted stocks included, "
-            f"{df['Ticker'].nunique():,} distinct stocks. Rows sampled weekly. "
-            f"Dev only: labels end before {HOLDOUT_START} (holdout untouched)."
-        )
+        universe_desc = _pit_universe_desc(df["Ticker"].nunique())
     parts = []
     last_by_h = {}
     preds_by_h = {}
@@ -603,6 +693,7 @@ def run_all(
             universe_desc=universe_desc,
             prices=prices,
             sectors=sectors,
+            acq=acq,
         )
 
         for h, pack in last_by_h.items():

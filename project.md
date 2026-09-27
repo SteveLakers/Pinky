@@ -7,22 +7,25 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-09-26**, late session. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): see `git log`.
+Last updated **2026-09-27**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: see `git log`.
 
 **State**
 - Phase 1 (honest evaluation): **done**.
 - Phase 2 **step 1 — new yardstick (v6_pit): done.** Same price-only models; 2020 now tested; holding buffer; top-50 / top 10% portfolios. Still **no reliable edge** (see Key findings).
+- **Showcase updated to v6_pit: done** (2026-09-27). Leads with the honest result; every number is computed from saved artifacts; text checked against the data.
+- **Every report now includes both checks the user asked for:** share of top picks acquired within 6 months (top-10 and top 10%, vs base rate) and results before/after 2009 vs SPY (`REPORT_SPLIT_YEAR` in `config.py`).
 - **Next, in order (all approved by the user):**
-  1. **Update the showcase** with v6_pit numbers (user chose "after step 1"). Lead with the honest result.
-  2. **Step 2 — the four model fixes** → compare to v6_pit.
-  3. **Step 3 — company data batch 1** → compare to step 2.
+  1. **Step 2 — the four model fixes** (VERSION v7) → compare to v6_pit.
+  2. **Step 3 — company data batch 1** → compare to step 2.
+  3. After each step: rebuild the showcase (set `RUN` in `scripts/build_showcase.py`) and re-read its text. Some lines are static: after the step 2 history fix, remove "Stocks need a year of price history" from the footer.
 - Local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
 **User decisions (2026-09-26)**
 - Phase 2 model fixes: **all four approved** (list under Roadmap).
 - Evaluation fixes approved and done in v6_pit: holding buffer, 2020 test block, top-50 / top 10% reports.
 - User wants **company data features**, not just price — that is the core of Phase 2.
-- Build **step by step** so we can tell what helps. Showcase update **after step 1**. GitHub: **don't push yet**.
+- Build **step by step** so we can tell what helps. Showcase update **after step 1** (done). GitHub: **don't push yet**.
+- Add to every future report (2026-09-27): takeover share of top picks, and 2009–2020 vs SPY (done in `train.py`).
 - User confirmed the highest model for Phase 2 (2026-09-26). New chats: ask again before hard work (Rule 10).
 
 **Step 2 notes (model fixes)**
@@ -110,6 +113,7 @@ Same price-only models as v5_pit. 2020 now tested (20 folds, backtest Jan 2001 �
 
 - **Still no reliable edge.** Ridge's lead is all from 2001–2008. **2009–2020: Ridge (top 10% + buffer) +12.6%/yr vs SPY +14.5%.**
 - **Ridge's top-10 are mostly takeover targets:** 25% get acquired within 6 months (base rate 2.2%). Calm, steady "pending deal" stocks = accidental merger arbitrage, not winner-finding.
+  - Those bought-out picks: median 63-day volatility 5.5% (other picks 25.5%), 0% crash (other picks 11%), mean 1y excess vs SPY only +0.2%. Safe, but no edge.
 - **2020 broke every model:** rank IC −0.17 to −0.22 that year. Mean Ridge IC 0.066 → 0.052.
 - **Buffer:** big help for top 10% (turnover 103% → 45%/month); little help for top-10, because top picks fall to a median rank of ~168 within a month (the signal jumps around).
 - Ridge finds fewer big winners than random (precision 0.06–0.08 vs 0.10). Momentum finds the most (0.15–0.17) but concentrated momentum crashes (−84% to −91% drawdowns).
@@ -196,7 +200,7 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - `pinky/backtest.py` — monthly top-N / top-fraction backtest, costs, sector cap (`sectors` param), holding buffer, stress tests
 - Legacy (128 stocks, yfinance): `data_pull.py`, `raw_io.py`, `features.py`, `labels.py`, `dataset.py`
 - `scripts/` — `pull_sharadar`, `train_walkforward`, `build_showcase`, plus legacy build scripts
-- `showcase/index.html` — one-page visual (offline). Still shows the old v4 numbers.
+- `showcase/index.html` — one-page visual (offline), built from v6_pit artifacts by `scripts/build_showcase.py`.
 - `data/sharadar/` (~6 GB, gitignored, never share) — tables (`*.parquet`), `zips/`, `panels/` (Date × Ticker), `spy.parquet`, `derived/pit_dataset.parquet`
 - `artifacts/`, `models/` — outputs (gitignored). Per run: `walkforward_summary_<run>.md`, `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`. `models/1y_pit/` holds the latest pit run's last-fold models (overwritten each run).
 - `docs/` — `WALKFORWARD_RESULTS.md`, `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`
@@ -211,8 +215,9 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
   3. Dataset: `python -m pinky.pit_dataset` (~1 min)
   4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min; output name = `train.VERSION` + `_pit`, currently `v6_pit`)
   - stdout is buffered when redirected to a file → use `python -u` to watch fold progress in a log.
+  - Rebuild a report without retraining: `python scripts/train_walkforward.py --report-only=v6_pit` (uses the saved metrics CSV + preds parquet).
 - Legacy: `pull_data.py` → `build_features.py` → `build_labels.py` → `build_dataset.py` → `train_walkforward.py` (`--ex-winners` drops hindsight winners)
-- Showcase: `python scripts/build_showcase.py`
+- Showcase: `python scripts/build_showcase.py` (~1 min; run name = `RUN` at the top). To view it in the IDE browser, serve it: `cd showcase && python3 -m http.server 8765` (`file://` is blocked).
 - GitHub (private): https://github.com/steveonshit/Pinky (`origin/main`) — push only when the user says.
 - Graphify CLI: `/Users/hqschool/Library/Python/3.12/bin`; run `graphify update .` after code changes.
 - Tip: use one chat at a time on Pinky (parallel chats can overwrite each other's edits).

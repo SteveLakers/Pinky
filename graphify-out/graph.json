@@ -41,18 +41,6 @@
       "source_location": "L17"
     },
     {
-      "id": "pinky_dataset_load_dataset",
-      "label": "load_dataset()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "preprocess.py",
-      "file_type": "code",
-      "norm_label": "load_dataset()",
-      "source_file": "pinky/dataset.py",
-      "source_location": "L97"
-    },
-    {
       "id": "pinky_dataset_save_dataset",
       "label": "save_dataset()",
       "_callable": true,
@@ -113,6 +101,18 @@
       "source_location": "L89"
     },
     {
+      "id": "pinky_backtest_between_years",
+      "label": "between_years()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "backtest.py",
+      "file_type": "code",
+      "norm_label": "between_years()",
+      "source_file": "pinky/backtest.py",
+      "source_location": "L194"
+    },
+    {
       "id": "pinky_backtest_cagr",
       "label": "_cagr()",
       "_callable": true,
@@ -122,7 +122,7 @@
       "file_type": "code",
       "norm_label": "_cagr()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L201"
+      "source_location": "L212"
     },
     {
       "id": "pinky_backtest_default_prices",
@@ -134,7 +134,7 @@
       "file_type": "code",
       "norm_label": "default_prices()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L279"
+      "source_location": "L290"
     },
     {
       "id": "pinky_backtest_load_price_panel",
@@ -158,7 +158,7 @@
       "file_type": "code",
       "norm_label": "_max_drawdown()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L207"
+      "source_location": "L218"
     },
     {
       "id": "pinky_backtest_momentum_scores",
@@ -170,7 +170,7 @@
       "file_type": "code",
       "norm_label": "momentum_scores()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L258"
+      "source_location": "L269"
     },
     {
       "id": "pinky_backtest_monthly_rebalance_dates",
@@ -218,7 +218,7 @@
       "file_type": "code",
       "norm_label": "pick_sector_share()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L246"
+      "source_location": "L257"
     },
     {
       "id": "pinky_backtest_pick_top",
@@ -254,7 +254,7 @@
       "file_type": "code",
       "norm_label": "summarize_backtest()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L212"
+      "source_location": "L223"
     },
     {
       "id": "pinky_backtest_top_winners",
@@ -266,7 +266,7 @@
       "file_type": "code",
       "norm_label": "top_winners()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L272"
+      "source_location": "L283"
     },
     {
       "id": "pinky_backtest_with_cost",
@@ -278,7 +278,7 @@
       "file_type": "code",
       "norm_label": "with_cost()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L194"
+      "source_location": "L205"
     },
     {
       "id": "pinky_backtest_within_sector_ic",
@@ -290,7 +290,7 @@
       "file_type": "code",
       "norm_label": "within_sector_ic()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L283"
+      "source_location": "L294"
     },
     {
       "id": "pinky_backtest_yearly_table",
@@ -302,7 +302,19 @@
       "file_type": "code",
       "norm_label": "yearly_table()",
       "source_file": "pinky/backtest.py",
-      "source_location": "L235"
+      "source_location": "L246"
+    },
+    {
+      "id": "pinky_metrics_daily_rank_ic",
+      "label": "daily_rank_ic()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "backtest.py",
+      "file_type": "code",
+      "norm_label": "daily_rank_ic()",
+      "source_file": "pinky/metrics.py",
+      "source_location": "L19"
     },
     {
       "id": "pinky_train_backtest_lines",
@@ -314,103 +326,43 @@
       "file_type": "code",
       "norm_label": "_backtest_lines()",
       "source_file": "pinky/train.py",
-      "source_location": "L328"
+      "source_location": "L356"
     },
     {
-      "id": "pinky_train_write_summary",
-      "label": "_write_summary()",
+      "id": "pinky_train_fmt_pct",
+      "label": "_fmt_pct()",
       "_callable": true,
       "_origin": "ast",
       "community": 10,
       "community_name": "backtest.py",
       "file_type": "code",
-      "norm_label": "_write_summary()",
+      "norm_label": "_fmt_pct()",
       "source_file": "pinky/train.py",
-      "source_location": "L471"
+      "source_location": "L289"
     },
     {
-      "id": "scripts_build_showcase_build_data",
-      "label": "build_data()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "code",
-      "norm_label": "build_data()",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L83"
-    },
-    {
-      "id": "scripts_build_showcase_equity_curve",
-      "label": "equity_curve()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "code",
-      "norm_label": "equity_curve()",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L49"
-    },
-    {
-      "id": "scripts_build_showcase_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L766"
-    },
-    {
-      "id": "scripts_build_showcase_ranking_metrics",
-      "label": "ranking_metrics()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "code",
-      "norm_label": "ranking_metrics()",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L59"
-    },
-    {
-      "id": "pinky_sharadar_api_key",
-      "label": "api_key()",
+      "id": "pinky_metrics_calibration_table",
+      "label": "calibration_table()",
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
-      "norm_label": "api_key()",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L43"
+      "norm_label": "calibration_table()",
+      "source_file": "pinky/metrics.py",
+      "source_location": "L151"
     },
     {
-      "id": "pinky_sharadar_bulk_status",
-      "label": "bulk_status()",
+      "id": "pinky_pit_dataset_load_pit_dataset",
+      "label": "load_pit_dataset()",
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
-      "norm_label": "bulk_status()",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L70"
-    },
-    {
-      "id": "pinky_sharadar_download_bulk",
-      "label": "download_bulk()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "sharadar.py",
-      "file_type": "code",
-      "norm_label": "download_bulk()",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L78"
+      "norm_label": "load_pit_dataset()",
+      "source_file": "pinky/pit_dataset.py",
+      "source_location": "L121"
     },
     {
       "id": "pinky_sharadar_load",
@@ -418,59 +370,83 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "load()",
       "source_file": "pinky/sharadar.py",
       "source_location": "L118"
     },
     {
-      "id": "pinky_sharadar_pull_all",
-      "label": "pull_all()",
+      "id": "pinky_train_dev_rows",
+      "label": "dev_rows()",
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
-      "norm_label": "pull_all()",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L122"
+      "norm_label": "dev_rows()",
+      "source_file": "pinky/train.py",
+      "source_location": "L230"
     },
     {
-      "id": "pinky_sharadar_query",
-      "label": "query()",
+      "id": "pinky_train_fit_beat_models",
+      "label": "_fit_beat_models()",
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
-      "norm_label": "query()",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L59"
+      "norm_label": "_fit_beat_models()",
+      "source_file": "pinky/train.py",
+      "source_location": "L132"
     },
     {
-      "id": "pinky_sharadar_scrub",
-      "label": "_scrub()",
+      "id": "pinky_train_fit_return_models",
+      "label": "_fit_return_models()",
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
-      "norm_label": "_scrub()",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L55"
+      "norm_label": "_fit_return_models()",
+      "source_file": "pinky/train.py",
+      "source_location": "L104"
     },
     {
-      "id": "pinky_sharadar_zip_to_parquet",
-      "label": "zip_to_parquet()",
+      "id": "pinky_train_pit_universe_desc",
+      "label": "_pit_universe_desc()",
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
-      "norm_label": "zip_to_parquet()",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L100"
+      "norm_label": "_pit_universe_desc()",
+      "source_file": "pinky/train.py",
+      "source_location": "L603"
+    },
+    {
+      "id": "pinky_train_ranking_lines",
+      "label": "_ranking_lines()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "code",
+      "norm_label": "_ranking_lines()",
+      "source_file": "pinky/train.py",
+      "source_location": "L293"
+    },
+    {
+      "id": "pinky_train_rewrite_summary",
+      "label": "rewrite_summary()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "code",
+      "norm_label": "rewrite_summary()",
+      "source_file": "pinky/train.py",
+      "source_location": "L612"
     },
     {
       "id": "pinky_train_run_all",
@@ -478,11 +454,71 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "run_all()",
       "source_file": "pinky/train.py",
-      "source_location": "L541"
+      "source_location": "L635"
+    },
+    {
+      "id": "pinky_train_run_horizon",
+      "label": "run_horizon()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "code",
+      "norm_label": "run_horizon()",
+      "source_file": "pinky/train.py",
+      "source_location": "L237"
+    },
+    {
+      "id": "pinky_train_write_summary",
+      "label": "_write_summary()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "code",
+      "norm_label": "_write_summary()",
+      "source_file": "pinky/train.py",
+      "source_location": "L532"
+    },
+    {
+      "id": "pinky_train_xy_beat",
+      "label": "_xy_beat()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "code",
+      "norm_label": "_xy_beat()",
+      "source_file": "pinky/train.py",
+      "source_location": "L98"
+    },
+    {
+      "id": "pinky_train_xy_return",
+      "label": "_xy_return()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "code",
+      "norm_label": "_xy_return()",
+      "source_file": "pinky/train.py",
+      "source_location": "L92"
+    },
+    {
+      "id": "pinky_universe_acquisition_dates",
+      "label": "acquisition_dates()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "code",
+      "norm_label": "acquisition_dates()",
+      "source_file": "pinky/universe.py",
+      "source_location": "L64"
     },
     {
       "id": "pinky_universe_backtest_prices",
@@ -490,11 +526,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "backtest_prices()",
       "source_file": "pinky/universe.py",
-      "source_location": "L164"
+      "source_location": "L170"
     },
     {
       "id": "pinky_universe_benchmark_closeadj",
@@ -502,11 +538,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "benchmark_closeadj()",
       "source_file": "pinky/universe.py",
-      "source_location": "L64"
+      "source_location": "L70"
     },
     {
       "id": "pinky_universe_build_panels",
@@ -514,11 +550,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "build_panels()",
       "source_file": "pinky/universe.py",
-      "source_location": "L75"
+      "source_location": "L81"
     },
     {
       "id": "pinky_universe_build_panels_wide",
@@ -526,11 +562,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "wide()",
       "source_file": "pinky/universe.py",
-      "source_location": "L82"
+      "source_location": "L88"
     },
     {
       "id": "pinky_universe_eligible_tickers",
@@ -538,7 +574,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "eligible_tickers()",
       "source_file": "pinky/universe.py",
@@ -550,11 +586,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "load_panel()",
       "source_file": "pinky/universe.py",
-      "source_location": "L160"
+      "source_location": "L166"
     },
     {
       "id": "pinky_universe_performance_delisted",
@@ -562,11 +598,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "performance_delisted()",
       "source_file": "pinky/universe.py",
-      "source_location": "L108"
+      "source_location": "L114"
     },
     {
       "id": "pinky_universe_save_panels",
@@ -574,11 +610,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "save_panels()",
       "source_file": "pinky/universe.py",
-      "source_location": "L154"
+      "source_location": "L160"
     },
     {
       "id": "pinky_universe_sector_map",
@@ -586,7 +622,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "sector_map()",
       "source_file": "pinky/universe.py",
@@ -598,11 +634,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "total_return_panel()",
       "source_file": "pinky/universe.py",
-      "source_location": "L117"
+      "source_location": "L123"
     },
     {
       "id": "pinky_universe_universe_summary",
@@ -610,83 +646,95 @@
       "_callable": true,
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "universe_summary()",
       "source_file": "pinky/universe.py",
-      "source_location": "L171"
+      "source_location": "L177"
     },
     {
-      "id": "pinky_labels_add_top_decile_labels",
-      "label": "add_top_decile_labels()",
+      "id": "pinky_sharadar_api_key",
+      "label": "api_key()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "code",
-      "norm_label": "add_top_decile_labels()",
-      "source_file": "pinky/labels.py",
-      "source_location": "L115"
+      "norm_label": "api_key()",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L43"
     },
     {
-      "id": "pinky_labels_build_labels_for_ticker",
-      "label": "build_labels_for_ticker()",
+      "id": "pinky_sharadar_bulk_status",
+      "label": "bulk_status()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "code",
-      "norm_label": "build_labels_for_ticker()",
-      "source_file": "pinky/labels.py",
-      "source_location": "L34"
+      "norm_label": "bulk_status()",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L70"
     },
     {
-      "id": "pinky_labels_build_universe_labels",
-      "label": "build_universe_labels()",
+      "id": "pinky_sharadar_download_bulk",
+      "label": "download_bulk()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "code",
-      "norm_label": "build_universe_labels()",
-      "source_file": "pinky/labels.py",
+      "norm_label": "download_bulk()",
+      "source_file": "pinky/sharadar.py",
       "source_location": "L78"
     },
     {
-      "id": "pinky_labels_forward_return",
-      "label": "_forward_return()",
+      "id": "pinky_sharadar_pull_all",
+      "label": "pull_all()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "code",
-      "norm_label": "_forward_return()",
-      "source_file": "pinky/labels.py",
-      "source_location": "L28"
+      "norm_label": "pull_all()",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L122"
     },
     {
-      "id": "pinky_labels_save_labels",
-      "label": "save_labels()",
+      "id": "pinky_sharadar_query",
+      "label": "query()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "code",
-      "norm_label": "save_labels()",
-      "source_file": "pinky/labels.py",
-      "source_location": "L135"
+      "norm_label": "query()",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L59"
     },
     {
-      "id": "pinky_train_dev_rows",
-      "label": "dev_rows()",
+      "id": "pinky_sharadar_scrub",
+      "label": "_scrub()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "Pinky",
+      "community": 2,
+      "community_name": "sharadar.py",
       "file_type": "code",
-      "norm_label": "dev_rows()",
-      "source_file": "pinky/train.py",
-      "source_location": "L226"
+      "norm_label": "_scrub()",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L55"
+    },
+    {
+      "id": "pinky_sharadar_zip_to_parquet",
+      "label": "zip_to_parquet()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "sharadar.py",
+      "file_type": "code",
+      "norm_label": "zip_to_parquet()",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L100"
     },
     {
       "id": "pinky_config_all_tickers",
@@ -698,7 +746,7 @@
       "file_type": "code",
       "norm_label": "all_tickers()",
       "source_file": "pinky/config.py",
-      "source_location": "L123"
+      "source_location": "L125"
     },
     {
       "id": "pinky_data_pull_download_ticker",
@@ -761,6 +809,18 @@
       "source_location": "L30"
     },
     {
+      "id": "pinky_dataset_load_dataset",
+      "label": "load_dataset()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "config.py",
+      "file_type": "code",
+      "norm_label": "load_dataset()",
+      "source_file": "pinky/dataset.py",
+      "source_location": "L97"
+    },
+    {
       "id": "pinky_pit_dataset_build_pit_dataset",
       "label": "build_pit_dataset()",
       "_callable": true,
@@ -771,18 +831,6 @@
       "norm_label": "build_pit_dataset()",
       "source_file": "pinky/pit_dataset.py",
       "source_location": "L60"
-    },
-    {
-      "id": "pinky_pit_dataset_load_pit_dataset",
-      "label": "load_pit_dataset()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "config.py",
-      "file_type": "code",
-      "norm_label": "load_pit_dataset()",
-      "source_file": "pinky/pit_dataset.py",
-      "source_location": "L121"
     },
     {
       "id": "pinky_pit_dataset_rsi",
@@ -905,6 +953,66 @@
       "source_location": "L202"
     },
     {
+      "id": "pinky_labels_add_top_decile_labels",
+      "label": "add_top_decile_labels()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "code",
+      "norm_label": "add_top_decile_labels()",
+      "source_file": "pinky/labels.py",
+      "source_location": "L115"
+    },
+    {
+      "id": "pinky_labels_build_labels_for_ticker",
+      "label": "build_labels_for_ticker()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "code",
+      "norm_label": "build_labels_for_ticker()",
+      "source_file": "pinky/labels.py",
+      "source_location": "L34"
+    },
+    {
+      "id": "pinky_labels_build_universe_labels",
+      "label": "build_universe_labels()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "code",
+      "norm_label": "build_universe_labels()",
+      "source_file": "pinky/labels.py",
+      "source_location": "L78"
+    },
+    {
+      "id": "pinky_labels_forward_return",
+      "label": "_forward_return()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "code",
+      "norm_label": "_forward_return()",
+      "source_file": "pinky/labels.py",
+      "source_location": "L28"
+    },
+    {
+      "id": "pinky_labels_save_labels",
+      "label": "save_labels()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "code",
+      "norm_label": "save_labels()",
+      "source_file": "pinky/labels.py",
+      "source_location": "L135"
+    },
+    {
       "id": "pinky_raw_io_adj_close_series",
       "label": "adj_close_series()",
       "_callable": true,
@@ -989,40 +1097,28 @@
       "source_location": "L40"
     },
     {
+      "id": "pinky_metrics_acquired_share",
+      "label": "acquired_share()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "acquired_share()",
+      "source_file": "pinky/metrics.py",
+      "source_location": "L95"
+    },
+    {
       "id": "pinky_metrics_brier_score",
       "label": "brier_score()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "brier_score()",
       "source_file": "pinky/metrics.py",
-      "source_location": "L122"
-    },
-    {
-      "id": "pinky_metrics_calibration_table",
-      "label": "calibration_table()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "train.py",
-      "file_type": "code",
-      "norm_label": "calibration_table()",
-      "source_file": "pinky/metrics.py",
-      "source_location": "L126"
-    },
-    {
-      "id": "pinky_metrics_daily_rank_ic",
-      "label": "daily_rank_ic()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "train.py",
-      "file_type": "code",
-      "norm_label": "daily_rank_ic()",
-      "source_file": "pinky/metrics.py",
-      "source_location": "L19"
+      "source_location": "L147"
     },
     {
       "id": "pinky_metrics_monthly_dates",
@@ -1030,7 +1126,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "_monthly_dates()",
       "source_file": "pinky/metrics.py",
@@ -1042,7 +1138,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "precision_at_k()",
       "source_file": "pinky/metrics.py",
@@ -1054,7 +1150,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "_safe_spearman()",
       "source_file": "pinky/metrics.py",
@@ -1066,7 +1162,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "top_decile_hit_rate()",
       "source_file": "pinky/metrics.py",
@@ -1078,7 +1174,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "top_n_basket_excess()",
       "source_file": "pinky/metrics.py",
@@ -1090,7 +1186,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "universe_mean_excess()",
       "source_file": "pinky/metrics.py",
@@ -1102,11 +1198,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "winner_capture()",
       "source_file": "pinky/metrics.py",
-      "source_location": "L95"
+      "source_location": "L120"
     },
     {
       "id": "pinky_train_eval_prepared",
@@ -1114,95 +1210,131 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "_eval_prepared()",
       "source_file": "pinky/train.py",
-      "source_location": "L161"
+      "source_location": "L165"
     },
     {
-      "id": "pinky_train_fit_beat_models",
-      "label": "_fit_beat_models()",
+      "id": "scripts_build_showcase_build_data",
+      "label": "build_data()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
-      "norm_label": "_fit_beat_models()",
-      "source_file": "pinky/train.py",
-      "source_location": "L128"
+      "norm_label": "build_data()",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L178"
     },
     {
-      "id": "pinky_train_fit_return_models",
-      "label": "_fit_return_models()",
+      "id": "scripts_build_showcase_buyout_split",
+      "label": "buyout_split()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
-      "norm_label": "_fit_return_models()",
-      "source_file": "pinky/train.py",
+      "norm_label": "buyout_split()",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L133"
+    },
+    {
+      "id": "scripts_build_showcase_buyout_split_stats",
+      "label": "stats()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "stats()",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L144"
+    },
+    {
+      "id": "scripts_build_showcase_equity_curve",
+      "label": "equity_curve()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "equity_curve()",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L63"
+    },
+    {
+      "id": "scripts_build_showcase_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L911"
+    },
+    {
+      "id": "scripts_build_showcase_make_curve",
+      "label": "make_curve()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "make_curve()",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L84"
+    },
+    {
+      "id": "scripts_build_showcase_max_drawdown",
+      "label": "max_drawdown()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "max_drawdown()",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L79"
+    },
+    {
+      "id": "scripts_build_showcase_old_results",
+      "label": "old_results()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "old_results()",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L156"
+    },
+    {
+      "id": "scripts_build_showcase_period_cagr",
+      "label": "period_cagr()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "period_cagr()",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L73"
+    },
+    {
+      "id": "scripts_build_showcase_skill_metrics",
+      "label": "skill_metrics()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "skill_metrics()",
+      "source_file": "scripts/build_showcase.py",
       "source_location": "L100"
-    },
-    {
-      "id": "pinky_train_fmt_pct",
-      "label": "_fmt_pct()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "train.py",
-      "file_type": "code",
-      "norm_label": "_fmt_pct()",
-      "source_file": "pinky/train.py",
-      "source_location": "L285"
-    },
-    {
-      "id": "pinky_train_ranking_lines",
-      "label": "_ranking_lines()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "train.py",
-      "file_type": "code",
-      "norm_label": "_ranking_lines()",
-      "source_file": "pinky/train.py",
-      "source_location": "L289"
-    },
-    {
-      "id": "pinky_train_run_horizon",
-      "label": "run_horizon()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "train.py",
-      "file_type": "code",
-      "norm_label": "run_horizon()",
-      "source_file": "pinky/train.py",
-      "source_location": "L233"
-    },
-    {
-      "id": "pinky_train_xy_beat",
-      "label": "_xy_beat()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "train.py",
-      "file_type": "code",
-      "norm_label": "_xy_beat()",
-      "source_file": "pinky/train.py",
-      "source_location": "L94"
-    },
-    {
-      "id": "pinky_train_xy_return",
-      "label": "_xy_return()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "train.py",
-      "file_type": "code",
-      "norm_label": "_xy_return()",
-      "source_file": "pinky/train.py",
-      "source_location": "L88"
     },
     {
       "id": "docs_prd_10_milestones",
@@ -1533,17 +1665,6 @@
       "source_location": "L90"
     },
     {
-      "id": "pinky_dataset_rationale_98",
-      "label": "Load saved train-ready dataset.",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "preprocess.py",
-      "file_type": "rationale",
-      "norm_label": "load saved train-ready dataset.",
-      "source_file": "pinky/dataset.py",
-      "source_location": "L98"
-    },
-    {
       "id": "pinky_preprocess_rationale_1",
       "label": "Feature prep for ranking models. 1) Cross-sectional z-score by Date (grade\u2026",
       "_origin": "ast",
@@ -1665,50 +1786,6 @@
       "source_location": ""
     },
     {
-      "id": "pinky_train_py_path",
-      "label": "Path",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "code",
-      "norm_label": "path",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "scripts_build_showcase",
-      "label": "build_showcase.py",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "code",
-      "norm_label": "build_showcase.py",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "scripts_build_showcase_py_dataframe",
-      "label": "DataFrame",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "code",
-      "norm_label": "dataframe",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "scripts_build_showcase_py_path",
-      "label": "Path",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "code",
-      "norm_label": "path",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "pinky_backtest_rationale_1",
       "label": "Tradeable portfolio backtest on out-of-sample (walk-forward test) predictions.\u2026",
       "_origin": "ast",
@@ -1732,6 +1809,17 @@
     },
     {
       "id": "pinky_backtest_rationale_195",
+      "label": "Holding periods that start in [first, last] (either end open).",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "backtest.py",
+      "file_type": "rationale",
+      "norm_label": "holding periods that start in [first, last] (either end open).",
+      "source_file": "pinky/backtest.py",
+      "source_location": "L195"
+    },
+    {
+      "id": "pinky_backtest_rationale_206",
       "label": "Same trades re-priced at another cost level (picks and turnover don't depend on\u2026",
       "_origin": "ast",
       "community": 10,
@@ -1739,10 +1827,10 @@
       "file_type": "rationale",
       "norm_label": "same trades re-priced at another cost level (picks and turnover don't depend on...",
       "source_file": "pinky/backtest.py",
-      "source_location": "L195"
+      "source_location": "L206"
     },
     {
-      "id": "pinky_backtest_rationale_247",
+      "id": "pinky_backtest_rationale_258",
       "label": "Average share of picks per sector (checks tech concentration).",
       "_origin": "ast",
       "community": 10,
@@ -1750,10 +1838,10 @@
       "file_type": "rationale",
       "norm_label": "average share of picks per sector (checks tech concentration).",
       "source_file": "pinky/backtest.py",
-      "source_location": "L247"
+      "source_location": "L258"
     },
     {
-      "id": "pinky_backtest_rationale_259",
+      "id": "pinky_backtest_rationale_270",
       "label": "Naive baseline: score = trailing 12m return (skip last month), same dates/names\u2026",
       "_origin": "ast",
       "community": 10,
@@ -1761,10 +1849,10 @@
       "file_type": "rationale",
       "norm_label": "naive baseline: score = trailing 12m return (skip last month), same dates/names...",
       "source_file": "pinky/backtest.py",
-      "source_location": "L259"
+      "source_location": "L270"
     },
     {
-      "id": "pinky_backtest_rationale_273",
+      "id": "pinky_backtest_rationale_284",
       "label": "The k best total-return stocks over [start, end] (hindsight set for a stress\u2026",
       "_origin": "ast",
       "community": 10,
@@ -1772,10 +1860,10 @@
       "file_type": "rationale",
       "norm_label": "the k best total-return stocks over [start, end] (hindsight set for a stress...",
       "source_file": "pinky/backtest.py",
-      "source_location": "L273"
+      "source_location": "L284"
     },
     {
-      "id": "pinky_backtest_rationale_286",
+      "id": "pinky_backtest_rationale_297",
       "label": "Mean daily rank IC computed inside each sector (does the model rank within a\u2026",
       "_origin": "ast",
       "community": 10,
@@ -1783,7 +1871,7 @@
       "file_type": "rationale",
       "norm_label": "mean daily rank ic computed inside each sector (does the model rank within a...",
       "source_file": "pinky/backtest.py",
-      "source_location": "L286"
+      "source_location": "L297"
     },
     {
       "id": "pinky_backtest_rationale_35",
@@ -1808,7 +1896,18 @@
       "source_location": "L79"
     },
     {
-      "id": "pinky_train_rationale_335",
+      "id": "pinky_metrics_rationale_20",
+      "label": "Mean Spearman IC across dates (cross-sectional).",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "backtest.py",
+      "file_type": "rationale",
+      "norm_label": "mean spearman ic across dates (cross-sectional).",
+      "source_file": "pinky/metrics.py",
+      "source_location": "L20"
+    },
+    {
+      "id": "pinky_train_rationale_363",
       "label": "Report lines + one stats row per (signal, portfolio).",
       "_origin": "ast",
       "community": 10,
@@ -1816,40 +1915,7 @@
       "file_type": "rationale",
       "norm_label": "report lines + one stats row per (signal, portfolio).",
       "source_file": "pinky/train.py",
-      "source_location": "L335"
-    },
-    {
-      "id": "scripts_build_showcase_rationale_1",
-      "label": "Build a self-contained one-page showcase for Pinky. Reads the real walk-forward\u2026",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "rationale",
-      "norm_label": "build a self-contained one-page showcase for pinky. reads the real walk-forward...",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "scripts_build_showcase_rationale_50",
-      "label": "Growth of $10k, one point per holding period (plus the starting point).",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "rationale",
-      "norm_label": "growth of $10k, one point per holding period (plus the starting point).",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L50"
-    },
-    {
-      "id": "scripts_build_showcase_rationale_60",
-      "label": "precision@10 and winner capture for LightGBM, Ridge and random picking.",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "backtest.py",
-      "file_type": "rationale",
-      "norm_label": "precision@10 and winner capture for lightgbm, ridge and random picking.",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L60"
+      "source_location": "L363"
     },
     {
       "id": "docs_walkforward_results",
@@ -2108,42 +2174,64 @@
       "label": "Index",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "index",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "pinky_sharadar",
-      "label": "sharadar.py",
+      "id": "pinky_train",
+      "label": "train.py",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
-      "norm_label": "sharadar.py",
-      "source_file": "pinky/sharadar.py",
+      "norm_label": "train.py",
+      "source_file": "pinky/train.py",
       "source_location": "L1"
     },
     {
-      "id": "pinky_sharadar_py_dataframe",
+      "id": "pinky_train_py_dataframe",
       "label": "DataFrame",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "dataframe",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "pinky_sharadar_py_path",
+      "id": "pinky_train_py_datetimeindex",
+      "label": "DatetimeIndex",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "code",
+      "norm_label": "datetimeindex",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "pinky_train_py_path",
       "label": "Path",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "path",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "pinky_train_py_series",
+      "label": "Series",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "code",
+      "norm_label": "series",
       "source_file": "",
       "source_location": ""
     },
@@ -2152,7 +2240,7 @@
       "label": "universe.py",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "universe.py",
       "source_file": "pinky/universe.py",
@@ -2163,7 +2251,7 @@
       "label": "DataFrame",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "dataframe",
       "source_file": "",
@@ -2174,161 +2262,173 @@
       "label": "Series",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "series",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "scripts_pull_sharadar",
-      "label": "pull_sharadar.py",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "sharadar.py",
-      "file_type": "code",
-      "norm_label": "pull_sharadar.py",
-      "source_file": "scripts/pull_sharadar.py",
-      "source_location": "L1"
-    },
-    {
       "id": "scripts_train_walkforward",
       "label": "train_walkforward.py",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "code",
       "norm_label": "train_walkforward.py",
       "source_file": "scripts/train_walkforward.py",
       "source_location": "L1"
     },
     {
-      "id": "pinky_sharadar_rationale_1",
-      "label": "Sharadar data access (direct API: https://api.sharadar.com/v1.0/data/{table}).\u2026",
+      "id": "project_repo_layout",
+      "label": "Repo layout",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "repo layout",
+      "source_file": "project.md",
+      "source_location": "L190"
+    },
+    {
+      "id": "pinky_metrics_rationale_156",
+      "label": "Reliability-style bins: predicted prob vs realized frequency.",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
       "file_type": "rationale",
-      "norm_label": "sharadar data access (direct api: https://api.sharadar.com/v1.0/data/{table})....",
-      "source_file": "pinky/sharadar.py",
+      "norm_label": "reliability-style bins: predicted prob vs realized frequency.",
+      "source_file": "pinky/metrics.py",
+      "source_location": "L156"
+    },
+    {
+      "id": "pinky_train_rationale_1",
+      "label": "Walk-forward training + evaluation (LightGBM + Ridge baseline). v2 prep: -\u2026",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "rationale",
+      "norm_label": "walk-forward training + evaluation (lightgbm + ridge baseline). v2 prep: -...",
+      "source_file": "pinky/train.py",
       "source_location": "L1"
     },
     {
-      "id": "pinky_sharadar_rationale_101",
-      "label": "Convert a bulk zip (one CSV inside) to parquet, parsing known date columns.",
+      "id": "pinky_train_rationale_231",
+      "label": "Rows whose label window ends before HOLDOUT_START, so the holdout stays unseen.",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
-      "norm_label": "convert a bulk zip (one csv inside) to parquet, parsing known date columns.",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L101"
+      "norm_label": "rows whose label window ends before holdout_start, so the holdout stays unseen.",
+      "source_file": "pinky/train.py",
+      "source_location": "L231"
     },
     {
-      "id": "pinky_sharadar_rationale_123",
-      "label": "Download + convert every bulk table. Returns row counts.",
+      "id": "pinky_train_rationale_240",
+      "label": "Train/eval all folds for one horizon with CS prep + tuned LightGBM.",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
-      "norm_label": "download + convert every bulk table. returns row counts.",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L123"
+      "norm_label": "train/eval all folds for one horizon with cs prep + tuned lightgbm.",
+      "source_file": "pinky/train.py",
+      "source_location": "L240"
     },
     {
-      "id": "pinky_sharadar_rationale_60",
-      "label": "Small filtered query (CSV). Pass `from_` for the `from` param.",
+      "id": "pinky_train_rationale_299",
+      "label": "Does the model find the future top decile / the year's biggest winners?",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
-      "norm_label": "small filtered query (csv). pass `from_` for the `from` param.",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L60"
+      "norm_label": "does the model find the future top decile / the year's biggest winners?",
+      "source_file": "pinky/train.py",
+      "source_location": "L299"
     },
     {
-      "id": "pinky_sharadar_rationale_79",
-      "label": "Stream the zipped CSV for a whole table to disk. Returns the zip path.",
+      "id": "pinky_train_rationale_613",
+      "label": "Rebuild a pit run's report from its saved metrics + predictions (no retraining).",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
-      "norm_label": "stream the zipped csv for a whole table to disk. returns the zip path.",
-      "source_file": "pinky/sharadar.py",
-      "source_location": "L79"
+      "norm_label": "rebuild a pit run's report from its saved metrics + predictions (no retraining).",
+      "source_file": "pinky/train.py",
+      "source_location": "L613"
     },
     {
-      "id": "pinky_train_rationale_548",
+      "id": "pinky_train_rationale_642",
       "label": "Run walk-forward training. Default focus: 1y. `exclude` drops tickers from\u2026",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "run walk-forward training. default focus: 1y. `exclude` drops tickers from...",
       "source_file": "pinky/train.py",
-      "source_location": "L548"
+      "source_location": "L642"
     },
     {
       "id": "pinky_universe_rationale_1",
       "label": "Point-in-time liquid US stock universe from Sharadar (survivorship-free). A\u2026",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "point-in-time liquid us stock universe from sharadar (survivorship-free). a...",
       "source_file": "pinky/universe.py",
       "source_location": "L1"
     },
     {
-      "id": "pinky_universe_rationale_109",
+      "id": "pinky_universe_rationale_115",
       "label": "Delisted tickers whose exit was a bankruptcy / liquidation / regulatory\u2026",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "delisted tickers whose exit was a bankruptcy / liquidation / regulatory...",
       "source_file": "pinky/universe.py",
-      "source_location": "L109"
+      "source_location": "L115"
     },
     {
-      "id": "pinky_universe_rationale_118",
+      "id": "pinky_universe_rationale_124",
       "label": "Delisting-aware total-return index (Date x Ticker). - While listed: adjusted\u2026",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "delisting-aware total-return index (date x ticker). - while listed: adjusted...",
       "source_file": "pinky/universe.py",
-      "source_location": "L118"
+      "source_location": "L124"
     },
     {
-      "id": "pinky_universe_rationale_165",
+      "id": "pinky_universe_rationale_171",
       "label": "Delisting-aware total-return panel plus a SPY column, for\u2026",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "delisting-aware total-return panel plus a spy column, for...",
       "source_file": "pinky/universe.py",
-      "source_location": "L165"
+      "source_location": "L171"
     },
     {
-      "id": "pinky_universe_rationale_172",
+      "id": "pinky_universe_rationale_178",
       "label": "Per-year: average stocks in the universe per day, and distinct stocks seen.",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "per-year: average stocks in the universe per day, and distinct stocks seen.",
       "source_file": "pinky/universe.py",
-      "source_location": "L172"
+      "source_location": "L178"
     },
     {
       "id": "pinky_universe_rationale_47",
       "label": "Securities master rows for stocks that may ever enter the universe.",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "securities master rows for stocks that may ever enter the universe.",
       "source_file": "pinky/universe.py",
@@ -2339,7 +2439,7 @@
       "label": "Ticker -> Sharadar sector (current classification) for every eligible stock.",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "ticker -> sharadar sector (current classification) for every eligible stock.",
       "source_file": "pinky/universe.py",
@@ -2347,43 +2447,43 @@
     },
     {
       "id": "pinky_universe_rationale_65",
-      "label": "SPY adjusted close from Sharadar funds (cached).",
+      "label": "Ticker -> completion date of its acquisition (Sharadar `acquisitionby`; first\u2026",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
-      "norm_label": "spy adjusted close from sharadar funds (cached).",
+      "norm_label": "ticker -> completion date of its acquisition (sharadar `acquisitionby`; first...",
       "source_file": "pinky/universe.py",
       "source_location": "L65"
     },
     {
-      "id": "pinky_universe_rationale_76",
+      "id": "pinky_universe_rationale_71",
+      "label": "SPY adjusted close from Sharadar funds (cached).",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "train.py",
+      "file_type": "rationale",
+      "norm_label": "spy adjusted close from sharadar funds (cached).",
+      "source_file": "pinky/universe.py",
+      "source_location": "L71"
+    },
+    {
+      "id": "pinky_universe_rationale_82",
       "label": "Pivot daily prices to wide Date x Ticker panels and apply the liquidity rules.",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "pivot daily prices to wide date x ticker panels and apply the liquidity rules.",
       "source_file": "pinky/universe.py",
-      "source_location": "L76"
-    },
-    {
-      "id": "scripts_pull_sharadar_rationale_2",
-      "label": "CLI: download all Sharadar bulk tables (full history) \u2192\u2026",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "sharadar.py",
-      "file_type": "rationale",
-      "norm_label": "cli: download all sharadar bulk tables (full history) \u2192...",
-      "source_file": "scripts/pull_sharadar.py",
-      "source_location": "L2"
+      "source_location": "L82"
     },
     {
       "id": "scripts_train_walkforward_rationale_2",
       "label": "CLI: walk-forward train + evaluate (default focus: 1y). Usage: python\u2026",
       "_origin": "ast",
       "community": 12,
-      "community_name": "sharadar.py",
+      "community_name": "train.py",
       "file_type": "rationale",
       "norm_label": "cli: walk-forward train + evaluate (default focus: 1y). usage: python...",
       "source_file": "scripts/train_walkforward.py",
@@ -2414,125 +2514,114 @@
       "source_location": "L1"
     },
     {
-      "id": "pinky_labels_py_dataframe",
+      "id": "pinky_sharadar",
+      "label": "sharadar.py",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "sharadar.py",
+      "file_type": "code",
+      "norm_label": "sharadar.py",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "pinky_sharadar_py_dataframe",
       "label": "DataFrame",
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "code",
       "norm_label": "dataframe",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "pinky_labels_py_path",
+      "id": "pinky_sharadar_py_path",
       "label": "Path",
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "code",
       "norm_label": "path",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "pinky_labels_py_series",
-      "label": "Series",
+      "id": "scripts_pull_sharadar",
+      "label": "pull_sharadar.py",
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "code",
-      "norm_label": "series",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "scripts_build_labels",
-      "label": "build_labels.py",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "build_labels_for_ticker",
-      "file_type": "code",
-      "norm_label": "build_labels.py",
-      "source_file": "scripts/build_labels.py",
+      "norm_label": "pull_sharadar.py",
+      "source_file": "scripts/pull_sharadar.py",
       "source_location": "L1"
     },
     {
-      "id": "pinky_labels_rationale_120",
-      "label": "Add `top_{h}` = 1 if the stock's forward excess is in the top `frac` of stocks\u2026",
+      "id": "pinky_sharadar_rationale_1",
+      "label": "Sharadar data access (direct API: https://api.sharadar.com/v1.0/data/{table}).\u2026",
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "rationale",
-      "norm_label": "add `top_{h}` = 1 if the stock's forward excess is in the top `frac` of stocks...",
-      "source_file": "pinky/labels.py",
-      "source_location": "L120"
+      "norm_label": "sharadar data access (direct api: https://api.sharadar.com/v1.0/data/{table})....",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L1"
     },
     {
-      "id": "pinky_labels_rationale_136",
-      "label": "Write stacked label panel to parquet.",
+      "id": "pinky_sharadar_rationale_101",
+      "label": "Convert a bulk zip (one CSV inside) to parquet, parsing known date columns.",
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "rationale",
-      "norm_label": "write stacked label panel to parquet.",
-      "source_file": "pinky/labels.py",
-      "source_location": "L136"
+      "norm_label": "convert a bulk zip (one csv inside) to parquet, parsing known date columns.",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L101"
     },
     {
-      "id": "pinky_labels_rationale_29",
-      "label": "Return from t to t+horizon_days. NaN near the end where future is unknown.",
+      "id": "pinky_sharadar_rationale_123",
+      "label": "Download + convert every bulk table. Returns row counts.",
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "rationale",
-      "norm_label": "return from t to t+horizon_days. nan near the end where future is unknown.",
-      "source_file": "pinky/labels.py",
-      "source_location": "L29"
+      "norm_label": "download + convert every bulk table. returns row counts.",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L123"
     },
     {
-      "id": "pinky_labels_rationale_40",
-      "label": "Build excess-return and beat labels for one stock across all horizons. Rows\u2026",
+      "id": "pinky_sharadar_rationale_60",
+      "label": "Small filtered query (CSV). Pass `from_` for the `from` param.",
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "rationale",
-      "norm_label": "build excess-return and beat labels for one stock across all horizons. rows...",
-      "source_file": "pinky/labels.py",
-      "source_location": "L40"
+      "norm_label": "small filtered query (csv). pass `from_` for the `from` param.",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L60"
     },
     {
-      "id": "pinky_labels_rationale_82",
-      "label": "Build and stack labels for all starter stocks.",
+      "id": "pinky_sharadar_rationale_79",
+      "label": "Stream the zipped CSV for a whole table to disk. Returns the zip path.",
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "rationale",
-      "norm_label": "build and stack labels for all starter stocks.",
-      "source_file": "pinky/labels.py",
-      "source_location": "L82"
+      "norm_label": "stream the zipped csv for a whole table to disk. returns the zip path.",
+      "source_file": "pinky/sharadar.py",
+      "source_location": "L79"
     },
     {
-      "id": "scripts_build_labels_rationale_2",
-      "label": "CLI: build labels vs SPY from data/raw/ into data/labels/.",
+      "id": "scripts_pull_sharadar_rationale_2",
+      "label": "CLI: download all Sharadar bulk tables (full history) \u2192\u2026",
       "_origin": "ast",
       "community": 2,
-      "community_name": "build_labels_for_ticker",
+      "community_name": "sharadar.py",
       "file_type": "rationale",
-      "norm_label": "cli: build labels vs spy from data/raw/ into data/labels/.",
-      "source_file": "scripts/build_labels.py",
+      "norm_label": "cli: download all sharadar bulk tables (full history) \u2192...",
+      "source_file": "scripts/pull_sharadar.py",
       "source_location": "L2"
-    },
-    {
-      "id": "pinky_train_py_datetimeindex",
-      "label": "DatetimeIndex",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "Pinky",
-      "file_type": "code",
-      "norm_label": "datetimeindex",
-      "source_file": "",
-      "source_location": ""
     },
     {
       "id": "project",
@@ -2556,7 +2645,7 @@
       "node_kind": "heading",
       "norm_label": "backtest defaults",
       "source_file": "project.md",
-      "source_location": "L177"
+      "source_location": "L182"
     },
     {
       "id": "project_commands",
@@ -2568,7 +2657,7 @@
       "node_kind": "heading",
       "norm_label": "commands",
       "source_file": "project.md",
-      "source_location": "L204"
+      "source_location": "L209"
     },
     {
       "id": "project_decisions",
@@ -2580,7 +2669,7 @@
       "node_kind": "heading",
       "norm_label": "decisions",
       "source_file": "project.md",
-      "source_location": "L140"
+      "source_location": "L145"
     },
     {
       "id": "project_gotchas_learned_the_hard_way",
@@ -2592,7 +2681,7 @@
       "node_kind": "heading",
       "norm_label": "gotchas (learned the hard way)",
       "source_file": "project.md",
-      "source_location": "L53"
+      "source_location": "L56"
     },
     {
       "id": "project_honest_baseline_v5_pit_2026_09_26",
@@ -2604,7 +2693,7 @@
       "node_kind": "heading",
       "norm_label": "honest baseline \u2014 v5_pit (2026-09-26)",
       "source_file": "project.md",
-      "source_location": "L117"
+      "source_location": "L122"
     },
     {
       "id": "project_key_findings",
@@ -2616,7 +2705,7 @@
       "node_kind": "heading",
       "norm_label": "key findings",
       "source_file": "project.md",
-      "source_location": "L98"
+      "source_location": "L102"
     },
     {
       "id": "project_new_yardstick_v6_pit_2026_09_26",
@@ -2628,7 +2717,7 @@
       "node_kind": "heading",
       "norm_label": "new yardstick \u2014 v6_pit (2026-09-26)",
       "source_file": "project.md",
-      "source_location": "L100"
+      "source_location": "L104"
     },
     {
       "id": "project_old_128_stock_results_inflated_by_survivorship_hindsight",
@@ -2640,7 +2729,7 @@
       "node_kind": "heading",
       "norm_label": "old 128-stock results (inflated by survivorship + hindsight)",
       "source_file": "project.md",
-      "source_location": "L135"
+      "source_location": "L140"
     },
     {
       "id": "project_pinky",
@@ -2653,18 +2742,6 @@
       "norm_label": "pinky",
       "source_file": "project.md",
       "source_location": "L1"
-    },
-    {
-      "id": "project_repo_layout",
-      "label": "Repo layout",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "Pinky",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "repo layout",
-      "source_file": "project.md",
-      "source_location": "L185"
     },
     {
       "id": "project_resume_here_new_chat_read_this_first",
@@ -2688,7 +2765,7 @@
       "node_kind": "heading",
       "norm_label": "roadmap",
       "source_file": "project.md",
-      "source_location": "L151"
+      "source_location": "L156"
     },
     {
       "id": "project_rules_always_on",
@@ -2700,7 +2777,7 @@
       "node_kind": "heading",
       "norm_label": "rules (always on)",
       "source_file": "project.md",
-      "source_location": "L69"
+      "source_location": "L73"
     },
     {
       "id": "project_user_goals_expectations",
@@ -2712,18 +2789,7 @@
       "node_kind": "heading",
       "norm_label": "user goals & expectations",
       "source_file": "project.md",
-      "source_location": "L90"
-    },
-    {
-      "id": "pinky_train_rationale_227",
-      "label": "Rows whose label window ends before HOLDOUT_START, so the holdout stays unseen.",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "Pinky",
-      "file_type": "rationale",
-      "norm_label": "rows whose label window ends before holdout_start, so the holdout stays unseen.",
-      "source_file": "pinky/train.py",
-      "source_location": "L227"
+      "source_location": "L94"
     },
     {
       "id": "pinky_init",
@@ -2869,6 +2935,17 @@
       "source_location": "L1"
     },
     {
+      "id": "scripts_summarize_walkforward",
+      "label": "summarize_walkforward.py",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "config.py",
+      "file_type": "code",
+      "norm_label": "summarize_walkforward.py",
+      "source_file": "scripts/summarize_walkforward.py",
+      "source_location": "L1"
+    },
+    {
       "id": "pinky_config_rationale_1",
       "label": "Universe + path config for Pinky.",
       "_origin": "ast",
@@ -2880,7 +2957,7 @@
       "source_location": "L1"
     },
     {
-      "id": "pinky_config_rationale_124",
+      "id": "pinky_config_rationale_126",
       "label": "Unique tickers to download (stocks + benchmark + helpers).",
       "_origin": "ast",
       "community": 5,
@@ -2888,7 +2965,7 @@
       "file_type": "rationale",
       "norm_label": "unique tickers to download (stocks + benchmark + helpers).",
       "source_file": "pinky/config.py",
-      "source_location": "L124"
+      "source_location": "L126"
     },
     {
       "id": "pinky_data_pull_rationale_1",
@@ -2968,6 +3045,17 @@
       "source_location": "L31"
     },
     {
+      "id": "pinky_dataset_rationale_98",
+      "label": "Load saved train-ready dataset.",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "config.py",
+      "file_type": "rationale",
+      "norm_label": "load saved train-ready dataset.",
+      "source_file": "pinky/dataset.py",
+      "source_location": "L98"
+    },
+    {
       "id": "pinky_labels_rationale_1",
       "label": "Labels vs SPY (architecture-locked). For each stock + date + horizon:\u2026",
       "_origin": "ast",
@@ -3023,6 +3111,17 @@
       "source_location": "L2"
     },
     {
+      "id": "scripts_summarize_walkforward_rationale_2",
+      "label": "CLI: print walk-forward fold summary (with purge) for each horizon.",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "config.py",
+      "file_type": "rationale",
+      "norm_label": "cli: print walk-forward fold summary (with purge) for each horizon.",
+      "source_file": "scripts/summarize_walkforward.py",
+      "source_location": "L2"
+    },
+    {
       "id": "pinky_features",
       "label": "features.py",
       "_origin": "ast",
@@ -3057,6 +3156,39 @@
     },
     {
       "id": "pinky_features_py_series",
+      "label": "Series",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "code",
+      "norm_label": "series",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "pinky_labels_py_dataframe",
+      "label": "DataFrame",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "code",
+      "norm_label": "dataframe",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "pinky_labels_py_path",
+      "label": "Path",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "code",
+      "norm_label": "path",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "pinky_labels_py_series",
       "label": "Series",
       "_origin": "ast",
       "community": 6,
@@ -3108,6 +3240,17 @@
       "file_type": "code",
       "norm_label": "build_features.py",
       "source_file": "scripts/build_features.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "scripts_build_labels",
+      "label": "build_labels.py",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "code",
+      "norm_label": "build_labels.py",
+      "source_file": "scripts/build_labels.py",
       "source_location": "L1"
     },
     {
@@ -3166,6 +3309,61 @@
       "source_location": "L92"
     },
     {
+      "id": "pinky_labels_rationale_120",
+      "label": "Add `top_{h}` = 1 if the stock's forward excess is in the top `frac` of stocks\u2026",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "rationale",
+      "norm_label": "add `top_{h}` = 1 if the stock's forward excess is in the top `frac` of stocks...",
+      "source_file": "pinky/labels.py",
+      "source_location": "L120"
+    },
+    {
+      "id": "pinky_labels_rationale_136",
+      "label": "Write stacked label panel to parquet.",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "rationale",
+      "norm_label": "write stacked label panel to parquet.",
+      "source_file": "pinky/labels.py",
+      "source_location": "L136"
+    },
+    {
+      "id": "pinky_labels_rationale_29",
+      "label": "Return from t to t+horizon_days. NaN near the end where future is unknown.",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "rationale",
+      "norm_label": "return from t to t+horizon_days. nan near the end where future is unknown.",
+      "source_file": "pinky/labels.py",
+      "source_location": "L29"
+    },
+    {
+      "id": "pinky_labels_rationale_40",
+      "label": "Build excess-return and beat labels for one stock across all horizons. Rows\u2026",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "rationale",
+      "norm_label": "build excess-return and beat labels for one stock across all horizons. rows...",
+      "source_file": "pinky/labels.py",
+      "source_location": "L40"
+    },
+    {
+      "id": "pinky_labels_rationale_82",
+      "label": "Build and stack labels for all starter stocks.",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "rationale",
+      "norm_label": "build and stack labels for all starter stocks.",
+      "source_file": "pinky/labels.py",
+      "source_location": "L82"
+    },
+    {
       "id": "pinky_raw_io_rationale_14",
       "label": "Load one ticker's raw OHLCV parquet. Raises FileNotFoundError if missing.",
       "_origin": "ast",
@@ -3196,6 +3394,17 @@
       "file_type": "rationale",
       "norm_label": "cli: build feature panel from data/raw/ into data/features/.",
       "source_file": "scripts/build_features.py",
+      "source_location": "L2"
+    },
+    {
+      "id": "scripts_build_labels_rationale_2",
+      "label": "CLI: build labels vs SPY from data/raw/ into data/labels/.",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "features.py",
+      "file_type": "rationale",
+      "norm_label": "cli: build labels vs spy from data/raw/ into data/labels/.",
+      "source_file": "scripts/build_labels.py",
       "source_location": "L2"
     },
     {
@@ -3627,17 +3836,6 @@
       "source_location": ""
     },
     {
-      "id": "scripts_summarize_walkforward",
-      "label": "summarize_walkforward.py",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "walkforward.py",
-      "file_type": "code",
-      "norm_label": "summarize_walkforward.py",
-      "source_file": "scripts/summarize_walkforward.py",
-      "source_location": "L1"
-    },
-    {
       "id": "pinky_walkforward_rationale_1",
       "label": "Walk-forward folds + label-window purge. - Expanding train window, fixed-length\u2026",
       "_origin": "ast",
@@ -3682,22 +3880,11 @@
       "source_location": "L93"
     },
     {
-      "id": "scripts_summarize_walkforward_rationale_2",
-      "label": "CLI: print walk-forward fold summary (with purge) for each horizon.",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "walkforward.py",
-      "file_type": "rationale",
-      "norm_label": "cli: print walk-forward fold summary (with purge) for each horizon.",
-      "source_file": "scripts/summarize_walkforward.py",
-      "source_location": "L2"
-    },
-    {
       "id": "ndarray",
       "label": "ndarray",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "ndarray",
       "source_file": "",
@@ -3708,7 +3895,7 @@
       "label": "metrics.py",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "metrics.py",
       "source_file": "pinky/metrics.py",
@@ -3719,7 +3906,7 @@
       "label": "DataFrame",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "dataframe",
       "source_file": "",
@@ -3730,31 +3917,64 @@
       "label": "DatetimeIndex",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "datetimeindex",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "pinky_train",
-      "label": "train.py",
+      "id": "pinky_metrics_py_series",
+      "label": "Series",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
-      "norm_label": "train.py",
-      "source_file": "pinky/train.py",
+      "norm_label": "series",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "scripts_build_showcase",
+      "label": "build_showcase.py",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "build_showcase.py",
+      "source_file": "scripts/build_showcase.py",
       "source_location": "L1"
     },
     {
-      "id": "pinky_train_py_dataframe",
+      "id": "scripts_build_showcase_py_dataframe",
       "label": "DataFrame",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "code",
       "norm_label": "dataframe",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "scripts_build_showcase_py_path",
+      "label": "Path",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "path",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "scripts_build_showcase_py_series",
+      "label": "Series",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "code",
+      "norm_label": "series",
       "source_file": "",
       "source_location": ""
     },
@@ -3763,51 +3983,40 @@
       "label": "Evaluation metrics for walk-forward reports (honest, no fake scores).",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
       "norm_label": "evaluation metrics for walk-forward reports (honest, no fake scores).",
       "source_file": "pinky/metrics.py",
       "source_location": "L1"
     },
     {
-      "id": "pinky_metrics_rationale_102",
+      "id": "pinky_metrics_rationale_103",
+      "label": "Share of the monthly top picks whose company is acquired within `days` of the\u2026",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "rationale",
+      "norm_label": "share of the monthly top picks whose company is acquired within `days` of the...",
+      "source_file": "pinky/metrics.py",
+      "source_location": "L103"
+    },
+    {
+      "id": "pinky_metrics_rationale_127",
       "label": "Time-weighted capture of big winners. For each calendar year, take the\u2026",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
       "norm_label": "time-weighted capture of big winners. for each calendar year, take the...",
       "source_file": "pinky/metrics.py",
-      "source_location": "L102"
-    },
-    {
-      "id": "pinky_metrics_rationale_131",
-      "label": "Reliability-style bins: predicted prob vs realized frequency.",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "train.py",
-      "file_type": "rationale",
-      "norm_label": "reliability-style bins: predicted prob vs realized frequency.",
-      "source_file": "pinky/metrics.py",
-      "source_location": "L131"
-    },
-    {
-      "id": "pinky_metrics_rationale_20",
-      "label": "Mean Spearman IC across dates (cross-sectional).",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "train.py",
-      "file_type": "rationale",
-      "norm_label": "mean spearman ic across dates (cross-sectional).",
-      "source_file": "pinky/metrics.py",
-      "source_location": "L20"
+      "source_location": "L127"
     },
     {
       "id": "pinky_metrics_rationale_35",
       "label": "Mean realized beat-rate among top predicted names each day.",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
       "norm_label": "mean realized beat-rate among top predicted names each day.",
       "source_file": "pinky/metrics.py",
@@ -3818,7 +4027,7 @@
       "label": "Mean equal-weight excess of top-N predicted names each day.",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
       "norm_label": "mean equal-weight excess of top-n predicted names each day.",
       "source_file": "pinky/metrics.py",
@@ -3829,7 +4038,7 @@
       "label": "Equal-weight all-names excess each day, then average.",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
       "norm_label": "equal-weight all-names excess each day, then average.",
       "source_file": "pinky/metrics.py",
@@ -3840,7 +4049,7 @@
       "label": "First available date of each month (limits overlap from year-long labels).",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
       "norm_label": "first available date of each month (limits overlap from year-long labels).",
       "source_file": "pinky/metrics.py",
@@ -3851,56 +4060,66 @@
       "label": "Share of the model's top-k picks that end up in the future top decile. `frac`\u2026",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
       "norm_label": "share of the model's top-k picks that end up in the future top decile. `frac`...",
       "source_file": "pinky/metrics.py",
       "source_location": "L78"
     },
     {
-      "id": "pinky_train_rationale_1",
-      "label": "Walk-forward training + evaluation (LightGBM + Ridge baseline). v2 prep: -\u2026",
+      "id": "scripts_build_showcase_rationale_1",
+      "label": "Build a self-contained one-page showcase for Pinky. Reads saved walk-forward\u2026",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
-      "norm_label": "walk-forward training + evaluation (lightgbm + ridge baseline). v2 prep: -...",
-      "source_file": "pinky/train.py",
+      "norm_label": "build a self-contained one-page showcase for pinky. reads saved walk-forward...",
+      "source_file": "scripts/build_showcase.py",
       "source_location": "L1"
     },
     {
-      "id": "pinky_train_rationale_236",
-      "label": "Train/eval all folds for one horizon with CS prep + tuned LightGBM.",
+      "id": "scripts_build_showcase_rationale_101",
+      "label": "Hit rate, crash rate, buyout rate and winner capture of the monthly top-10.",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
-      "norm_label": "train/eval all folds for one horizon with cs prep + tuned lightgbm.",
-      "source_file": "pinky/train.py",
-      "source_location": "L236"
+      "norm_label": "hit rate, crash rate, buyout rate and winner capture of the monthly top-10.",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L101"
     },
     {
-      "id": "pinky_train_rationale_290",
-      "label": "Does the model find the future top decile / the year's biggest winners?",
+      "id": "scripts_build_showcase_rationale_136",
+      "label": "Monthly top-k picks: the ones bought out within `days` vs the rest.",
       "_origin": "ast",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "file_type": "rationale",
-      "norm_label": "does the model find the future top decile / the year's biggest winners?",
-      "source_file": "pinky/train.py",
-      "source_location": "L290"
+      "norm_label": "monthly top-k picks: the ones bought out within `days` vs the rest.",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L136"
     },
     {
-      "id": "json",
-      "label": "json",
-      "_origin": "semantic",
-      "community": 10,
-      "community_name": "backtest.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "json",
-      "source_file": "",
-      "type": "external"
+      "id": "scripts_build_showcase_rationale_157",
+      "label": "The original 128-stock run (survivorship-biased), for the 'what changed'\u2026",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "rationale",
+      "norm_label": "the original 128-stock run (survivorship-biased), for the 'what changed'...",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L157"
+    },
+    {
+      "id": "scripts_build_showcase_rationale_64",
+      "label": "Growth of $10k, one point per holding period (plus the starting point).",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "build_showcase.py",
+      "file_type": "rationale",
+      "norm_label": "growth of $10k, one point per holding period (plus the starting point).",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L64"
     },
     {
       "id": "math",
@@ -3915,26 +4134,62 @@
       "type": "external"
     },
     {
-      "id": "os",
-      "label": "os",
+      "id": "joblib",
+      "label": "joblib",
       "_origin": "semantic",
-      "community": 10,
-      "community_name": "backtest.py",
+      "community": 12,
+      "community_name": "train.py",
       "external": true,
       "file_type": "concept",
-      "norm_label": "os",
+      "norm_label": "joblib",
       "source_file": "",
       "type": "external"
     },
     {
-      "id": "warnings",
-      "label": "warnings",
+      "id": "lightgbm",
+      "label": "lightgbm",
       "_origin": "semantic",
-      "community": 10,
-      "community_name": "backtest.py",
+      "community": 12,
+      "community_name": "train.py",
       "external": true,
       "file_type": "concept",
-      "norm_label": "warnings",
+      "norm_label": "lightgbm",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "sklearn_linear_model",
+      "label": "sklearn_linear_model",
+      "_origin": "semantic",
+      "community": 12,
+      "community_name": "train.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "sklearn_linear_model",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "sklearn_pipeline",
+      "label": "sklearn_pipeline",
+      "_origin": "semantic",
+      "community": 12,
+      "community_name": "train.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "sklearn_pipeline",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "sklearn_preprocessing",
+      "label": "sklearn_preprocessing",
+      "_origin": "semantic",
+      "community": 12,
+      "community_name": "train.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "sklearn_preprocessing",
       "source_file": "",
       "type": "external"
     },
@@ -3942,7 +4197,7 @@
       "id": "io",
       "label": "io",
       "_origin": "semantic",
-      "community": 12,
+      "community": 2,
       "community_name": "sharadar.py",
       "external": true,
       "file_type": "concept",
@@ -3951,10 +4206,22 @@
       "type": "external"
     },
     {
+      "id": "os",
+      "label": "os",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "sharadar.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "os",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "pyarrow_parquet",
       "label": "pyarrow_parquet",
       "_origin": "semantic",
-      "community": 12,
+      "community": 2,
       "community_name": "sharadar.py",
       "external": true,
       "file_type": "concept",
@@ -3966,7 +4233,7 @@
       "id": "re",
       "label": "re",
       "_origin": "semantic",
-      "community": 12,
+      "community": 2,
       "community_name": "sharadar.py",
       "external": true,
       "file_type": "concept",
@@ -3978,7 +4245,7 @@
       "id": "requests",
       "label": "requests",
       "_origin": "semantic",
-      "community": 12,
+      "community": 2,
       "community_name": "sharadar.py",
       "external": true,
       "file_type": "concept",
@@ -3990,7 +4257,7 @@
       "id": "sys",
       "label": "sys",
       "_origin": "semantic",
-      "community": 12,
+      "community": 2,
       "community_name": "sharadar.py",
       "external": true,
       "file_type": "concept",
@@ -4002,7 +4269,7 @@
       "id": "zipfile",
       "label": "zipfile",
       "_origin": "semantic",
-      "community": 12,
+      "community": 2,
       "community_name": "sharadar.py",
       "external": true,
       "file_type": "concept",
@@ -4083,26 +4350,14 @@
       "type": "external"
     },
     {
-      "id": "joblib",
-      "label": "joblib",
+      "id": "json",
+      "label": "json",
       "_origin": "semantic",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "external": true,
       "file_type": "concept",
-      "norm_label": "joblib",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "lightgbm",
-      "label": "lightgbm",
-      "_origin": "semantic",
-      "community": 9,
-      "community_name": "train.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "lightgbm",
+      "norm_label": "json",
       "source_file": "",
       "type": "external"
     },
@@ -4111,7 +4366,7 @@
       "label": "scipy_stats",
       "_origin": "semantic",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "external": true,
       "file_type": "concept",
       "norm_label": "scipy_stats",
@@ -4119,38 +4374,14 @@
       "type": "external"
     },
     {
-      "id": "sklearn_linear_model",
-      "label": "sklearn_linear_model",
+      "id": "warnings",
+      "label": "warnings",
       "_origin": "semantic",
       "community": 9,
-      "community_name": "train.py",
+      "community_name": "build_showcase.py",
       "external": true,
       "file_type": "concept",
-      "norm_label": "sklearn_linear_model",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "sklearn_pipeline",
-      "label": "sklearn_pipeline",
-      "_origin": "semantic",
-      "community": 9,
-      "community_name": "train.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "sklearn_pipeline",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "sklearn_preprocessing",
-      "label": "sklearn_preprocessing",
-      "_origin": "semantic",
-      "community": 9,
-      "community_name": "train.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "sklearn_preprocessing",
+      "norm_label": "warnings",
       "source_file": "",
       "type": "external"
     }
@@ -4165,7 +4396,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/backtest.py",
-      "source_location": "L280",
+      "source_location": "L291",
       "weight": 1.0
     },
     {
@@ -4261,7 +4492,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/backtest.py",
-      "source_location": "L221",
+      "source_location": "L232",
       "weight": 1.0
     },
     {
@@ -4273,7 +4504,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/backtest.py",
-      "source_location": "L230",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -4285,7 +4516,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/backtest.py",
-      "source_location": "L289",
+      "source_location": "L300",
       "weight": 1.0
     },
     {
@@ -4565,6 +4796,18 @@
       "weight": 1.0
     },
     {
+      "source": "pinky_metrics_acquired_share",
+      "target": "pinky_metrics_monthly_dates",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/metrics.py",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
       "source": "pinky_metrics_daily_rank_ic",
       "target": "pinky_metrics_safe_spearman",
       "relation": "calls",
@@ -4597,7 +4840,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/metrics.py",
-      "source_location": "L110",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -4825,7 +5068,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L339",
+      "source_location": "L367",
       "weight": 1.0
     },
     {
@@ -4837,7 +5080,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L359",
+      "source_location": "L387",
       "weight": 1.0
     },
     {
@@ -4849,7 +5092,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L363",
+      "source_location": "L391",
       "weight": 1.0
     },
     {
@@ -4861,7 +5104,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L364",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -4873,7 +5116,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L382",
+      "source_location": "L410",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_backtest_lines",
+      "target": "pinky_backtest_between_years",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/train.py",
+      "source_location": "L444",
       "weight": 1.0
     },
     {
@@ -4885,7 +5140,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L407",
+      "source_location": "L466",
       "weight": 1.0
     },
     {
@@ -4897,7 +5152,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L427",
+      "source_location": "L486",
       "weight": 1.0
     },
     {
@@ -4909,7 +5164,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L442",
+      "source_location": "L501",
       "weight": 1.0
     },
     {
@@ -4921,7 +5176,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L452",
+      "source_location": "L511",
       "weight": 1.0
     },
     {
@@ -4933,7 +5188,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L197",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -4945,7 +5200,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L200",
+      "source_location": "L204",
       "weight": 1.0
     },
     {
@@ -4957,7 +5212,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L202",
+      "source_location": "L206",
       "weight": 1.0
     },
     {
@@ -4969,7 +5224,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L205",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -4981,7 +5236,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L206",
+      "source_location": "L210",
       "weight": 1.0
     },
     {
@@ -4993,7 +5248,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L314",
+      "source_location": "L333",
       "weight": 1.0
     },
     {
@@ -5005,7 +5260,79 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L317",
+      "source_location": "L336",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_ranking_lines",
+      "target": "pinky_metrics_acquired_share",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/train.py",
+      "source_location": "L339",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_rewrite_summary",
+      "target": "pinky_train_write_summary",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/train.py",
+      "source_location": "L621",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_rewrite_summary",
+      "target": "pinky_train_pit_universe_desc",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/train.py",
+      "source_location": "L626",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_rewrite_summary",
+      "target": "pinky_universe_backtest_prices",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/train.py",
+      "source_location": "L627",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_rewrite_summary",
+      "target": "pinky_universe_sector_map",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/train.py",
+      "source_location": "L628",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_rewrite_summary",
+      "target": "pinky_universe_acquisition_dates",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/train.py",
+      "source_location": "L629",
       "weight": 1.0
     },
     {
@@ -5017,7 +5344,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L558",
+      "source_location": "L652",
       "weight": 1.0
     },
     {
@@ -5029,7 +5356,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L559",
+      "source_location": "L653",
       "weight": 1.0
     },
     {
@@ -5041,7 +5368,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L560",
+      "source_location": "L654",
       "weight": 1.0
     },
     {
@@ -5053,7 +5380,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L561",
+      "source_location": "L655",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_run_all",
+      "target": "pinky_universe_acquisition_dates",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/train.py",
+      "source_location": "L656",
       "weight": 1.0
     },
     {
@@ -5065,7 +5404,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L563",
+      "source_location": "L658",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_run_all",
+      "target": "pinky_train_pit_universe_desc",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/train.py",
+      "source_location": "L664",
       "weight": 1.0
     },
     {
@@ -5077,7 +5428,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L581",
+      "source_location": "L671",
       "weight": 1.0
     },
     {
@@ -5089,7 +5440,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L582",
+      "source_location": "L672",
       "weight": 1.0
     },
     {
@@ -5101,7 +5452,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L597",
+      "source_location": "L687",
       "weight": 1.0
     },
     {
@@ -5113,7 +5464,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L624",
+      "source_location": "L715",
       "weight": 1.0
     },
     {
@@ -5125,7 +5476,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L241",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -5137,7 +5488,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L242",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -5149,7 +5500,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L243",
+      "source_location": "L247",
       "weight": 1.0
     },
     {
@@ -5161,7 +5512,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L244",
+      "source_location": "L248",
       "weight": 1.0
     },
     {
@@ -5173,7 +5524,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L246",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -5185,7 +5536,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L247",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
@@ -5197,7 +5548,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L249",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -5209,7 +5560,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L529",
+      "source_location": "L591",
       "weight": 1.0
     },
     {
@@ -5221,7 +5572,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L532",
+      "source_location": "L594",
       "weight": 1.0
     },
     {
@@ -5233,7 +5584,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L533",
+      "source_location": "L595",
       "weight": 1.0
     },
     {
@@ -5245,7 +5596,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/train.py",
-      "source_location": "L534",
+      "source_location": "L596",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_universe_acquisition_dates",
+      "target": "pinky_sharadar_load",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pinky/universe.py",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -5257,7 +5620,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L166",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -5269,7 +5632,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L167",
+      "source_location": "L173",
       "weight": 1.0
     },
     {
@@ -5281,7 +5644,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L68",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -5293,7 +5656,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L101",
+      "source_location": "L107",
       "weight": 1.0
     },
     {
@@ -5305,7 +5668,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L77",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -5317,7 +5680,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L78",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -5341,7 +5704,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L110",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -5365,7 +5728,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L128",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -5377,7 +5740,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L129",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -5389,7 +5752,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L139",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -5466,50 +5829,38 @@
     },
     {
       "source": "scripts_build_showcase_build_data",
-      "target": "scripts_build_showcase_equity_curve",
+      "target": "pinky_universe_acquisition_dates",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L111",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
       "source": "scripts_build_showcase_build_data",
-      "target": "pinky_backtest_pick_sector_share",
+      "target": "pinky_universe_backtest_prices",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L147",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
       "source": "scripts_build_showcase_build_data",
-      "target": "scripts_build_showcase_ranking_metrics",
+      "target": "pinky_universe_sector_map",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L175",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_build_showcase_build_data",
-      "target": "pinky_backtest_default_prices",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L87",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -5521,7 +5872,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L91",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -5533,7 +5884,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L94",
+      "source_location": "L190",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_build_data",
+      "target": "scripts_build_showcase_make_curve",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -5545,7 +5908,67 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L97",
+      "source_location": "L218",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_build_data",
+      "target": "pinky_backtest_pick_sector_share",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L221",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_build_data",
+      "target": "pinky_backtest_with_cost",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L224",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_build_data",
+      "target": "scripts_build_showcase_old_results",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L255",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_build_data",
+      "target": "scripts_build_showcase_skill_metrics",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L257",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_build_data",
+      "target": "scripts_build_showcase_buyout_split",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L262",
       "weight": 1.0
     },
     {
@@ -5557,23 +5980,95 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L767",
+      "source_location": "L912",
       "weight": 1.0
     },
     {
-      "source": "scripts_build_showcase_ranking_metrics",
-      "target": "pinky_labels_add_top_decile_labels",
+      "source": "scripts_build_showcase_make_curve",
+      "target": "scripts_build_showcase_equity_curve",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L61",
+      "source_location": "L85",
       "weight": 1.0
     },
     {
-      "source": "scripts_build_showcase_ranking_metrics",
+      "source": "scripts_build_showcase_make_curve",
+      "target": "scripts_build_showcase_period_cagr",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L93",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_make_curve",
+      "target": "scripts_build_showcase_max_drawdown",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L96",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_old_results",
+      "target": "pinky_backtest_default_prices",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L160",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_old_results",
+      "target": "pinky_backtest_run_backtest",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L163",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_old_results",
+      "target": "pinky_backtest_summarize_backtest",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L163",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_period_cagr",
+      "target": "pinky_backtest_between_years",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_skill_metrics",
       "target": "pinky_metrics_precision_at_k",
       "relation": "calls",
       "_origin": "ast",
@@ -5581,11 +6076,23 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L66",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
-      "source": "scripts_build_showcase_ranking_metrics",
+      "source": "scripts_build_showcase_skill_metrics",
+      "target": "pinky_metrics_acquired_share",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_skill_metrics",
       "target": "pinky_metrics_winner_capture",
       "relation": "calls",
       "_origin": "ast",
@@ -5593,7 +6100,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L67",
+      "source_location": "L119",
       "weight": 1.0
     },
     {
@@ -5605,7 +6112,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pinky/universe.py",
-      "source_location": "L82",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_buyout_split",
+      "target": "scripts_build_showcase_buyout_split_stats",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -5653,7 +6172,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "pinky/train.py",
-      "source_location": "L328",
+      "source_location": "L356",
       "weight": 1.0
     },
     {
@@ -5665,7 +6184,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "pinky/train.py",
-      "source_location": "L233",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -5677,7 +6196,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "pinky/train.py",
-      "source_location": "L471",
+      "source_location": "L532",
       "weight": 1.0
     },
     {
@@ -5689,7 +6208,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "pinky/universe.py",
-      "source_location": "L75",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -5701,7 +6220,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "pinky/universe.py",
-      "source_location": "L154",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -6198,6 +6717,18 @@
     },
     {
       "source": "pinky_train",
+      "target": "pinky_backtest_between_years",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pinky/train.py",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train",
       "target": "pinky_backtest_default_prices",
       "relation": "imports",
       "_origin": "ast",
@@ -6313,7 +6844,19 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L56",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train",
+      "target": "pinky_metrics_acquired_share",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pinky/train.py",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -6325,7 +6868,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -6337,7 +6880,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -6349,7 +6892,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -6361,7 +6904,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -6373,7 +6916,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -6385,7 +6928,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -6397,7 +6940,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -6409,7 +6952,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -6421,7 +6964,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L67",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -6433,7 +6976,19 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L68",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train",
+      "target": "pinky_universe_acquisition_dates",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pinky/train.py",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -6445,7 +7000,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L69",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -6457,7 +7012,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L69",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -6469,7 +7024,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L69",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -6481,7 +7036,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L70",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -6493,7 +7048,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L70",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -6649,7 +7204,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -6661,7 +7216,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -6673,7 +7228,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -6685,7 +7240,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L23",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -6697,7 +7252,19 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L24",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "pinky_backtest_between_years",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -6709,7 +7276,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -6721,7 +7288,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -6733,7 +7300,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -6745,7 +7312,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -6757,19 +7324,31 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
       "source": "scripts_build_showcase",
-      "target": "pinky_labels_add_top_decile_labels",
+      "target": "pinky_backtest_with_cost",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L40",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "pinky_metrics_acquired_share",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -6781,7 +7360,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L41",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -6793,7 +7372,43 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L41",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "pinky_universe_acquisition_dates",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "pinky_universe_backtest_prices",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "pinky_universe_sector_map",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -6865,7 +7480,19 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/train_walkforward.py",
-      "source_location": "L11",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_train_walkforward",
+      "target": "pinky_train_rewrite_summary",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scripts/train_walkforward.py",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -6877,7 +7504,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/train_walkforward.py",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -7237,7 +7864,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -7249,7 +7876,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L56",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -7261,7 +7888,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -7273,7 +7900,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L67",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -7285,7 +7912,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L68",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -7297,7 +7924,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L69",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -7309,7 +7936,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pinky/train.py",
-      "source_location": "L70",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -7417,7 +8044,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -7429,7 +8056,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -7441,19 +8068,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L33",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_build_showcase",
-      "target": "pinky_labels",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L40",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -7465,7 +8080,31 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L41",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "pinky_pit_dataset",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "pinky_universe",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -7537,7 +8176,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/train_walkforward.py",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -7549,7 +8188,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "scripts/train_walkforward.py",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -7561,7 +8200,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L201",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
@@ -7573,7 +8212,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L201",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
@@ -7585,7 +8224,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L207",
+      "source_location": "L218",
       "weight": 1.0
     },
     {
@@ -7633,7 +8272,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L246",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -7657,7 +8296,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L212",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -7669,7 +8308,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L272",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -7681,7 +8320,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L272",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -7693,7 +8332,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L283",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -7841,6 +8480,30 @@
       "weight": 1.0
     },
     {
+      "source": "pinky_metrics_acquired_share",
+      "target": "pinky_metrics_py_dataframe",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "pinky/metrics.py",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_metrics_acquired_share",
+      "target": "pinky_metrics_py_series",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "pinky/metrics.py",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
       "source": "pinky_metrics_brier_score",
       "target": "ndarray",
       "relation": "references",
@@ -7849,7 +8512,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/metrics.py",
-      "source_location": "L122",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -7861,7 +8524,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/metrics.py",
-      "source_location": "L126",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -7957,7 +8620,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/metrics.py",
-      "source_location": "L95",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -8065,7 +8728,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/train.py",
-      "source_location": "L226",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -8077,7 +8740,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/train.py",
-      "source_location": "L161",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -8089,7 +8752,19 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/train.py",
-      "source_location": "L289",
+      "source_location": "L293",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_ranking_lines",
+      "target": "pinky_train_py_series",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "pinky/train.py",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -8101,7 +8776,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/train.py",
-      "source_location": "L233",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -8113,7 +8788,19 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/train.py",
-      "source_location": "L471",
+      "source_location": "L532",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_write_summary",
+      "target": "pinky_train_py_series",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "pinky/train.py",
+      "source_location": "L532",
       "weight": 1.0
     },
     {
@@ -8125,7 +8812,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/train.py",
-      "source_location": "L94",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -8137,7 +8824,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/train.py",
-      "source_location": "L88",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -8149,7 +8836,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/universe.py",
-      "source_location": "L108",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -8161,7 +8848,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "pinky/universe.py",
-      "source_location": "L108",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -8237,6 +8924,30 @@
       "weight": 1.0
     },
     {
+      "source": "scripts_build_showcase_buyout_split",
+      "target": "scripts_build_showcase_py_dataframe",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L133",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_buyout_split",
+      "target": "scripts_build_showcase_py_series",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L133",
+      "weight": 1.0
+    },
+    {
       "source": "scripts_build_showcase_equity_curve",
       "target": "scripts_build_showcase_py_dataframe",
       "relation": "references",
@@ -8245,11 +8956,11 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L49",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
-      "source": "scripts_build_showcase_ranking_metrics",
+      "source": "scripts_build_showcase_make_curve",
       "target": "scripts_build_showcase_py_dataframe",
       "relation": "references",
       "_origin": "ast",
@@ -8257,7 +8968,67 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L59",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_max_drawdown",
+      "target": "scripts_build_showcase_py_dataframe",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_period_cagr",
+      "target": "scripts_build_showcase_py_dataframe",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L73",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_skill_metrics",
+      "target": "scripts_build_showcase_py_dataframe",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_skill_metrics",
+      "target": "scripts_build_showcase_py_series",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_backtest_between_years",
+      "target": "pinky_backtest_py_dataframe",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "return_type",
+      "source_file": "pinky/backtest.py",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -8269,7 +9040,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L279",
+      "source_location": "L290",
       "weight": 1.0
     },
     {
@@ -8293,7 +9064,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L258",
+      "source_location": "L269",
       "weight": 1.0
     },
     {
@@ -8329,7 +9100,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L246",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -8353,7 +9124,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L194",
+      "source_location": "L205",
       "weight": 1.0
     },
     {
@@ -8365,7 +9136,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L283",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -8377,7 +9148,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/backtest.py",
-      "source_location": "L235",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -8593,7 +9364,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/metrics.py",
-      "source_location": "L126",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -8749,7 +9520,19 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/train.py",
-      "source_location": "L226",
+      "source_location": "L230",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_rewrite_summary",
+      "target": "pinky_train_py_path",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "return_type",
+      "source_file": "pinky/train.py",
+      "source_location": "L612",
       "weight": 1.0
     },
     {
@@ -8761,7 +9544,19 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/train.py",
-      "source_location": "L541",
+      "source_location": "L635",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_universe_acquisition_dates",
+      "target": "pinky_universe_py_series",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "return_type",
+      "source_file": "pinky/universe.py",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -8773,7 +9568,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/universe.py",
-      "source_location": "L164",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -8785,7 +9580,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/universe.py",
-      "source_location": "L64",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -8809,7 +9604,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/universe.py",
-      "source_location": "L160",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -8821,7 +9616,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/universe.py",
-      "source_location": "L117",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -8833,7 +9628,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "pinky/universe.py",
-      "source_location": "L171",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -8881,7 +9676,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L766",
+      "source_location": "L911",
       "weight": 1.0
     },
     {
@@ -9568,7 +10363,7 @@
     },
     {
       "source": "pinky_backtest",
-      "target": "pinky_backtest_with_cost",
+      "target": "pinky_backtest_between_years",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -9579,29 +10374,18 @@
     },
     {
       "source": "pinky_backtest",
+      "target": "pinky_backtest_with_cost",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/backtest.py",
+      "source_location": "L205",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_backtest",
       "target": "pinky_backtest_cagr",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "pinky/backtest.py",
-      "source_location": "L201",
-      "weight": 1.0
-    },
-    {
-      "source": "pinky_backtest",
-      "target": "pinky_backtest_max_drawdown",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "pinky/backtest.py",
-      "source_location": "L207",
-      "weight": 1.0
-    },
-    {
-      "source": "pinky_backtest",
-      "target": "pinky_backtest_summarize_backtest",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -9612,18 +10396,29 @@
     },
     {
       "source": "pinky_backtest",
-      "target": "pinky_backtest_yearly_table",
+      "target": "pinky_backtest_max_drawdown",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/backtest.py",
-      "source_location": "L235",
+      "source_location": "L218",
       "weight": 1.0
     },
     {
       "source": "pinky_backtest",
-      "target": "pinky_backtest_pick_sector_share",
+      "target": "pinky_backtest_summarize_backtest",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/backtest.py",
+      "source_location": "L223",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_backtest",
+      "target": "pinky_backtest_yearly_table",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -9634,13 +10429,24 @@
     },
     {
       "source": "pinky_backtest",
+      "target": "pinky_backtest_pick_sector_share",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/backtest.py",
+      "source_location": "L257",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_backtest",
       "target": "pinky_backtest_momentum_scores",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/backtest.py",
-      "source_location": "L258",
+      "source_location": "L269",
       "weight": 1.0
     },
     {
@@ -9651,7 +10457,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/backtest.py",
-      "source_location": "L272",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -9662,7 +10468,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/backtest.py",
-      "source_location": "L279",
+      "source_location": "L290",
       "weight": 1.0
     },
     {
@@ -9673,7 +10479,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/backtest.py",
-      "source_location": "L283",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -9739,7 +10545,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/config.py",
-      "source_location": "L123",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -9986,13 +10792,24 @@
     },
     {
       "source": "pinky_metrics",
+      "target": "pinky_metrics_winner_capture",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/metrics.py",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_metrics",
       "target": "pinky_metrics_brier_score",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/metrics.py",
-      "source_location": "L122",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -10003,7 +10820,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/metrics.py",
-      "source_location": "L126",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -10074,7 +10891,7 @@
     },
     {
       "source": "pinky_metrics",
-      "target": "pinky_metrics_winner_capture",
+      "target": "pinky_metrics_acquired_share",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -10300,7 +11117,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L100",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -10311,7 +11128,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L128",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -10322,7 +11139,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L161",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -10333,7 +11150,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L226",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -10344,7 +11161,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L233",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -10355,7 +11172,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L285",
+      "source_location": "L289",
       "weight": 1.0
     },
     {
@@ -10366,7 +11183,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L289",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -10377,7 +11194,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L328",
+      "source_location": "L356",
       "weight": 1.0
     },
     {
@@ -10388,7 +11205,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L471",
+      "source_location": "L532",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train",
+      "target": "pinky_train_pit_universe_desc",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/train.py",
+      "source_location": "L603",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train",
+      "target": "pinky_train_rewrite_summary",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/train.py",
+      "source_location": "L612",
       "weight": 1.0
     },
     {
@@ -10399,7 +11238,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L541",
+      "source_location": "L635",
       "weight": 1.0
     },
     {
@@ -10410,7 +11249,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L88",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -10421,7 +11260,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L94",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -10432,7 +11271,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L108",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -10443,7 +11282,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L117",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -10454,7 +11293,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L154",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -10465,7 +11304,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L160",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -10476,7 +11315,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L164",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -10487,7 +11326,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L171",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -10514,7 +11353,7 @@
     },
     {
       "source": "pinky_universe",
-      "target": "pinky_universe_benchmark_closeadj",
+      "target": "pinky_universe_acquisition_dates",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -10525,13 +11364,24 @@
     },
     {
       "source": "pinky_universe",
+      "target": "pinky_universe_benchmark_closeadj",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/universe.py",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_universe",
       "target": "pinky_universe_build_panels",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L75",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -10619,7 +11469,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L100",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -10630,7 +11480,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L117",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -10641,7 +11491,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L135",
+      "source_location": "L140",
+      "weight": 1.0
+    },
+    {
+      "source": "project_pinky",
+      "target": "project_key_findings",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "project.md",
+      "source_location": "L102",
       "weight": 1.0
     },
     {
@@ -10652,7 +11513,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L140",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -10663,7 +11524,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L151",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -10674,7 +11535,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L177",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -10685,7 +11546,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L185",
+      "source_location": "L190",
       "weight": 1.0
     },
     {
@@ -10696,7 +11557,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L204",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -10707,7 +11568,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L53",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -10718,7 +11579,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L69",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -10740,18 +11601,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "project.md",
-      "source_location": "L90",
-      "weight": 1.0
-    },
-    {
-      "source": "project_pinky",
-      "target": "project_key_findings",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "project.md",
-      "source_location": "L98",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
@@ -10844,35 +11694,35 @@
     },
     {
       "source": "scripts_build_showcase",
-      "target": "scripts_build_showcase_equity_curve",
+      "target": "scripts_build_showcase_skill_metrics",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L49",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
       "source": "scripts_build_showcase",
-      "target": "scripts_build_showcase_ranking_metrics",
+      "target": "scripts_build_showcase_buyout_split",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L59",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
       "source": "scripts_build_showcase",
-      "target": "scripts_build_showcase_main",
+      "target": "scripts_build_showcase_old_results",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L766",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -10883,7 +11733,62 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L83",
+      "source_location": "L178",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "scripts_build_showcase_equity_curve",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L63",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "scripts_build_showcase_period_cagr",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L73",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "scripts_build_showcase_max_drawdown",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "scripts_build_showcase_make_curve",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase",
+      "target": "scripts_build_showcase_main",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L911",
       "weight": 1.0
     },
     {
@@ -10910,7 +11815,7 @@
     },
     {
       "source": "pinky_backtest_rationale_195",
-      "target": "pinky_backtest_with_cost",
+      "target": "pinky_backtest_between_years",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -10920,47 +11825,58 @@
       "weight": 1.0
     },
     {
-      "source": "pinky_backtest_rationale_247",
+      "source": "pinky_backtest_rationale_206",
+      "target": "pinky_backtest_with_cost",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/backtest.py",
+      "source_location": "L206",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_backtest_rationale_258",
       "target": "pinky_backtest_pick_sector_share",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/backtest.py",
-      "source_location": "L247",
+      "source_location": "L258",
       "weight": 1.0
     },
     {
-      "source": "pinky_backtest_rationale_259",
+      "source": "pinky_backtest_rationale_270",
       "target": "pinky_backtest_momentum_scores",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/backtest.py",
-      "source_location": "L259",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
-      "source": "pinky_backtest_rationale_273",
+      "source": "pinky_backtest_rationale_284",
       "target": "pinky_backtest_top_winners",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/backtest.py",
-      "source_location": "L273",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
-      "source": "pinky_backtest_rationale_286",
+      "source": "pinky_backtest_rationale_297",
       "target": "pinky_backtest_within_sector_ic",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/backtest.py",
-      "source_location": "L286",
+      "source_location": "L297",
       "weight": 1.0
     },
     {
@@ -10997,14 +11913,14 @@
       "weight": 1.0
     },
     {
-      "source": "pinky_config_rationale_124",
+      "source": "pinky_config_rationale_126",
       "target": "pinky_config_all_tickers",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/config.py",
-      "source_location": "L124",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -11272,25 +12188,36 @@
       "weight": 1.0
     },
     {
-      "source": "pinky_metrics_rationale_102",
+      "source": "pinky_metrics_rationale_103",
+      "target": "pinky_metrics_acquired_share",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/metrics.py",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_metrics_rationale_127",
       "target": "pinky_metrics_winner_capture",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/metrics.py",
-      "source_location": "L102",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
-      "source": "pinky_metrics_rationale_131",
+      "source": "pinky_metrics_rationale_156",
       "target": "pinky_metrics_calibration_table",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/metrics.py",
-      "source_location": "L131",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -11536,58 +12463,69 @@
       "weight": 1.0
     },
     {
-      "source": "pinky_train_rationale_227",
+      "source": "pinky_train_rationale_231",
       "target": "pinky_train_dev_rows",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L227",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
-      "source": "pinky_train_rationale_236",
+      "source": "pinky_train_rationale_240",
       "target": "pinky_train_run_horizon",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L236",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
-      "source": "pinky_train_rationale_290",
+      "source": "pinky_train_rationale_299",
       "target": "pinky_train_ranking_lines",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L290",
+      "source_location": "L299",
       "weight": 1.0
     },
     {
-      "source": "pinky_train_rationale_335",
+      "source": "pinky_train_rationale_363",
       "target": "pinky_train_backtest_lines",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L335",
+      "source_location": "L363",
       "weight": 1.0
     },
     {
-      "source": "pinky_train_rationale_548",
+      "source": "pinky_train_rationale_613",
+      "target": "pinky_train_rewrite_summary",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/train.py",
+      "source_location": "L613",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_train_rationale_642",
       "target": "pinky_train_run_all",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/train.py",
-      "source_location": "L548",
+      "source_location": "L642",
       "weight": 1.0
     },
     {
@@ -11602,47 +12540,47 @@
       "weight": 1.0
     },
     {
-      "source": "pinky_universe_rationale_109",
+      "source": "pinky_universe_rationale_115",
       "target": "pinky_universe_performance_delisted",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L109",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
-      "source": "pinky_universe_rationale_118",
+      "source": "pinky_universe_rationale_124",
       "target": "pinky_universe_total_return_panel",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L118",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
-      "source": "pinky_universe_rationale_165",
+      "source": "pinky_universe_rationale_171",
       "target": "pinky_universe_backtest_prices",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L165",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
-      "source": "pinky_universe_rationale_172",
+      "source": "pinky_universe_rationale_178",
       "target": "pinky_universe_universe_summary",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L172",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -11669,7 +12607,7 @@
     },
     {
       "source": "pinky_universe_rationale_65",
-      "target": "pinky_universe_benchmark_closeadj",
+      "target": "pinky_universe_acquisition_dates",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11679,14 +12617,25 @@
       "weight": 1.0
     },
     {
-      "source": "pinky_universe_rationale_76",
+      "source": "pinky_universe_rationale_71",
+      "target": "pinky_universe_benchmark_closeadj",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pinky/universe.py",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "pinky_universe_rationale_82",
       "target": "pinky_universe_build_panels",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pinky/universe.py",
-      "source_location": "L76",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -11778,25 +12727,47 @@
       "weight": 1.0
     },
     {
-      "source": "scripts_build_showcase_rationale_50",
+      "source": "scripts_build_showcase_rationale_101",
+      "target": "scripts_build_showcase_skill_metrics",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_rationale_136",
+      "target": "scripts_build_showcase_buyout_split",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_rationale_157",
+      "target": "scripts_build_showcase_old_results",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/build_showcase.py",
+      "source_location": "L157",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_build_showcase_rationale_64",
       "target": "scripts_build_showcase_equity_curve",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/build_showcase.py",
-      "source_location": "L50",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_build_showcase_rationale_60",
-      "target": "scripts_build_showcase_ranking_metrics",
-      "relation": "rationale_for",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "scripts/build_showcase.py",
-      "source_location": "L60",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -11885,7 +12856,7 @@
       "confidence_score": 0.95,
       "context": "backtest.with_cost",
       "source_file": "project.md",
-      "source_location": "L179",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -11897,7 +12868,7 @@
       "confidence_score": 0.95,
       "context": "backtest_prices()",
       "source_file": "project.md",
-      "source_location": "L189",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -11921,7 +12892,7 @@
       "confidence_score": 0.95,
       "context": "dev_rows",
       "source_file": "project.md",
-      "source_location": "L193",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -11933,7 +12904,7 @@
       "confidence_score": 0.95,
       "context": "iter_walk_forward_folds",
       "source_file": "project.md",
-      "source_location": "L59",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -11945,7 +12916,7 @@
       "confidence_score": 0.95,
       "context": "parameter_type",
       "source_file": "pinky/train.py",
-      "source_location": "L163",
+      "source_location": "L167",
       "weight": 0.8
     },
     {
@@ -11957,10 +12928,10 @@
       "confidence_score": 0.95,
       "context": "train.dev_rows",
       "source_file": "project.md",
-      "source_location": "L149",
+      "source_location": "L154",
       "weight": 1.0
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2f307217c59b5b98879c42392b866267a4a0a739"
+  "built_at_commit": "5be6e8357eeaecc7532887350c757d33660f5eb9"
 }

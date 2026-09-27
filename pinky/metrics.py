@@ -92,6 +92,31 @@ def precision_at_k(
     return float(np.mean(vals)) if vals else float("nan")
 
 
+def acquired_share(
+    df: pd.DataFrame,
+    pred_col: str,
+    acq_dates: pd.Series,
+    k: int = 10,
+    frac: float | None = None,
+    days: int = 183,
+) -> float:
+    """
+    Share of the monthly top picks whose company is acquired within `days` of the pick.
+
+    Diagnostic only: deal completion dates are known later, so never use this as a feature.
+    `frac=1.0` gives the base rate over all stocks.
+    """
+    monthly = df[df["Date"].isin(set(_monthly_dates(df)))]
+    acq = monthly["Ticker"].map(acq_dates)
+    hit = (acq > monthly["Date"]) & (acq <= monthly["Date"] + pd.Timedelta(days=days))
+    monthly = monthly.assign(_acq=hit.astype(float).to_numpy())
+    vals = []
+    for _, g in monthly.groupby("Date"):
+        n = max(1, int(np.ceil(frac * len(g)))) if frac else k
+        vals.append(float(g.nlargest(min(n, len(g)), pred_col)["_acq"].mean()))
+    return float(np.mean(vals)) if vals else float("nan")
+
+
 def winner_capture(
     df: pd.DataFrame,
     pred_col: str,
