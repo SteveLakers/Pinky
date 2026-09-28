@@ -7,7 +7,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-09-27**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7): see `git log`.
+Last updated **2026-09-28**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Nothing has run since Sep 27 ~1 AM.
 
 **State**
 - Phase 1 (honest evaluation): **done**.
@@ -15,9 +15,9 @@ Last updated **2026-09-27**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
 - **Showcase updated to v6_pit: done** (2026-09-27). Leads with the honest result; every number is computed from saved artifacts; text checked against the data.
 - **Every report now includes both checks the user asked for:** share of top picks acquired within 6 months (top-10 and top 10%, vs base rate) and results before/after 2009 vs SPY (`REPORT_SPLIT_YEAR` in `config.py`).
 - **Phase 2 step 2 — four model fixes (v7_pit): done**, plus one ablation per fix and a control (all off = v6). Results in Key findings and `docs/WALKFORWARD_RESULTS.md`. Short version: IC doubles, crashes drop, **still no edge over SPY**; no run passes the bar. The **rank label** turns models into calm, low-volatility pickers (few big winners), which clashes with the goal.
-- **Waiting on the user:** which return target step 3 builds on (rank label = calm picks, better IC; raw target = winner-hunting LightGBM), and whether to rebuild the showcase now or after step 3.
+- **Waiting on the user (still open 2026-09-28):** which return target step 3 builds on (rank label = calm picks, better IC; raw target = winner-hunting LightGBM; recommended: run both through step 3 and pick with a rule fixed up front), and whether to rebuild the showcase now or after step 3 (recommended: after).
 - **Next:** step 3 — company data batch 1 → compare to step 2. After each step: rebuild the showcase (set `RUN` in `scripts/build_showcase.py`) and re-read its text. Static lines: the footer's "Stocks need a year of price history" must go once the showcase shows a run with the `young` fix.
-- Local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
+- 17 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
 **User decisions (2026-09-26)**
 - Phase 2 model fixes: **all four approved** (list under Roadmap).
@@ -150,7 +150,8 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 | Naive 12-1 momentum | −1.4% | −84% | 0.17 | 0.048 |
 
 - LightGBM picks volatile "lottery tickets": 1.5× random chance of a top-10% winner, but 2.6× the normal chance of losing > 50% vs SPY. **Price data predicts how much a stock moves, not which way.**
-- Ridge picks calm, rising stocks → about market return, smaller drawdowns.
+- Ridge picks calm, rising stocks → about market return, smaller drawdowns. **Correction (found in v6):** many of those calm picks are takeover targets (25% of Ridge's top-10 acquired within 6 months vs 2.2% base rate) — safe, not skill.
+- 2020 was not tested in v5 (last partial year dropped). v6 added it: 2020 broke every model.
 - The 60% sector cap barely matters here (picks are already spread out).
 - Full report: `artifacts/walkforward_summary_v5_pit.md`. History: `docs/WALKFORWARD_RESULTS.md`.
 
@@ -162,17 +163,23 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 ## Decisions
 
 - **Data:** Sharadar Core US Equities Bundle — active. Direct API + bulk tables. Key in `.env` (gitignored, never print). License: never share or commit the data.
-- **Universe (`pinky/universe.py`):** each day, price ≥ $5 and 21-day avg dollar volume ≥ $5M (nominal $). Common stock + ADRs + Canadian; no preferreds, secondary share classes, or SPACs (SIC 6770); NYSE / NASDAQ / NYSE American only. → **1,200–2,850 stocks/day, 11,561 distinct** (1998–2026).
+- **Universe (`pinky/universe.py`):** each day, price ≥ $5 and 21-day avg dollar volume ≥ $5M (nominal $). Common stock + ADRs + Canadian; no preferreds, secondary share classes, or SPACs (SIC 6770); NYSE / NASDAQ / NYSE American only. → **~1,200–2,850 stocks/day (yearly averages), 11,561 distinct** (1998–2026).
 - **Delistings:** exit value reinvested in SPY. Bankruptcy / liquidation / regulatory delistings also take **−30%** on the last price (Shumway 1997).
-- **Dataset rows:** weekly (every 5th trading day); folds use the daily calendar. Stocks need 1y of price history to be scored (hides new IPOs for a year — Phase 2 fix).
+- **Dataset rows:** weekly (every 5th trading day); folds use the daily calendar. Since v7 (`young` fix), stocks are scored after ~1 month of prices; missing long-window features get the day's middle value. v5/v6 needed 1y of history.
 - **Sectors:** Sharadar sectors (current classification) for the cap. The custom "Tech/AI" bucket only applies to the old 128-stock universe.
 - **Risk:** no leverage. Sector cap 60%.
-- **Main signal:** undecided. Revisit in Phase 2.
+- **Main signal:** undecided — depends on the open step 3 target decision.
 - **Locked holdout:** `HOLDOUT_START = 2022-01-01`. Dev runs only use rows whose label ends before it (`train.dev_rows`). Score the holdout once, at the very end.
 
 ## Roadmap
 
-**Phase 1 — honest evaluation: done.** Sharadar pull, point-in-time universe, delisting-aware labels, weekly dataset, top-decile label, precision@10 + winner capture, locked holdout, honest re-score (v5_pit).
+**Phase 1 — honest evaluation: done (2026-09-25/26).**
+- Proved the old results were inflated: removing NVDA/SMCI/TSLA/PLTR/AVGO from train + test cut +41%/yr to +19%.
+- Free data covered only ~22% of stocks that left the S&P 500 → switched to paid Sharadar.
+- Scoring tools: top-10% label, precision@10, time-weighted winner capture (first version was flawed — random scored 0.62), locked 2022+ holdout.
+- Pipeline: Sharadar pull → daily point-in-time universe (dead stocks included) → delisting-aware returns → weekly dataset (2.83M rows, 10,043 stocks, 1999–2026) → `--pit` training (19 test years, 2001–2019).
+- Result (v5_pit): **no edge** — Ridge +7.6%/yr ≈ SPY +6.9%, LightGBM −8.0%.
+- Bugs caught: bankrupt stocks counted as 0% in the backtest, ticker "NA" read as blank, `fiscalperiod` would be wiped, `top_` label leak risk, weekly rows breaking fold day counts (see Gotchas).
 
 **Phase 2 step 1 — evaluation fixes: done (v6_pit).** Holding buffer, 2020 test block, top-50 / top 10% reports.
 
@@ -238,5 +245,6 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - Legacy: `pull_data.py` → `build_features.py` → `build_labels.py` → `build_dataset.py` → `train_walkforward.py` (`--ex-winners` drops hindsight winners)
 - Showcase: `python scripts/build_showcase.py` (~1 min; run name = `RUN` at the top). To view it in the IDE browser, serve it: `cd showcase && python3 -m http.server 8765` (`file://` is blocked).
 - GitHub (private): https://github.com/steveonshit/Pinky (`origin/main`) — push only when the user says.
-- Graphify CLI: `/Users/hqschool/Library/Python/3.12/bin`; run `graphify update .` after code changes.
-- Tip: use one chat at a time on Pinky (parallel chats can overwrite each other's edits).
+- Graphify CLI: `/Users/hqschool/Library/Python/3.12/bin` (if `graphify` isn't found: `export PATH="/Users/hqschool/Library/Python/3.12/bin:$PATH"`); run `graphify update .` after code changes.
+- Tip: use one chat at a time on Pinky (parallel chats can overwrite each other's edits). On 2026-09-26/27 two chats worked in turn, which confused where work happened.
+- Long chats get auto-summarized by Cursor (the agent then works from a summary; the full record is still saved). One very long chat also got a "Request blocked by Anthropic" error on a harmless question (likely a false positive). Fix for both: start a new chat — it picks up from this file.
