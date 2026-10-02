@@ -15,9 +15,15 @@ Last updated **2026-10-02**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
 - **Showcase updated to v6_pit: done** (2026-09-27). Leads with the honest result; every number is computed from saved artifacts; text checked against the data.
 - **Every report now includes both checks the user asked for:** share of top picks acquired within 6 months (top-10 and top 10%, vs base rate) and results before/after 2009 vs SPY (`REPORT_SPLIT_YEAR` in `config.py`).
 - **Phase 2 step 2 — four model fixes (v7_pit): done**, plus one ablation per fix and a control (all off = v6). Results in Key findings and `docs/WALKFORWARD_RESULTS.md`. Short version: IC doubles, crashes drop, **still no edge over SPY**; no run passes the bar. The **rank label** turns models into calm, low-volatility pickers (few big winners), which clashes with the goal.
-- **Waiting on the user (still open 2026-09-28):** which return target step 3 builds on (rank label = calm picks, better IC; raw target = winner-hunting LightGBM; recommended: run both through step 3 and pick with a rule fixed up front), and whether to rebuild the showcase now or after step 3 (recommended: after).
+- **Public product page: done (2026-09-30, not committed yet).** `product/index.html`: plain-language intro for non-coders (goal, method, honest-testing rules, findings, next steps, FAQ). No secrets: no data vendor, model names, cost level, thresholds, sector cap, file paths or repo links. Numbers are **hand-copied** (v6_pit, v7_pit, v7 no-rank_label, v4/v4_ex5, universe counts), not built by a script → re-check and update by hand after step 3, then redeploy. View: `cd product && python3 -m http.server 8766`.
+- **Product page is live (2026-09-30, short-term):** https://pinky-research.vercel.app (Vercel Hobby, free; CLI logged in on this Mac). Headline changed to "AI vs. the S&P 500" on 2026-10-02 (the old question now opens the intro). Share only this link; per-deploy URLs are login-protected. **Redeploy from a copy outside git:** deploying from `product/` now gets blocked on Hobby ("commit author doesn't have permission"), because the CLI attaches the local commit author. Run from the repo root: `rm -rf /tmp/pinky-deploy && mkdir -p /tmp/pinky-deploy/.vercel && cp product/index.html product/.vercelignore /tmp/pinky-deploy/ && cp -R product/fonts /tmp/pinky-deploy/ && cp product/.vercel/project.json /tmp/pinky-deploy/.vercel/ && (cd /tmp/pinky-deploy && npx vercel@latest deploy --prod)`. If the CLI says "Not authorized", run `npx vercel@latest login` again (needed after 2 days). Take down: `npx vercel@latest project remove pinky-research`. `product/.vercelignore` limits the upload to `index.html` + `fonts/`; `product/.vercel/` (project link) is gitignored by `product/.gitignore` — never commit it.
+- **Waiting on the user (still open 2026-10-02):**
+  1. Which return target step 3 builds on: rank label (calm picks, better IC — but that IC comes mostly from the bottom of the list) or raw target (winner-hunting LightGBM). Recommended: run both through step 3 and pick with a rule fixed up front.
+  2. Rebuild the showcase now or after step 3 (recommended: after).
+  3. Add a 10-group table to every report: per weekly score decile (plus the top-10 names), share that beat SPY, median and mean 1y excess. Recommended; report code only, rebuild with `--report-only`, no retraining.
+  4. Commit `product/` locally (page, fonts, `.vercelignore`, `.gitignore`; `.vercel/` stays ignored)? Never asked; the product-page chat left it uncommitted.
 - **Next:** step 3 — company data batch 1 → compare to step 2. After each step: rebuild the showcase (set `RUN` in `scripts/build_showcase.py`) and re-read its text. Static lines: the footer's "Stocks need a year of price history" must go once the showcase shows a run with the `young` fix.
-- 18 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
+- 19 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
 **User decisions (2026-09-26)**
 - Phase 2 model fixes: **all four approved** (list under Roadmap).
@@ -42,8 +48,8 @@ Last updated **2026-10-02**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
 - Ridge rank IC **0.052**; Ridge top 10% + buffer **+8.7%/yr** (+7.8% at 25 bps); Ridge top-10 + buffer +8.3%/yr.
 - Also check: 2009–2020 vs SPY (Ridge trails: +12.6% vs +14.5%/yr) and the takeover share of top picks (Ridge top-10: 25%; base rate 2.2%).
 - Per-portfolio numbers: `artifacts/backtest_stats_1y_v6_pit.csv`. Side by side: `PYTHONPATH=. python scripts/compare_runs.py v6_pit v7_pit`.
-- v7_pit (step 2) passes the IC part (0.056–0.063) but not the portfolio part (best top 10% + buffer: LightGBM +7.2%). Top-10 CAGRs are noisy by a few %/yr: judge on IC and top 10% first.
-- Never touch the 2022+ holdout until the final test.
+- v7_pit (step 2) passes the IC part (0.056–0.063) but not the portfolio part (best top 10% + buffer: LightGBM +7.2%). Top-10 CAGRs are noisy by a few %/yr: judge on IC and top 10% first. Caveat: IC can come mostly from sorting the bottom of the list (v7's did), so a higher IC alone doesn't mean better picks.
+- Never touch the 2022+ holdout until the final test. Caveat: the old 128-stock tests (2018 → Oct 2025) already covered 2022–2025, and the 60% sector cap was picked after seeing them, so the holdout is clean for the pit models but not fully unseen by us.
 
 **Data facts for Phase 2**
 - Fundamentals ARQ: filing dates 1993 → 2026, 17,045 tickers, revenue filled 97% (ART 92%).
@@ -98,6 +104,7 @@ Also: **no push** until the user says; **training only when the user says**.
 - First asked for ~10%/month — explained that's unrealistic. Realistic aim: beat SPY by a few %/yr, reliably.
 - Accepts a bit more risk (60% sector cap), **no leverage** (account can't). Bullish on tech.
 - Data budget flexible (paying for Sharadar). Lots of time and compute.
+- New to quant terms: explain metrics in plain words with small examples. Rank IC explained 2026-10-02 (one score per week for the model's whole ranked list; −1 = exactly backwards, 0 = no information, +1 = perfect order; grades order, not size, and not single stocks or just the top picks).
 
 ## Key findings
 
@@ -176,7 +183,7 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 
 **Phase 1 — honest evaluation: done (2026-09-25/26).**
 - Proved the old results were inflated: removing NVDA/SMCI/TSLA/PLTR/AVGO from train + test cut +41%/yr to +19%.
-- Free data covered only ~22% of stocks that left the S&P 500 → switched to paid Sharadar.
+- Free data covered only ~22% of stocks that left the S&P 500 → switched to paid Sharadar. (Re-check 2026-09-30: the share depends on the definition — 29.9% have any free data, 19.3% have data before they left, 11.0% cover their whole membership. The product page just says "missing most".)
 - Scoring tools: top-10% label, precision@10, time-weighted winner capture (first version was flawed — random scored 0.62), locked 2022+ holdout.
 - Pipeline: Sharadar pull → daily point-in-time universe (dead stocks included) → delisting-aware returns → weekly dataset (2.83M rows, 10,043 stocks, 1999–2026) → `--pit` training (19 test years, 2001–2019).
 - Result (v5_pit): **no edge** — Ridge +7.6%/yr ≈ SPY +6.9%, LightGBM −8.0%.
@@ -226,6 +233,7 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - Legacy (128 stocks, yfinance): `data_pull.py`, `raw_io.py`, `features.py`, `labels.py`, `dataset.py`
 - `scripts/` — `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, plus legacy build scripts
 - `showcase/index.html` — one-page visual (offline), built from v6_pit artifacts by `scripts/build_showcase.py`.
+- `product/index.html` — public product page for non-coders (static, hand-written, inline SVG charts, no build step); `product/fonts/` = Newsreader + Libre Franklin (OFL licenses included); `product/.vercelignore` = Vercel upload allowlist; `product/.gitignore` keeps `.vercel/` and `.env*` out of git.
 - `data/sharadar/` (~6 GB, gitignored, never share) — tables (`*.parquet`), `zips/`, `panels/` (Date × Ticker), `spy.parquet`, `derived/pit_dataset.parquet`
 - `artifacts/`, `models/` — outputs (gitignored). Per run: `walkforward_summary_<run>.md`, `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `run_config_<run>.json`. `models/1y_<tag>/` holds last-fold models per tag (`1y_pit` = latest full pit run, overwritten; ablations get `1y_pit_no-<fix>`).
 - `docs/` — `WALKFORWARD_RESULTS.md`, `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`
