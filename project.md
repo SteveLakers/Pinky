@@ -7,7 +7,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-09-28**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Nothing has run since Sep 27 ~1 AM.
+Last updated **2026-10-02**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Nothing has run since Sep 27 ~1 AM.
 
 **State**
 - Phase 1 (honest evaluation): **done**.
@@ -17,7 +17,7 @@ Last updated **2026-09-28**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
 - **Phase 2 step 2 — four model fixes (v7_pit): done**, plus one ablation per fix and a control (all off = v6). Results in Key findings and `docs/WALKFORWARD_RESULTS.md`. Short version: IC doubles, crashes drop, **still no edge over SPY**; no run passes the bar. The **rank label** turns models into calm, low-volatility pickers (few big winners), which clashes with the goal.
 - **Waiting on the user (still open 2026-09-28):** which return target step 3 builds on (rank label = calm picks, better IC; raw target = winner-hunting LightGBM; recommended: run both through step 3 and pick with a rule fixed up front), and whether to rebuild the showcase now or after step 3 (recommended: after).
 - **Next:** step 3 — company data batch 1 → compare to step 2. After each step: rebuild the showcase (set `RUN` in `scripts/build_showcase.py`) and re-read its text. Static lines: the footer's "Stocks need a year of price history" must go once the showcase shows a run with the `young` fix.
-- 17 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
+- 18 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
 **User decisions (2026-09-26)**
 - Phase 2 model fixes: **all four approved** (list under Roadmap).
@@ -115,6 +115,7 @@ Same price features; same yardstick. SPY +7.3%/yr (2009–2020 +14.5%). Control 
 - **Still no edge over SPY; no run passes the bar.** Best broad portfolio: LightGBM top 10% + buffer +7.2% vs SPY +7.3%.
 - **Rank label = the big lever:** IC ~doubles, but picks become calm low-volatility stocks (median vol 14–16% vs 33%) that rarely crash **and rarely win big** — against the goal.
 - **Without the rank label**, LightGBM is the best winner-finder so far (13.4% big winners, crashes 18.5% → 8.0%).
+- **v7's IC comes mostly from the bottom of the list** (checked 2026-10-02 on saved v7 predictions; 1y excess vs SPY by weekly score decile). LightGBM bottom 10%: median −8.5%, 42.5% beat SPY. Top 10%: 49.0% beat SPY vs 47.7% for all stocks, but mean +0.4% vs +1.6% (few big winners). Ridge's top-10: only 44% beat SPY. Higher IC does not mean better top picks; for a buy-only portfolio, judge the top of the list.
 - Rank features beat z-scores on robustness: z-scores bring back takeover targets (41% of Ridge's top-10). Young stocks: small IC gain. Size: helps LightGBM.
 - Full table + ablations: `docs/WALKFORWARD_RESULTS.md`.
 
