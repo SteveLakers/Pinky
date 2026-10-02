@@ -34,7 +34,8 @@ Big winners = monthly top-10 picks landing in the next year's top 10% (random: 1
 ### Honest read
 
 - **Still no edge over SPY.** v7's best broad portfolio (LightGBM top 10% + buffer) makes +7.2%/yr vs SPY +7.3%, and +13.5% vs +14.5% in 2009–2020. **No run passes the Phase 2 bar** (IC > 0.052 **and** top 10% + buffer > +8.7%).
-- The fixes make the ranking better on average and cut crashes, but the rank label points the models at calm stocks, which is the opposite of the goal (big winners). The target choice is open (user decision).
+- The fixes make the ranking better on average and cut crashes, but the rank label points the models at calm stocks, which is the opposite of the goal (big winners). User decision (2026-10-02): step 3 runs on both targets, with a pick rule fixed before seeing results.
+- **Score groups** (report section added 2026-10-02, rebuilt from saved predictions): the IC comes mostly from the **bottom** of the list. LightGBM's bottom 10% beat SPY 42.5% of the time (median −8.5%); its top 10% is about average (49.0% vs 47.7% for all stocks; mean +0.4% vs +1.6%). Without the rank label, the top 10% is below average (46.3%, median −2.8%). Momentum's top-10: 36.4% beat SPY, median −16.1%.
 
 ---
 

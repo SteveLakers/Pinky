@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "pinky/config.py": {
-    "mtime": 1790482564.7567785,
-    "seen": 1790483451.044993,
-    "ast_hash": "eab96ffcd4a6bf0e62947492f17ff600",
+    "mtime": 1790946807.0927753,
+    "seen": 1790947324.7836401,
+    "ast_hash": "7f97a5cd923f32d410ffccaf76f6b86a",
     "semantic_hash": ""
   },
   "pinky/data_pull.py": {
@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "project.md": {
-    "mtime": 1790484991.3629317,
-    "seen": 1790485000.816899,
-    "ast_hash": "e653c1ce026dc1784f27233a4ef90214",
+    "mtime": 1790946436.3248615,
+    "seen": 1790947324.783654,
+    "ast_hash": "e6fde0ffc5824ec2caaa196955a57ab3",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -114,15 +114,15 @@
     "semantic_hash": ""
   },
   "pinky/metrics.py": {
-    "mtime": 1790481924.933598,
-    "seen": 1790483451.044996,
-    "ast_hash": "9ac1b6b463ea4d8babcebf9cdf1e3c20",
+    "mtime": 1790946811.3187733,
+    "seen": 1790947324.783642,
+    "ast_hash": "f4af458850f669989917c32f5a88ce6e",
     "semantic_hash": ""
   },
   "pinky/train.py": {
-    "mtime": 1790483810.2554579,
-    "seen": 1790485000.81689,
-    "ast_hash": "0606b4107ee9839857bb2b443bddc17f",
+    "mtime": 1790946826.2967763,
+    "seen": 1790947324.783645,
+    "ast_hash": "2fc11cfa429f7e78694b1288bf545f59",
     "semantic_hash": ""
   },
   "scripts/train_walkforward.py": {
@@ -195,6 +195,24 @@
     "mtime": 1790483981.5042279,
     "seen": 1790485000.816894,
     "ast_hash": "f46586933b8101b1d85f7049db2c8e00",
+    "semantic_hash": ""
+  },
+  "product/fonts/OFL-LibreFranklin.txt": {
+    "mtime": 1790777879.3024611,
+    "seen": 1790804552.306241,
+    "ast_hash": "b5f4d9a6c954a7793cfbf2955b649002",
+    "semantic_hash": ""
+  },
+  "product/fonts/OFL-Newsreader.txt": {
+    "mtime": 1790777879.3006136,
+    "seen": 1790804552.306241,
+    "ast_hash": "1738a90899631a6ba5dff435d25a0627",
+    "semantic_hash": ""
+  },
+  "product/index.html": {
+    "mtime": 1790944968.3946223,
+    "seen": 1790945118.693585,
+    "ast_hash": "260e591d106b10bad7ddad45474a21e4",
     "semantic_hash": ""
   }
 }

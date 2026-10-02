@@ -54,6 +54,7 @@ from pinky.config import (
     HOLDOUT_START,
     HORIZONS,
     PROJECT_ROOT,
+    REPORT_SCORE_GROUPS,
     REPORT_SPLIT_YEAR,
     UNIVERSE_MIN_DOLLAR_VOLUME,
     UNIVERSE_MIN_PRICE,
@@ -66,6 +67,7 @@ from pinky.metrics import (
     calibration_table,
     daily_rank_ic,
     precision_at_k,
+    score_group_table,
     top_decile_hit_rate,
     top_n_basket_excess,
     universe_mean_excess,
@@ -364,6 +366,56 @@ def _ranking_lines(
     return lines
 
 
+def _score_group_lines(
+    horizon: str,
+    preds: pd.DataFrame,
+    mom: pd.DataFrame,
+) -> tuple[list[str], pd.DataFrame]:
+    """Where the ranking skill sits: what each score group did next."""
+    excess_col = f"excess_{horizon}"
+    if excess_col not in preds:
+        return [], pd.DataFrame()
+    n_groups, k = REPORT_SCORE_GROUPS, BACKTEST_TOP_N
+    mom = mom.merge(preds[["Date", "Ticker", excess_col]], on=["Date", "Ticker"])
+    signals = {
+        "LightGBM": (preds, "pred_excess_lgbm"),
+        "Ridge": (preds, "pred_excess_ridge"),
+        "Blend": (preds, "pred_excess_blend"),
+        "Momentum 12-1": (mom, "mom_12_1"),
+    }
+    tables = {
+        sig: score_group_table(frame, col, excess_col, n_groups=n_groups, top_n=k)
+        for sig, (frame, col) in signals.items()
+    }
+    lines = [
+        f"## Where the ranking skill sits `{horizon}` (out-of-sample, every date)",
+        "",
+        f"- Each date's stocks are split into {n_groups} equal groups by score "
+        f"(1 = lowest, {n_groups} = highest), plus the top-{k} names; averaged over dates.",
+        "- Rank IC grades the whole list. A buy-only portfolio gets only the top, so skill "
+        "at the bottom (spotting losers) doesn't help it.",
+        "- **Median** = the typical stock; **mean** is pulled up by a few big winners.",
+        "",
+    ]
+    for title, col, fmt in [
+        (f"Share beating SPY over the next `{horizon}`", "beat_spy", lambda x: f"{100 * x:.1f}%"),
+        (f"Median `{horizon}` excess vs SPY", "median_excess", _fmt_pct),
+        (f"Mean `{horizon}` excess vs SPY", "mean_excess", _fmt_pct),
+    ]:
+        lines += [
+            f"### {title}",
+            "",
+            "| Score group | " + " | ".join(signals) + " |",
+            "|---|" + "---|" * len(signals),
+        ]
+        for row in tables["LightGBM"].index:
+            cells = [fmt(tables[sig][col].get(row, np.nan)) for sig in signals]
+            lines.append(f"| {row} | " + " | ".join(cells) + " |")
+        lines.append("")
+    table = pd.concat(tables, names=["signal", "group"]).reset_index()
+    return lines, table
+
+
 def _backtest_lines(
     horizon: str,
     preds: pd.DataFrame,
@@ -605,6 +657,10 @@ def _write_summary(
         for horizon, preds in preds_by_h.items():
             mom = momentum_scores(preds, prices)
             lines += _ranking_lines(horizon, preds, mom, acq)
+            group_lines, groups = _score_group_lines(horizon, preds, mom)
+            lines += group_lines
+            if not groups.empty:
+                groups.to_csv(path.parent / f"score_groups_{horizon}_{run_name}.csv", index=False)
             bt_lines, bt_table = _backtest_lines(horizon, preds, prices, sectors, mom)
             lines += bt_lines
             bt_table.to_csv(path.parent / f"backtest_stats_{horizon}_{run_name}.csv", index=False)

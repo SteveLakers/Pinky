@@ -117,6 +117,9 @@ BACKTEST_WIDE_TOP_N = 50     # wider portfolio for a less noisy read of the sign
 BACKTEST_TOP_FRAC = 0.10     # top-decile portfolio (size varies with the universe)
 # Reports split backtests here: the price-only edge came from 2001–2008 and faded after.
 REPORT_SPLIT_YEAR = 2009
+# Score groups per date in reports: IC can come from the bottom of the list, which a
+# buy-only portfolio never gets.
+REPORT_SCORE_GROUPS = 10
 
 # Back-compat alias used by older scripts/imports
 STARTER_STOCKS = UNIVERSE_STOCKS

@@ -144,6 +144,50 @@ def winner_capture(
     return float(np.mean(rates)) if rates else float("nan")
 
 
+def score_group_table(
+    df: pd.DataFrame,
+    pred_col: str,
+    excess_col: str,
+    n_groups: int = 10,
+    top_n: int = 10,
+) -> pd.DataFrame:
+    """
+    What each score group did next: shows where a model's ranking skill sits.
+
+    Every date's stocks are split into `n_groups` equal groups by prediction (1 = lowest),
+    plus the `top_n` names and all stocks. Per date: share beating SPY, median and mean
+    excess; then averaged over all dates (not sampled monthly).
+    """
+    d = df[["Date", pred_col, excess_col]].dropna()
+    pct = d.groupby("Date")[pred_col].rank(pct=True, method="first")
+    d = d.assign(
+        group=np.ceil(pct * n_groups).clip(1, n_groups).astype(int),
+        beat=(d[excess_col] > 0).astype(float),
+    )
+
+    def per_date(frame: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
+        g = frame.groupby(keys)
+        return pd.DataFrame(
+            {
+                "beat_spy": g["beat"].mean(),
+                "median_excess": g[excess_col].median(),
+                "mean_excess": g[excess_col].mean(),
+            }
+        )
+
+    groups = per_date(d, ["Date", "group"]).groupby(level="group").mean()
+    groups.index = [
+        f"{i} (lowest)" if i == 1 else f"{i} (highest)" if i == n_groups else str(i)
+        for i in groups.index
+    ]
+    top = d.sort_values(["Date", pred_col], ascending=[True, False]).groupby("Date").head(top_n)
+    extra = pd.DataFrame(
+        [per_date(top, ["Date"]).mean(), per_date(d, ["Date"]).mean()],
+        index=[f"Top-{top_n} names", "All stocks"],
+    )
+    return pd.concat([groups, extra])
+
+
 def brier_score(y_true: np.ndarray, p_pred: np.ndarray) -> float:
     return float(np.mean((p_pred - y_true) ** 2))
 
