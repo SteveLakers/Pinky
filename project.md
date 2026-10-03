@@ -28,7 +28,7 @@ Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
 - **Waiting on the user:** **`run`** (training; the date/leak checks have passed); push permission.
 - **Next:** user says `run` → 13 walk-forward runs (step 3 notes, item 6) → `PYTHONPATH=. python scripts/step3_verdict.py --weekly` applies the locked keep-rule, A vs B, scoreboard, weekly-vs-monthly → show the user. Showcase rebuild only when the user says.
   - **Step 3 build (done 2026-10-03):** `pinky/fundamentals.py` (growth features), wired into `pit_dataset.py` (dataset rebuilt: same 2,932,585 rows, 21 features). `train.py`: `VERSION = "v8"`, `growth` in `MODEL_FIXES`, `--placebo`, `--seed=N`, `pit_training_frame()`, monthly returns saved as `artifacts/backtest_periods_1y_<run>.csv`. `backtest.run_backtest(rebalance="weekly")`. `compare_runs.py` adds equal-weight universe and monthly top-10 big-winner / crash rows. New scripts: `scripts/check_growth_features.py` (59 date/leak checks) and `scripts/step3_verdict.py` (the locked rule; refuses to run until all 13 runs exist). v7 dataset backup: `data/sharadar/derived/pit_dataset_v7.parquet` (checksum-verified copy).
-- 22 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
+- 23 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
 **User decisions (2026-09-26)**
 - Phase 2 model fixes: **all four approved** (list under Roadmap).
@@ -62,6 +62,7 @@ Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
    - A real: no extra options (→ `v8_pit`), `--seed=7`, `--seed=99`. A placebo: `--placebo`, `--placebo --seed=7`, `--placebo --seed=99`.
    - B: the same six with `--without=rank_label` added (→ `v8_pit_no-rank_label…`).
    - A control: `--without=growth` (→ `v8_pit_no-growth`; must reproduce `v7_pit` within ~0.5%/yr; inputs proven identical).
+   - Run 6 at a time (Commands: 6 runs ≈ 13 min) → about 40 min for all 13.
    - Then `PYTHONPATH=. python scripts/step3_verdict.py --weekly` (writes `artifacts/step3_verdict.md`).
 7. **Date/leak checks (2026-10-03, `scripts/check_growth_features.py`, 59/59 pass; logged per the integrity rule):**
    - Made-up cases for every date rule (previews, catch-up filings, amendments, same-day rows, staleness): all pass.
@@ -272,11 +273,11 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - `showcase/index.html` — one-page visual (offline), built from v6_pit artifacts by `scripts/build_showcase.py`.
 - `product/index.html` — public product page for non-coders (static, hand-written, inline SVG charts, no build step); `product/fonts/` = Newsreader + Libre Franklin (OFL licenses included); `product/.vercelignore` = Vercel upload allowlist; `product/.gitignore` keeps `.vercel/` and `.env*` out of git.
 - `data/sharadar/` (~6 GB, gitignored, never share) — tables (`*.parquet`), `zips/`, `panels/` (Date × Ticker), `spy.parquet`, `derived/pit_dataset.parquet`
-- `artifacts/`, `models/` — outputs (gitignored). Per run: `walkforward_summary_<run>.md`, `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `score_groups_1y_<run>.csv`, `run_config_<run>.json`. `models/1y_<tag>/` holds last-fold models per tag (`1y_pit` = latest full pit run, overwritten; ablations get `1y_pit_no-<fix>`).
+- `artifacts/`, `models/` — outputs (gitignored). Per run: `walkforward_summary_<run>.md`, `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `backtest_periods_1y_<run>.csv` (monthly returns, v8+), `score_groups_1y_<run>.csv`, `run_config_<run>.json`. `models/1y_<tag>/` holds last-fold models per tag (`1y_pit` = latest full pit run, overwritten; ablations get `1y_pit_no-<fix>`).
 - `docs/` — `WALKFORWARD_RESULTS.md`, `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`
 - `AGENTS.md`, `.cursor/rules/` — agent instructions. `graphify-out/` — knowledge graph.
 - Agent add-ons (2026-10-02; untracked, don't commit). Skills in `.agents/skills/` (listed in `skills-lock.json`):
-  - `residual-edge-analyzer`: does a portfolio beat SPY / equal-weight / momentum beyond their exposure? Needs a dated monthly return CSV, which Pinky doesn't save yet (rebuild from saved preds like `build_showcase.py`; no retraining).
+  - `residual-edge-analyzer`: does a portfolio beat SPY / equal-weight / momentum beyond their exposure? Needs one dated monthly CSV (strategy + baselines on each row, same cost basis). Since v8, every run saves `artifacts/backtest_periods_1y_<run>.csv` (per month: net, gross, SPY, equal-weight universe, for every signal × portfolio, incl. Momentum 12-1) → pivot it; older runs get the file via `--report-only`. Use gross for all columns (SPY and equal-weight carry no costs).
   - `shap`: which features drive LightGBM. The `shap` package isn't installed yet; it only adds numba, llvmlite, slicer, tqdm, packaging (core versions unchanged).
   - `verification-before-completion`, `systematic-debugging` (obra/superpowers).
   - Context7 plugin (current library docs), enabled for Pinky in `.cursor/settings.json`. `.graphifyignore` keeps `.agents/` out of the graph.
@@ -288,7 +289,7 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
   1. Pull: `python scripts/pull_sharadar.py` (~10 min, needs network)
   2. Universe panels: `python -m pinky.universe` (~1 min)
   3. Dataset: `python -m pinky.pit_dataset` (~1 min)
-  4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min alone; output name = `train.VERSION` + `_pit`, currently `v7_pit`)
+  4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min alone; output name = `train.VERSION` + `_pit`, currently `v8_pit`)
   - Ablations: `--without=rank_label,size` (see `train.MODEL_FIXES`). Several runs fit in parallel: `OMP_NUM_THREADS=3` each, 6 runs ≈ 13 min (18 cores, 51 GB RAM).
   - stdout is buffered when redirected to a file → use `python -u` to watch fold progress in a log.
   - Rebuild a report without retraining: `python scripts/train_walkforward.py --report-only=v7_pit` (uses the saved metrics CSV + preds parquet).
