@@ -7,11 +7,11 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Score-group table: `340e866`. Step 3 plan locked 2026-10-03; **step 3 code + date/leak checks done 2026-10-03 (all pass): `349d0d6`**; v8 dataset built. **Ready to train: follow the runbook below once the user says `run`.**
+Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Score-group table: `340e866`. Step 3 plan locked 2026-10-03; **step 3 code + date/leak checks done 2026-10-03 (all pass): `349d0d6`**; v8 dataset built. **Step 3 trained 2026-10-03 (13 runs, all clean): growth DROP on A and B → both continue without growth, monthly trading. See Key findings → Step 3.**
 
-### Step 3 training runbook (next agent: do this when the user says `run`)
+### Step 3 training runbook (done 2026-10-03; reuse for the next batch)
 
-Everything is built and checked; **nothing is trained yet**. Every command below was tested on 2026-10-03 (with stand-ins, no training). Go step by step.
+**Ran 2026-10-03 as written:** all 13 runs EXIT 0 on the first try (no reruns), control reproduced v7 exactly, ~39 min of training + ~2 min verdict. For the next batch, change the run names / flags and keep the steps. Sandbox note: `caffeinate` needs full permissions.
 
 **0. Before anything**
 - **Go-ahead:** train only after the user says `run` (or clearly asks you to start training). The plan is locked (Step 3 notes below) → don't re-plan or re-ask; confirm in one line and start.
@@ -139,11 +139,11 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
 - **SHAP** (which features drive LightGBM): installed 2026-10-03, ready. Only last-fold models are saved (trained on data before 2020, tested on 2020).
 - **Next batch:** Roadmap batch 2 (margin expansion), same protocol (placebo, 3 seeds, propose the keep-rule before any run).
 
-**Open user decisions (raised 2026-10-03, not answered yet)**
-- Save **every** fold's model (SHAP across all years, not just 2020)? Needs a small `train.py` change **before** training (~9 MB per run; last-fold models are ~440 KB). If the user doesn't ask, train as built.
-- Run the residual-edge check after the runs?
+**Open user decisions (2026-10-03, after step 3)**
+- Residual-edge check on the final versions (A = `v8_pit_no-growth`, B = `v7_pit_no-rank_label`)?
+- SHAP (installed) on the final versions' last-fold models (2020 only): A `models/1y_pit_no-growth`, B `models/1y_pit_no-rank_label_v7`?
+- Next batch (Roadmap 2, margin expansion): add the keep condition "real ≥ baseline without the new features, same 3 seeds"? (Step 3: extra columns cost A ~1%/yr even with real data.) Save every fold's model (~9 MB per run; small `train.py` change before training)?
 - Push to GitHub?
-- Add info-only lines to the step 3 report: real − placebo gap **before costs**, and turnover? The placebo is reshuffled every week (`shuffle_growth_within_date`), while real growth numbers mostly change once a quarter, so trading costs could tilt the gap (v7 cost drag for LightGBM top 10% + buffer: 0.37%/yr; 0.54%/yr in 2001–08). The saved stats already have `cagr_gross` and `avg_monthly_turnover`. Doesn't change the locked rule.
 
 ### State and history
 
@@ -165,8 +165,9 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
 - **User decisions (2026-10-03):** step 3 plan approved. Use **announcement dates** (not later SEC filings) when a matching earnings event exists; test weekly vs monthly trading after the model has news; keep-rule is the **middle** bar (real beats fake by ≥ 1%/yr overall and ≥ 0.5%/yr in each half), **three seeds each** (42 / 7 / 99); A and B both continue unless one trails by > 4%/yr. Do **not** train until the user says `run`.
 - **User asked (2026-10-03) whether the new add-ons help training:** they don't change training; they help check results afterwards (verification, debugging, residual-edge, SHAP). The user then asked for a detailed handover so the next agent can start training → the runbook above.
 - **User (2026-10-03, later):** wants **very short replies by default** (saves tokens); more detail only when asked. SHAP installed (see Repo layout).
-- **Waiting on the user:** **`run`** (training; all checks passed); push permission; the open decisions at the end of the runbook (per-fold models, residual-edge, gap-before-costs lines).
-- **Next:** user says `run` → runbook above (control → A → B → checks → verdict → report → docs + local commit). Showcase rebuild only when the user says.
+- **Phase 2 step 3 — growth features (v8): done 2026-10-03** (user said "Start train"; launched and judged on Claude Opus 5.5). Locked verdict: **DROP on A and B** (real − placebo +0.26%/yr and +0.98%/yr; bar +1.0%). Both continue without growth, monthly trading. Details: Key findings → Step 3, `docs/WALKFORWARD_RESULTS.md`, `artifacts/step3_verdict.md`.
+- **Waiting on the user:** the open decisions at the end of the runbook (residual-edge, SHAP, next-batch keep-rule, push).
+- **Next:** Roadmap batch 2 (margin expansion) with the same protocol; agree the keep-rule before any run. Showcase / product page only when the user says.
   - **Step 3 build (done 2026-10-03):** `pinky/fundamentals.py` (growth features), wired into `pit_dataset.py` (dataset rebuilt: same 2,932,585 rows, 21 features). `train.py`: `VERSION = "v8"`, `growth` in `MODEL_FIXES`, `--placebo`, `--seed=N`, `pit_training_frame()`, monthly returns saved as `artifacts/backtest_periods_1y_<run>.csv`. `backtest.run_backtest(rebalance="weekly")`. `compare_runs.py` adds equal-weight universe and monthly top-10 big-winner / crash rows. New scripts: `scripts/check_growth_features.py` (59 date/leak checks) and `scripts/step3_verdict.py` (the locked rule; refuses to run until all 13 runs exist). v7 dataset backup: `data/sharadar/derived/pit_dataset_v7.parquet` (checksum-verified copy).
 - 24 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
@@ -283,6 +284,23 @@ Also: **no push** until the user says; **training only when the user says**.
 
 ## Key findings
 
+### Step 3 — growth features (v8) (2026-10-03)
+
+LightGBM top 10% + buffer, net of 10 bps, mean of 3 seeds (all / 2001–08 / 2009–20). SPY +7.3% (−2.7% / +14.5%); equal-weight universe +8.0%.
+
+| | Real | Placebo | Real − placebo | Without growth (1 seed) |
+|---|---|---|---|---|
+| A (rank label) | +6.30% / −4.10% / +13.86% | +6.04% / −3.94% / +13.27% | +0.26% / −0.16% / +0.59% | +7.23% / −1.55% / +13.52% |
+| B (raw return) | +6.20% / −3.87% / +13.50% | +5.22% / −5.25% / +12.85% | +0.98% / +1.38% / +0.65% | +5.83% / −2.27% / +11.60% |
+
+- **Growth: DROP on both** (bar: ≥ +1.0%/yr overall and ≥ +0.5%/yr per half). B missed by 0.02%/yr; paired monthly test t = +1.19 (A +0.51): not reliable either way. Control reproduced v7 exactly; no leak flag.
+- Final versions: A = `v8_pit_no-growth` (+7.23%), B = `v7_pit_no-rank_label` (+5.83%); both continue (gap ≤ 4%/yr). Weekly trading loses at 25 bps → stay monthly.
+- Scoreboard (final versions): neither beats +8.7%, SPY in both halves, or the equal-weight universe. Top-10 crashes A 2.3% / B 8.0%; big winners A 3.9% / B 13.4% (random 10%). LightGBM IC > 0 in both halves for both.
+- Hint only: real growth lifts LightGBM IC in 2009–2020 (A 0.075 → 0.083, B 0.046 → 0.055; placebo 0.076 / 0.047). Too small for the portfolio bar.
+- **Extra columns cost A ~1%/yr, real or fake** (mostly 2001–08). The real-vs-placebo rule can't see this → proposal for the next batch: also require real ≥ the no-new-features baseline (same 3 seeds).
+- Placebo cost tilt (info only): fake data turns over more (A 37% vs 34%/month, B 59% vs 52%) but explains only 0.04 / 0.08%/yr of the gap. Gap before costs: A +0.22%, B +0.90%.
+- Full write-up: `docs/WALKFORWARD_RESULTS.md`.
+
 ### Four model fixes — v7_pit + ablations (2026-09-27)
 
 Same price features; same yardstick. SPY +7.3%/yr (2009–2020 +14.5%). Control (all fixes off) reproduces v6_pit.
@@ -351,7 +369,7 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - **Dataset rows:** weekly (every 5th trading day); folds use the daily calendar. Since v7 (`young` fix), stocks are scored after ~1 month of prices; missing long-window features get the day's middle value. v5/v6 needed 1y of history.
 - **Sectors:** Sharadar sectors (current classification) for the cap. The custom "Tech/AI" bucket only applies to the old 128-stock universe.
 - **Risk:** no leverage. Sector cap 60%.
-- **Main signal:** undecided. Step 3 keeps both A (rank label) and B (raw return); drop one only if it trails by > 4%/yr.
+- **Main signal:** undecided. After step 3 both continue without growth: A (rank label, v7_pit inputs) +7.23%/yr, B (raw return, v7 no-rank_label) +5.83%/yr; drop one only if it trails by > 4%/yr.
 - **Locked holdout:** `HOLDOUT_START = 2022-01-01`. Dev runs only use rows whose label ends before it (`train.dev_rows`). Score the holdout once, at the very end.
 
 ## Roadmap
@@ -410,7 +428,7 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - `showcase/index.html` — one-page visual (offline), built from v6_pit artifacts by `scripts/build_showcase.py`.
 - `product/index.html` — public product page for non-coders (static, hand-written, inline SVG charts, no build step); `product/fonts/` = Newsreader + Libre Franklin (OFL licenses included); `product/.vercelignore` = Vercel upload allowlist; `product/.gitignore` keeps `.vercel/` and `.env*` out of git.
 - `data/sharadar/` (~6 GB, gitignored, never share) — tables (`*.parquet`), `zips/`, `panels/` (Date × Ticker), `spy.parquet`, `derived/pit_dataset.parquet`
-- `artifacts/`, `models/` — outputs (gitignored). Per run: `walkforward_summary_<run>.md`, `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `backtest_periods_1y_<run>.csv` (monthly returns, v8+), `score_groups_1y_<run>.csv`, `run_config_<run>.json`. Training logs: `artifacts/logs/train_<run>.log` (last line `EXIT <code>`). Step 3 verdict: `artifacts/step3_verdict.md`. `models/1y_<tag>/` holds only the **last fold's** models per tag (~440 KB; `1y_pit` = latest full pit run, overwritten; ablations get `1y_pit_no-<fix>`, seeds / placebo get their own folders).
+- `artifacts/`, `models/` — outputs (gitignored). Per run: `walkforward_summary_<run>.md`, `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `backtest_periods_1y_<run>.csv` (monthly returns, v8+), `score_groups_1y_<run>.csv`, `run_config_<run>.json`. Training logs: `artifacts/logs/train_<run>.log` (last line `EXIT <code>`). Step 3 verdict: `artifacts/step3_verdict.md`. `models/1y_<tag>/` holds only the **last fold's** models per tag (~440 KB; `1y_pit` = latest full pit run, overwritten; ablations get `1y_pit_no-<fix>`, seeds / placebo get their own folders). After step 3, `1y_pit` and `1y_pit_no-rank_label` hold v8 models (with growth); v7's are in `1y_pit_v7` and `1y_pit_no-rank_label_v7`.
 - `docs/` — `WALKFORWARD_RESULTS.md`, `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`
 - `AGENTS.md`, `.cursor/rules/` — agent instructions. `graphify-out/` — knowledge graph.
 - Agent add-ons (2026-10-02; untracked, don't commit). Skills in `.agents/skills/` (listed in `skills-lock.json`):

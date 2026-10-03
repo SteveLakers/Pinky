@@ -1,5 +1,42 @@
 # Walk-Forward Results
 
+## v8_pit — growth features, batch 1 (2026-10-03)
+
+Six growth features from SF1 ARQ/ART (`pinky/fundamentals.py`): `rev_yoy_q`, `rev_accel`, `gp_yoy_q`, `rev_yoy_ttm`, `days_since_news`, `has_growth`; dated by the earnings announcement (events code 22, from Aug 2004) or else the SEC filing. Tested on both targets: **A** = rank label (baseline `v7_pit`), **B** = raw return (baseline `v7_pit_no-rank_label`). Each: real growth on seeds 42 / 7 / 99, plus a **placebo** on the same seeds (the six growth values moved as a block between stocks within each date). Control `v8_pit_no-growth` (seed 42). 13 runs (6 in parallel, 3 threads each), ~39 min, all EXIT 0 on the first try. Locked rule (2026-10-03, before results): keep growth only if real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half (LightGBM, top 10% + buffer, 10 bps, mean of 3 seeds). Verdict text: `artifacts/step3_verdict.md`.
+
+**The control reproduces v7_pit exactly** (+0.00%/yr in every period).
+
+LightGBM top 10% + buffer, net of 10 bps (all / 2001–08 / 2009–20). SPY +7.3% (−2.7% / +14.5%); equal-weight universe +8.0%.
+
+| | Real (mean of 3) | Placebo (mean of 3) | Real − placebo | Without growth (seed 42) |
+|---|---|---|---|---|
+| A (rank label) | +6.30% / −4.10% / +13.86% | +6.04% / −3.94% / +13.27% | +0.26% / −0.16% / +0.59% | +7.23% / −1.55% / +13.52% |
+| B (raw return) | +6.20% / −3.87% / +13.50% | +5.22% / −5.25% / +12.85% | **+0.98%** / +1.38% / +0.65% | +5.83% / −2.27% / +11.60% |
+
+- By seed (all): A real 6.22–6.34%, placebo 5.87–6.19%; B real 5.92–6.42%, placebo 5.01–5.40%.
+- Paired monthly test (real − placebo, Newey-West, 240 months): A +0.34%/yr ± 0.68 (t = +0.51); B +0.89%/yr ± 0.74 (t = +1.19).
+- **Verdict: DROP growth on both.** A fails overall and in 2001–08; B misses the overall bar by 0.02%/yr. No leak flag (gap < +3%/yr). Final versions: A → `v8_pit_no-growth` (v7_pit inputs), B → `v7_pit_no-rank_label`. A vs B: both continue (+7.23% vs +5.83%).
+- Weekly vs monthly (final versions): A +7.29% vs +7.23% at 10 bps, +6.36% vs +6.63% at 25 bps; B +6.01% vs +5.83%, +4.17% vs +4.72% → **stay monthly**.
+- Info only (not part of the rule): placebo values are reshuffled every week, so placebo portfolios turn over more (A 37.0% vs 33.9%/month; B 59.3% vs 52.3%). That explains only 0.04 / 0.08%/yr of the gap; gap before costs A +0.22%, B +0.90%. The verdict holds either way.
+
+Seed-42 runs side by side (`scripts/compare_runs.py`):
+
+| | v7_pit | v8_pit | v8_pit placebo | v7 no rank_label | v8 no rank_label | v8 no rank_label placebo |
+|---|---|---|---|---|---|---|
+| Rank IC LightGBM (2009–2020) | 0.063 (0.075) | 0.065 (0.083) | 0.055 (0.076) | 0.031 (0.046) | 0.030 (0.055) | 0.023 (0.047) |
+| Top-10 + buffer, LightGBM (2009–2020) | +7.2% (+10.8%) | +4.2% (+14.9%) | +4.2% (+9.8%) | +7.2% (+15.9%) | +2.6% (+9.9%) | +6.5% (+14.0%) |
+| LightGBM top-10: big winners / crashes | 3.9% / 2.3% | 5.0% / 2.3% | 4.2% / 2.3% | 13.4% / 8.0% | 12.7% / 9.0% | 11.9% / 7.9% |
+| Precision@10, LightGBM | 0.039 | 0.050 | 0.042 | 0.134 | 0.127 | 0.119 |
+
+### Honest read
+
+- **Revenue and gross-profit growth add no reliable edge** at the portfolio level, as the leak-power test hinted (rank IC of `rev_yoy_q` alone +0.0018).
+- Hints of real information in 2009–2020 only: LightGBM IC rises with real growth (A 0.075 → 0.083, B 0.046 → 0.055) but not with the placebo (0.076, 0.047). Too small to pass the bar.
+- **The extra columns cost A ~1%/yr, real or fake** (+7.23% without vs +6.30% real / +6.04% placebo), mostly in 2001–08. The real-vs-placebo rule can't see this, so a batch could pass it and still make the model worse. Proposal for the next batch: also require real ≥ the baseline without the new features, on the same 3 seeds.
+- Still no edge over SPY: best final version (A) +7.23% vs SPY +7.28%; neither final version beats the equal-weight universe (+8.0%). 2022+ holdout untouched.
+
+---
+
 ## v7_pit — four model fixes, with ablations (2026-09-27)
 
 Same price features and yardstick as v6_pit. Four fixes (each can be switched off with `--without=`):
