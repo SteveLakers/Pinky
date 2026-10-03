@@ -7,7 +7,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Score-group table: `340e866`. Step 3 plan locked 2026-10-03; **step 3 code + date/leak checks done 2026-10-03 (all pass)**; v8 dataset built; **no training until the user says `run`**.
+Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Score-group table: `340e866`. Step 3 plan locked 2026-10-03; **step 3 code + date/leak checks done 2026-10-03 (all pass): `349d0d6`**; v8 dataset built; **no training until the user says `run`**.
 
 **State**
 - Phase 1 (honest evaluation): **done**.
@@ -28,7 +28,7 @@ Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
 - **Waiting on the user:** **`run`** (training; the date/leak checks have passed); push permission.
 - **Next:** user says `run` → 13 walk-forward runs (step 3 notes, item 6) → `PYTHONPATH=. python scripts/step3_verdict.py --weekly` applies the locked keep-rule, A vs B, scoreboard, weekly-vs-monthly → show the user. Showcase rebuild only when the user says.
   - **Step 3 build (done 2026-10-03):** `pinky/fundamentals.py` (growth features), wired into `pit_dataset.py` (dataset rebuilt: same 2,932,585 rows, 21 features). `train.py`: `VERSION = "v8"`, `growth` in `MODEL_FIXES`, `--placebo`, `--seed=N`, `pit_training_frame()`, monthly returns saved as `artifacts/backtest_periods_1y_<run>.csv`. `backtest.run_backtest(rebalance="weekly")`. `compare_runs.py` adds equal-weight universe and monthly top-10 big-winner / crash rows. New scripts: `scripts/check_growth_features.py` (59 date/leak checks) and `scripts/step3_verdict.py` (the locked rule; refuses to run until all 13 runs exist). v7 dataset backup: `data/sharadar/derived/pit_dataset_v7.parquet` (checksum-verified copy).
-- 20 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
+- 22 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
 **User decisions (2026-09-26)**
 - Phase 2 model fixes: **all four approved** (list under Roadmap).
