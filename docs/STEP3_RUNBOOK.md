@@ -123,8 +123,8 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
 - Ask open questions in plain text at the end, not in a question form (text written before a form isn't visible to the user).
 
 **7. Wrap up**
-- `docs/PROJECT_HISTORY.md`: add "Step 3 — growth features (v8)" under Key findings (verdict table + scoreboard); log every test, including reruns. `project.md`: update the Resume section (State / Waiting / Next) and the Key findings summary. `docs/WALKFORWARD_RESULTS.md`: add a v8 section like the v7 one.
-- Commit locally. Stage only files you changed (`project.md`, `docs/…`; if code changed, also run `graphify update .`). Key check (prints a count, never the key; must print 0): `git diff --cached | grep -c -F -f <(sed -n 's/^[^=#]*=//p' .env | tr -d '"' | tr -d "'" | awk 'length($0) >= 8') || true`
+- `docs/PROJECT_HISTORY.md`: add "Step 3 — growth features (v8)" under Key findings (verdict table + scoreboard); log every test, including reruns. `project.md`: update the Resume section (State / Open user decisions / Next) and the Key findings summary; keep it ~12–15 KB (details go to `docs/PROJECT_HISTORY.md`). `docs/WALKFORWARD_RESULTS.md`: add a v8 section like the v7 one.
+- Commit locally. Stage only files you changed (`project.md`, `docs/…`; if code changed, also run `graphify update .`). Key check (prints a count, never the key; must print 0; run it as its own command, in the normal sandbox): `git diff --cached | grep -c -F -f <(sed -n 's/^[^=#]*=//p' .env | tr -d '"' | tr -d "'" | awk 'length($0) >= 8') || true`
 - Never stage `data/`, `artifacts/`, `models/`, `product/`, `.agents/`, `skills-lock.json`, `.cursor/settings.json`, `.graphifyignore`, `graphify-out/YYYY-MM-DD/`. **No push.**
 
 **8. Then ask the user (start none of these without an OK)**

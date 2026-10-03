@@ -15,19 +15,20 @@ Last updated **2026-10-03**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
 - **Step 3 — growth features (v8), done 2026-10-03:** 13 runs, all clean on the first try; control reproduced v7 exactly; no leak flag. Locked verdict: **growth DROP on A and B** (real − placebo +0.26%/yr and +0.98%/yr; bar +1.0%). Both continue **without growth**, monthly trading.
 - **Final versions:** A (rank label) = `v8_pit_no-growth` (v7_pit inputs) **+7.23%/yr**; B (raw return) = `v7_pit_no-rank_label` **+5.83%/yr**. SPY +7.3%, equal-weight universe +8.0%.
-- Showcase shows v6_pit (2026-09-27). Product page is live: https://pinky-research.vercel.app (numbers hand-copied, up to v7; re-check each by hand before any update). Update either **only when the user says**. `product/` stays uncommitted (user's choice).
+- Showcase shows v6_pit (2026-09-27). Product page is live: https://pinky-research.vercel.app (numbers hand-copied, up to v7; re-check each by hand before any update). Update either **only when the user says**.
 - Every report includes: takeover share of top picks, 2009–2020 vs SPY (`REPORT_SPLIT_YEAR`), and the score-group table.
 - Local commits are **not pushed** (`git log origin/main..main --oneline`). User said: don't push yet.
 
-**Open user decisions (2026-10-03, after step 3)**
+**Open user decisions (2026-10-03)**
 - Residual-edge check on the final versions (A = `v8_pit_no-growth`, B = `v7_pit_no-rank_label`)?
 - SHAP (installed) on the final versions' last-fold models (2020 only): A `models/1y_pit_no-growth`, B `models/1y_pit_no-rank_label_v7`?
 - Next batch (Roadmap 2, margin expansion): add the keep condition "real ≥ baseline without the new features, same 3 seeds"? (Step 3: extra columns cost A ~1%/yr even with real data.) Save every fold's model (~9 MB per run; small `train.py` change before training)?
 - Push to GitHub?
+- Plugins: turn Vercel / Supabase / Railway off in Cursor's settings (applies to all projects)? The project-only switch doesn't work (Gotchas).
 
 **Next:** Roadmap batch 2 (margin expansion), same protocol as step 3 (placebo, 3 seeds). Propose the keep-rule and get the user's OK **before any run**. **Careful:** `--pit` still turns `growth` on by default (it's in `MODEL_FIXES`), so runs without growth need `--without=growth` (or change the default in `train.py`; ask first).
 
-**When you finish a chunk of work:** update this Resume section so the next chat can pick up.
+**When you finish a chunk of work:** update this Resume section so the next chat can pick up. Keep this file ~12–15 KB (`wc -c project.md`; every chat reads it): current state only. Move finished-step details (logs, decision logs, results tables) to `docs/PROJECT_HISTORY.md` and leave a 1–2 line summary + pointer here.
 
 ## Key findings (summary)
 
@@ -105,17 +106,16 @@ Data not downloaded yet: Sharadar `metrics` (access confirmed, ~1.4 MB).
 - Size: panels are 7,227 days × 17,340 stocks. Dataset build peaks ~14 GB RAM (machine: 48 GiB RAM = 51.5 GB, 18 cores, 1.3 TB free). A training run needs ~4–5 GB.
 - Run names come from the code (`train.run_all` builds them from the options), not from the log file name. Example: the v7 control was logged as `train_v7_pit_control.log`, but its files are named `v7_pit_no-rank_label_no-rank_features_no-young_no-size`. The step 3 runbook uses log name = run name and checks it.
 - Untracked `data/reference/` comes from another chat — leave it alone.
-- `graphify update` backs up the previous graph into a dated folder (`graphify-out/YYYY-MM-DD/`, untracked). Don't commit them.
 - graphify does not skip dot-folders: third-party code there (e.g. `.agents/`) gets indexed unless it's listed in `.graphifyignore`.
 - Cursor's sandbox blocks `pip install` into `.venv` ("Operation not permitted") → run pip with full permissions. In the sandbox, matplotlib warns that `~/.matplotlib` isn't writable (harmless; it uses a temp folder).
-- API key safety: never print `.env`. Before a commit, check the staged diff with a count-only `grep -c -F` for the key.
-- `.git/info/exclude` (local, 2026-10-03) hides never-commit files from `git status`: `graphify-out/20*/`, `.agents/`, `product/`, `skills-lock.json`, `.cursor/settings.json`, `.graphifyignore`. Still never stage them. Workspace-wide Grep skips them → pass the folder as the search path.
-- `.cursor/settings.json` `plugins`: Cursor reads only `"enabled": true` and ignores `false` (its code, 2026-10-03), so the Vercel / Supabase / Railway `false` entries don't turn them off.
-- RTK (2026-10-03): a global hook (`~/.cursor/hooks.json`) rewrites agent shell commands to compact `rtk` versions (`git`, `grep`, `ls`, `cat`…). Runbook checks and the key check give the same results (tested). Raw output: `rtk proxy <cmd>`. Remove: `rtk init -g --agent cursor --uninstall`.
+- API key safety: never print `.env`. Before a commit, check the staged diff with a count-only `grep -c -F` for the key (command: `docs/STEP3_RUNBOOK.md` step 7). Run it as its own command, in the normal sandbox: RTK leaves it unchanged, and auto-review blocked a full-permissions call containing it.
+- `.git/info/exclude` (local to this clone, 2026-10-03) hides never-commit files from `git status`: `graphify-out/20*/` (dated backups made by `graphify update`), `.agents/`, `product/`, `skills-lock.json`, `.cursor/settings.json`, `.graphifyignore`. Still never stage them; put new never-commit paths there too, not in `.gitignore`. Project skills in `.agents/skills/` still load (checked). Workspace-wide Grep skips these paths → pass the folder as the search path.
+- `.cursor/settings.json` `plugins`: Cursor reads only `"enabled": true` and ignores `false` (its code, 2026-10-03), so the Vercel / Supabase / Railway `false` entries don't turn them off (open decision above).
+- RTK (2026-10-03): a global hook (`~/.cursor/hooks.json`, all projects) rewrites agent shell commands to compact `rtk` versions (`git`, `grep`, `ls`, `cat`…). Runbook checks give the same results (tested). Its `git status` drops the last newline, so chained output can run together. Raw output: `rtk proxy <cmd>`. Remove: `rtk init -g --agent cursor --uninstall`.
 
 ## Rules
 
-All rules live in `AGENTS.md` (always on; every agent and subagent gets it).
+Core rules: `AGENTS.md` (always on; every agent and subagent gets it; keep it short). Graphify: `.cursor/rules/graphify.mdc` (on request). Add or change rules only there, never in this file.
 
 ## Repo layout
 
@@ -139,8 +139,8 @@ Full layout with details: `docs/PROJECT_HISTORY.md`.
   - Rebuild a report without retraining: `python scripts/train_walkforward.py --report-only=v7_pit` (uses the saved metrics CSV + preds parquet).
   - Compare runs: `python scripts/compare_runs.py v6_pit v7_pit ...`
 - Showcase: `python scripts/build_showcase.py` (~1 min; run name = `RUN` at the top). To view it in the IDE browser, serve it: `cd showcase && python3 -m http.server 8765` (`file://` is blocked).
-- Product page (Vercel Hobby): redeploy from a copy outside git (deploying from `product/` is blocked: "commit author doesn't have permission"): `rm -rf /tmp/pinky-deploy && mkdir -p /tmp/pinky-deploy/.vercel && cp product/index.html product/.vercelignore /tmp/pinky-deploy/ && cp -R product/fonts /tmp/pinky-deploy/ && cp product/.vercel/project.json /tmp/pinky-deploy/.vercel/ && (cd /tmp/pinky-deploy && npx vercel@latest deploy --prod)`. "Not authorized" → `npx vercel@latest login`. Take down: `npx vercel@latest project remove pinky-research`. View locally: `cd product && python3 -m http.server 8766`. Never commit `product/.vercel/`.
+- Product page (Vercel Hobby; update only when the user says): redeploy, take-down and local-view commands → `docs/PROJECT_HISTORY.md` (State log, product page bullets). Never commit `product/.vercel/`.
 - GitHub (private): https://github.com/steveonshit/Pinky (`origin/main`).
 - Graphify CLI: `/Users/hqschool/Library/Python/3.12/bin` (if `graphify` isn't found: `export PATH="/Users/hqschool/Library/Python/3.12/bin:$PATH"`).
 - Legacy 128-stock pipeline commands: `docs/PROJECT_HISTORY.md`.
-- Chats: use one chat at a time on Pinky (parallel chats overwrite each other's edits; on 2026-10-03 the training chat committed `66e83c7` and `0a0a0a8` while another chat restructured docs). Long chats get auto-summarized and can lose track → start a new chat. Before editing or resuming, check `git log -3`, `git status` and file times, not just the chat. Details: `docs/PROJECT_HISTORY.md`.
+- Chats: use one chat at a time on Pinky (parallel chats overwrite each other's edits). Long chats get auto-summarized and can lose track → start a new chat. Before editing or resuming, check `git log -3`, `git status` and file times, not just the chat. Details: `docs/PROJECT_HISTORY.md`.
