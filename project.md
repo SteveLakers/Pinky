@@ -136,11 +136,10 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
 
 **8. Then ask the user (start none of these without an OK)**
 - **Residual-edge check** (no install; `.agents/skills/residual-edge-analyzer/`): is the portfolio's return more than its SPY / equal-weight / momentum exposure? Input: `artifacts/backtest_periods_1y_<run>.csv`, rows with `signal == "LightGBM"` and `portfolio == "Top 10% + buffer"`: `start` = date, `gross` = strategy, `spy` = market, `universe_ew` = equal-weight; momentum = `gross` of the `Momentum 12-1` rows (same portfolio and dates). Monthly; gross for every column.
-- **SHAP** (which features drive LightGBM): needs `pip install "shap[plots]==0.52.0"` (version from `.agents/skills/shap/SKILL.md`) → ask first. Only last-fold models are saved (trained on data before 2020, tested on 2020).
+- **SHAP** (which features drive LightGBM): installed 2026-10-03, ready. Only last-fold models are saved (trained on data before 2020, tested on 2020).
 - **Next batch:** Roadmap batch 2 (margin expansion), same protocol (placebo, 3 seeds, propose the keep-rule before any run).
 
 **Open user decisions (raised 2026-10-03, not answered yet)**
-- Install SHAP now or later?
 - Save **every** fold's model (SHAP across all years, not just 2020)? Needs a small `train.py` change **before** training (~9 MB per run; last-fold models are ~440 KB). If the user doesn't ask, train as built.
 - Run the residual-edge check after the runs?
 - Push to GitHub?
@@ -165,7 +164,8 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
   4. `product/` stays **uncommitted** (user said no).
 - **User decisions (2026-10-03):** step 3 plan approved. Use **announcement dates** (not later SEC filings) when a matching earnings event exists; test weekly vs monthly trading after the model has news; keep-rule is the **middle** bar (real beats fake by ≥ 1%/yr overall and ≥ 0.5%/yr in each half), **three seeds each** (42 / 7 / 99); A and B both continue unless one trails by > 4%/yr. Do **not** train until the user says `run`.
 - **User asked (2026-10-03) whether the new add-ons help training:** they don't change training; they help check results afterwards (verification, debugging, residual-edge, SHAP). The user then asked for a detailed handover so the next agent can start training → the runbook above.
-- **Waiting on the user:** **`run`** (training; all checks passed); push permission; the open decisions at the end of the runbook (SHAP, per-fold models, residual-edge).
+- **User (2026-10-03, later):** wants **very short replies by default** (saves tokens); more detail only when asked. SHAP installed (see Repo layout).
+- **Waiting on the user:** **`run`** (training; all checks passed); push permission; the open decisions at the end of the runbook (per-fold models, residual-edge, gap-before-costs lines).
 - **Next:** user says `run` → runbook above (control → A → B → checks → verdict → report → docs + local commit). Showcase rebuild only when the user says.
   - **Step 3 build (done 2026-10-03):** `pinky/fundamentals.py` (growth features), wired into `pit_dataset.py` (dataset rebuilt: same 2,932,585 rows, 21 features). `train.py`: `VERSION = "v8"`, `growth` in `MODEL_FIXES`, `--placebo`, `--seed=N`, `pit_training_frame()`, monthly returns saved as `artifacts/backtest_periods_1y_<run>.csv`. `backtest.run_backtest(rebalance="weekly")`. `compare_runs.py` adds equal-weight universe and monthly top-10 big-winner / crash rows. New scripts: `scripts/check_growth_features.py` (59 date/leak checks) and `scripts/step3_verdict.py` (the locked rule; refuses to run until all 13 runs exist). v7 dataset backup: `data/sharadar/derived/pit_dataset_v7.parquet` (checksum-verified copy).
 - 24 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
@@ -248,6 +248,7 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
 - Untracked `data/reference/` comes from another chat — leave it alone.
 - `graphify update` backs up the previous graph into a dated folder (`graphify-out/YYYY-MM-DD/`, untracked). Don't commit them.
 - graphify does not skip dot-folders: third-party code there (e.g. `.agents/`) gets indexed unless it's listed in `.graphifyignore`.
+- Cursor's sandbox blocks `pip install` into `.venv` ("Operation not permitted") → run pip with full permissions. In the sandbox, matplotlib warns that `~/.matplotlib` isn't writable (harmless; it uses a temp folder).
 - API key safety: never print `.env`. Before a commit, check the staged diff with a count-only `grep -c -F` for the key.
 
 ## Rules (always on)
@@ -256,7 +257,7 @@ Apply at all times unless the user says otherwise. Mirrored in `.cursor/rules/`.
 
 1. **Never lie.** Never fake data, results, or information.
 2. **Double-check before answering.**
-3. **Be concise.** Straight to the point, no filler.
+3. **Be concise.** Straight to the point, no filler. **Very short by default** (user, 2026-10-03: saves tokens); more detail only when asked.
 4. **No exceptions** unless the user says so.
 5. **Auto-update `project.md`** after big features/updates, and as the project changes.
 6. **Challenge bad ideas.** If the user is wrong or a better way exists, say so.
@@ -414,7 +415,7 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - `AGENTS.md`, `.cursor/rules/` — agent instructions. `graphify-out/` — knowledge graph.
 - Agent add-ons (2026-10-02; untracked, don't commit). Skills in `.agents/skills/` (listed in `skills-lock.json`):
   - `residual-edge-analyzer`: does a portfolio beat SPY / equal-weight / momentum beyond their exposure? Needs one dated monthly CSV (strategy + baselines on each row, same cost basis). Since v8, every run saves `artifacts/backtest_periods_1y_<run>.csv` (per month: net, gross, SPY, equal-weight universe, for every signal × portfolio, incl. Momentum 12-1) → pivot it; older runs get the file via `--report-only`. Use gross for all columns (SPY and equal-weight carry no costs).
-  - `shap`: which features drive LightGBM. The `shap` package isn't installed yet (ask the user first). `.venv` has Python 3.12.0 (SHAP 0.52.0 needs ≥ 3.12). Install into the existing `.venv` with pip; skip the skill's `uv venv` step (it makes a new environment). Dry run 2026-10-03: `pip install "shap==0.52.0"` adds 5 packages (numba, llvmlite, slicer, tqdm, packaging); `"shap[plots]==0.52.0"` adds 28 (also matplotlib, IPython and their dependencies). numpy / pandas / scipy unchanged either way. Only last-fold models are saved (see runbook step 8).
+  - `shap`: which features drive LightGBM. **Installed 2026-10-03** (user asked): `shap[plots]==0.52.0` into the existing `.venv` (Python 3.12.0), also in `requirements.txt`. 29 packages added (shap, numba, llvmlite, slicer, tqdm, packaging, matplotlib, IPython + their dependencies); nothing removed or changed (numpy, pandas, scipy, scikit-learn, lightgbm same); `pip check` clean; smoke test on a small LightGBM passed (additivity OK). No Pinky code imports matplotlib / IPython / psutil. Don't follow the skill's `uv venv` step (it makes a new environment). Only last-fold models are saved (see runbook step 8).
   - None of these add-ons change training; they are for checking results afterwards.
   - `verification-before-completion`, `systematic-debugging` (obra/superpowers).
   - Context7 plugin (current library docs), enabled for Pinky in `.cursor/settings.json`. `.graphifyignore` keeps `.agents/` out of the graph.
