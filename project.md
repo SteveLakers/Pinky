@@ -144,6 +144,7 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
 - Save **every** fold's model (SHAP across all years, not just 2020)? Needs a small `train.py` change **before** training (~9 MB per run; last-fold models are ~440 KB). If the user doesn't ask, train as built.
 - Run the residual-edge check after the runs?
 - Push to GitHub?
+- Add info-only lines to the step 3 report: real − placebo gap **before costs**, and turnover? The placebo is reshuffled every week (`shuffle_growth_within_date`), while real growth numbers mostly change once a quarter, so trading costs could tilt the gap (v7 cost drag for LightGBM top 10% + buffer: 0.37%/yr; 0.54%/yr in 2001–08). The saved stats already have `cagr_gross` and `avg_monthly_turnover`. Doesn't change the locked rule.
 
 ### State and history
 
@@ -413,7 +414,7 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - `AGENTS.md`, `.cursor/rules/` — agent instructions. `graphify-out/` — knowledge graph.
 - Agent add-ons (2026-10-02; untracked, don't commit). Skills in `.agents/skills/` (listed in `skills-lock.json`):
   - `residual-edge-analyzer`: does a portfolio beat SPY / equal-weight / momentum beyond their exposure? Needs one dated monthly CSV (strategy + baselines on each row, same cost basis). Since v8, every run saves `artifacts/backtest_periods_1y_<run>.csv` (per month: net, gross, SPY, equal-weight universe, for every signal × portfolio, incl. Momentum 12-1) → pivot it; older runs get the file via `--report-only`. Use gross for all columns (SPY and equal-weight carry no costs).
-  - `shap`: which features drive LightGBM. The `shap` package isn't installed yet (`pip install "shap[plots]==0.52.0"`; ask the user first); it only adds numba, llvmlite, slicer, tqdm, packaging (core versions unchanged). Only last-fold models are saved (see runbook step 8).
+  - `shap`: which features drive LightGBM. The `shap` package isn't installed yet (ask the user first). `.venv` has Python 3.12.0 (SHAP 0.52.0 needs ≥ 3.12). Install into the existing `.venv` with pip; skip the skill's `uv venv` step (it makes a new environment). Dry run 2026-10-03: `pip install "shap==0.52.0"` adds 5 packages (numba, llvmlite, slicer, tqdm, packaging); `"shap[plots]==0.52.0"` adds 28 (also matplotlib, IPython and their dependencies). numpy / pandas / scipy unchanged either way. Only last-fold models are saved (see runbook step 8).
   - None of these add-ons change training; they are for checking results afterwards.
   - `verification-before-completion`, `systematic-debugging` (obra/superpowers).
   - Context7 plugin (current library docs), enabled for Pinky in `.cursor/settings.json`. `.graphifyignore` keeps `.agents/` out of the graph.
