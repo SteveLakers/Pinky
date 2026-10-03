@@ -7,7 +7,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Score-group table: `340e866`. Step 3 plan locked 2026-10-03; **step 3 code + date/leak checks done 2026-10-03 (all pass): `349d0d6`**; v8 dataset built. **Step 3 trained 2026-10-03 (13 runs, all clean): growth DROP on A and B → both continue without growth, monthly trading. See Key findings → Step 3.**
+Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Score-group table: `340e866`. Step 3 plan locked 2026-10-03; **step 3 code + date/leak checks done 2026-10-03 (all pass): `349d0d6`**; v8 dataset built. **Step 3 trained 2026-10-03 (13 runs, all clean): growth DROP on A and B → both continue without growth, monthly trading. See Key findings → Step 3.** Results commit: `66e83c7`.
 
 ### Step 3 training runbook (done 2026-10-03; reuse for the next batch)
 
@@ -167,9 +167,9 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
 - **User (2026-10-03, later):** wants **very short replies by default** (saves tokens); more detail only when asked. SHAP installed (see Repo layout).
 - **Phase 2 step 3 — growth features (v8): done 2026-10-03** (user said "Start train"; launched and judged on Claude Opus 5.5). Locked verdict: **DROP on A and B** (real − placebo +0.26%/yr and +0.98%/yr; bar +1.0%). Both continue without growth, monthly trading. Details: Key findings → Step 3, `docs/WALKFORWARD_RESULTS.md`, `artifacts/step3_verdict.md`.
 - **Waiting on the user:** the open decisions at the end of the runbook (residual-edge, SHAP, next-batch keep-rule, push).
-- **Next:** Roadmap batch 2 (margin expansion) with the same protocol; agree the keep-rule before any run. Showcase / product page only when the user says.
+- **Next:** Roadmap batch 2 (margin expansion) with the same protocol; agree the keep-rule before any run. **Careful:** `--pit` still turns `growth` on by default (it's in `MODEL_FIXES`), so runs without growth need `--without=growth` (or change the default in `train.py`; ask first). Showcase / product page only when the user says.
   - **Step 3 build (done 2026-10-03):** `pinky/fundamentals.py` (growth features), wired into `pit_dataset.py` (dataset rebuilt: same 2,932,585 rows, 21 features). `train.py`: `VERSION = "v8"`, `growth` in `MODEL_FIXES`, `--placebo`, `--seed=N`, `pit_training_frame()`, monthly returns saved as `artifacts/backtest_periods_1y_<run>.csv`. `backtest.run_backtest(rebalance="weekly")`. `compare_runs.py` adds equal-weight universe and monthly top-10 big-winner / crash rows. New scripts: `scripts/check_growth_features.py` (59 date/leak checks) and `scripts/step3_verdict.py` (the locked rule; refuses to run until all 13 runs exist). v7 dataset backup: `data/sharadar/derived/pit_dataset_v7.parquet` (checksum-verified copy).
-- 24 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
+- 28 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
 **User decisions (2026-09-26)**
 - Phase 2 model fixes: **all four approved** (list under Roadmap).
@@ -391,8 +391,8 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - Add **size** (market cap) as a feature.
 
 **Phase 2 — company data**, added in batches; keep only what beats the baseline:
-1. **Growth + revenue acceleration** ← first
-2. Margin expansion
+1. Growth + revenue acceleration — **tested 2026-10-03 (v8): DROP** on both targets
+2. **Margin expansion** ← next
 3. Price strength (momentum, 52-week-high proximity, vs sector)
 4. Earnings reactions / surprises
 5. Reinvestment (R&D/revenue, ROIC)
@@ -417,14 +417,15 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - `pinky/config.py` — universe rules, paths, backtest settings, `HOLDOUT_START`, `DELIST_RETURN_PERFORMANCE`
 - `pinky/sharadar.py` — Sharadar API: bulk download → parquet, small queries (key never printed)
 - `pinky/universe.py` — point-in-time universe panels, delisting-aware `tr` panel, sectors, SPY, `backtest_prices()`
-- `pinky/pit_dataset.py` — weekly features + labels on the point-in-time universe (13 price features + `history_1y` + `log_mcap`)
+- `pinky/pit_dataset.py` — weekly features + labels on the point-in-time universe (13 price features + `history_1y` + `log_mcap`; since v8 also the 6 growth features = 21)
+- `pinky/fundamentals.py` — growth features from SF1 ARQ/ART (announcement / filing dates, YoY, staleness) + placebo shuffle (`shuffle_growth_within_date`)
 - `pinky/preprocess.py` — per-day z-score or percentile rank + correlated-feature drop
 - `pinky/walkforward.py` — expanding walk-forward folds + label purge (`calendar` param)
-- `pinky/train.py` — Ridge / LightGBM / Blend, report, `pit=True` and `exclude` runs, `dev_rows`
+- `pinky/train.py` — Ridge / LightGBM / Blend, report, `pit=True` and `exclude` runs, `dev_rows`, `MODEL_FIXES` (`--without=`), `--seed=N`, `--placebo`, `pit_training_frame`
 - `pinky/metrics.py` — IC, top-N, precision@k, winner capture, score groups, calibration
-- `pinky/backtest.py` — monthly top-N / top-fraction backtest, costs, sector cap (`sectors` param), holding buffer, stress tests
+- `pinky/backtest.py` — monthly (or weekly) top-N / top-fraction backtest, costs, sector cap (`sectors` param), holding buffer, stress tests
 - Legacy (128 stocks, yfinance): `data_pull.py`, `raw_io.py`, `features.py`, `labels.py`, `dataset.py`
-- `scripts/` — `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, plus legacy build scripts
+- `scripts/` — `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features` (59 date/leak checks), `step3_verdict` (locked keep-rule), plus legacy build scripts
 - `showcase/index.html` — one-page visual (offline), built from v6_pit artifacts by `scripts/build_showcase.py`.
 - `product/index.html` — public product page for non-coders (static, hand-written, inline SVG charts, no build step); `product/fonts/` = Newsreader + Libre Franklin (OFL licenses included); `product/.vercelignore` = Vercel upload allowlist; `product/.gitignore` keeps `.vercel/` and `.env*` out of git.
 - `data/sharadar/` (~6 GB, gitignored, never share) — tables (`*.parquet`), `zips/`, `panels/` (Date × Ticker), `spy.parquet`, `derived/pit_dataset.parquet`
