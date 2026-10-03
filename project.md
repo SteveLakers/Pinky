@@ -7,7 +7,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-02**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Nothing has run since Sep 27 ~1 AM.
+Last updated **2026-10-03**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `5be6e83`. Showcase + report checks: `cf84035`. Step 2 (v7_pit): `9030d73`. Score-group table: `340e866`. Step 3 plan locked 2026-10-03; **step 3 code + date/leak checks done 2026-10-03 (all pass)**; v8 dataset built; **no training until the user says `run`**.
 
 **State**
 - Phase 1 (honest evaluation): **done**.
@@ -24,8 +24,10 @@ Last updated **2026-10-02**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
   2. Showcase and product page: update **only when the user says**.
   3. Score-group table: approved, done (above).
   4. `product/` stays **uncommitted** (user said no).
-- **Waiting on the user:** OK on the step-3 pick rule (propose it first); push permission.
-- **Next:** step 3 — company data batch 1, on both targets → compare to `v7_pit` and `v7_pit_no-rank_label`. Showcase rebuild (set `RUN` in `scripts/build_showcase.py`) only when the user says; then re-read its text. Static lines: the footer's "Stocks need a year of price history" must go once the showcase shows a run with the `young` fix.
+- **User decisions (2026-10-03):** step 3 plan approved. Use **announcement dates** (not later SEC filings) when a matching earnings event exists; test weekly vs monthly trading after the model has news; keep-rule is the **middle** bar (real beats fake by ≥ 1%/yr overall and ≥ 0.5%/yr in each half), **three seeds each** (42 / 7 / 99); A and B both continue unless one trails by > 4%/yr. Do **not** train until the user says `run`.
+- **Waiting on the user:** **`run`** (training; the date/leak checks have passed); push permission.
+- **Next:** user says `run` → 13 walk-forward runs (step 3 notes, item 6) → `PYTHONPATH=. python scripts/step3_verdict.py --weekly` applies the locked keep-rule, A vs B, scoreboard, weekly-vs-monthly → show the user. Showcase rebuild only when the user says.
+  - **Step 3 build (done 2026-10-03):** `pinky/fundamentals.py` (growth features), wired into `pit_dataset.py` (dataset rebuilt: same 2,932,585 rows, 21 features). `train.py`: `VERSION = "v8"`, `growth` in `MODEL_FIXES`, `--placebo`, `--seed=N`, `pit_training_frame()`, monthly returns saved as `artifacts/backtest_periods_1y_<run>.csv`. `backtest.run_backtest(rebalance="weekly")`. `compare_runs.py` adds equal-weight universe and monthly top-10 big-winner / crash rows. New scripts: `scripts/check_growth_features.py` (59 date/leak checks) and `scripts/step3_verdict.py` (the locked rule; refuses to run until all 13 runs exist). v7 dataset backup: `data/sharadar/derived/pit_dataset_v7.parquet` (checksum-verified copy).
 - 20 local commits are **not pushed** (check: `git log origin/main..main --oneline`). User said: don't push yet.
 
 **User decisions (2026-09-26)**
@@ -41,11 +43,38 @@ Last updated **2026-10-02**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
 - Dataset (`pit_dataset.py`) now keeps stocks with ≥ ~1 month of prices (`SHORT_FEATURES`), adds `history_1y` and `log_mcap` (Sharadar DAILY; verified point-in-time). v6 dataset backup: `data/sharadar/derived/pit_dataset_v6.parquet`.
 - Rank features run once before the walk-forward (`preprocess.cross_section_rank`; per-day only, so no leak). Each run saves `artifacts/run_config_<run>.json` (fixes, stock count) for `--report-only`.
 
-**Step 3 notes (company data batch 1)**
-1. New `pinky/fundamentals.py`: load `data/sharadar/fundamentals.parquet`, **ARQ + ART rows only**. Attach to dataset rows with `merge_asof` on the **filing `date`** (backward, by ticker) → point-in-time.
-2. Growth + revenue acceleration features: quarterly revenue growth vs the same quarter last year, TTM revenue growth, acceleration (this quarter's YoY growth minus last quarter's), gross-profit growth, days since last filing.
-   - Find "same quarter last year" by `calendardate`, not by row offset (filings can be missing or late).
-3. Run `train_walkforward.py --pit` under a new version; compare to the previous step; keep only what helps.
+**Step 3 notes (company data batch 1 — plan locked 2026-10-03)**
+
+**A** = with the rank label (calm-stock target; baseline `v7_pit`). **B** = without it (raw return, big-winner target; baseline `v7_pit_no-rank_label`). Both get the growth features.
+
+1. `pinky/fundamentals.py`: load SF1 **ARQ + ART only** (never MR*). Drop filings dated < 10 days after period end (no real 10-Q is that fast: data errors; 121 ARQ / 182 ART reports, 0.02%; tightened 2026-10-03 during the date checks, before any results); keep the **first-filed** row per (ticker, calendardate).
+2. **News date** (user chose announcement dates now, not filing dates): Sharadar events code `22` (earnings announcement) if it falls after period end, at least 10 days later (skip previews), and no later than the SEC filing. An announcement belongs to the **newest** quarter that ended ≥ 10 days before it (fixes catch-up filings). If several match, use the **latest** (can only be late, never early). No match → filing date. Events start Aug 2004; earlier years stay on filings. A report published after a newer one (late catch-up filing) never replaces the newer one.
+3. Features (6): `rev_yoy_q`, `rev_accel`, `gp_yoy_q`, `rev_yoy_ttm`, `days_since_news`, `has_growth`. YoY matches `calendardate` with `MonthEnd` math (both sides > 0; prior news date ≤ current). Attach with `merge_asof(..., allow_exact_matches=False)` so numbers are used only on dates **after** the news date. Stale: quarterly > 365 days since period end → missing; TTM > 550 days → missing.
+4. `MODEL_FIXES` adds `growth` (`--without=growth` = v7 inputs). `VERSION` = v8. Back up `pit_dataset.parquet` as `pit_dataset_v7.parquet` before rebuild.
+5. **Locked keep-rule** (judge LightGBM, Top 10% + buffer, 10 bps, 2001–2020; do not change after seeing results):
+   - Real vs **placebo** (growth columns shuffled within each date, block of 6). Keep growth on a version if real − fake ≥ **+1.0%/yr overall** and ≥ **+0.5%/yr in both 2001–08 and 2009–20**. Average **3 seeds** (42, 7, 99).
+   - Decide A and B separately. If growth does not help a version, that version continues **without** it.
+   - A vs B: **both continue**. Drop one only if it trails by **> 4%/yr**.
+   - Weekly vs monthly (same predictions, no extra training): weekly wins only if it beats monthly by ≥ 1%/yr after 10 bps **and** does not lose at 25 bps. Default reports stay monthly until that test.
+   - Scoreboard only (does not decide): > +8.7%/yr; ≥ SPY in both halves; ≥ equal-weight universe (+8.0%); crashes ≤ 10%; IC > 0 in both halves. **IC > 0.052 is retired** as a gate (it grades the whole list and would knock out B).
+   - No feature tweaks after results. Log every test. 2022+ holdout untouched. Jump > +3%/yr vs fake → leak audit before believing it.
+6. Training (only after user says `run`): `OMP_NUM_THREADS=3 PYTHONPATH=. python -u scripts/train_walkforward.py --pit <options>`, 13 runs:
+   - A real: no extra options (→ `v8_pit`), `--seed=7`, `--seed=99`. A placebo: `--placebo`, `--placebo --seed=7`, `--placebo --seed=99`.
+   - B: the same six with `--without=rank_label` added (→ `v8_pit_no-rank_label…`).
+   - A control: `--without=growth` (→ `v8_pit_no-growth`; must reproduce `v7_pit` within ~0.5%/yr; inputs proven identical).
+   - Then `PYTHONPATH=. python scripts/step3_verdict.py --weekly` (writes `artifacts/step3_verdict.md`).
+7. **Date/leak checks (2026-10-03, `scripts/check_growth_features.py`, 59/59 pass; logged per the integrity rule):**
+   - Made-up cases for every date rule (previews, catch-up filings, amendments, same-day rows, staleness): all pass.
+   - Dataset vs v7 backup: same rows in the same order, all 37 old columns identical, exactly the 6 growth columns added. The growth-off model frame equals the v7 frame for A and B (`pit_training_frame`), so the control gets v7 inputs exactly.
+   - Real data: every announcement ≥ 10 days after period end and ≤ the filing; every number used only on rows strictly after its news date; nothing older than 365 / 550 days; the quarter shown never goes backwards. Median: news 41 days after period end, announcement 2 days before filing.
+   - Independent plain-Python re-implementation: 2,758 sampled rows (303 stocks) match exactly.
+   - Volume (100k quarters, filing ≥ 7 days after announcement): spike on announcement day 0–1 median 2.57× normal (65% > 2×) vs filing day 1.20× (18%). Median profile peaks on days 0–1 (1.82×, 1.94×), not later → dates are not early.
+   - Hand checks: NVDA (Q3 FY17, +53.6% YoY, appears 2016-11-11, day after the release), AAPL (Q4 FY16, −9.0%, appears 2016-10-28), MSFT 2002 (filing date, appears after 2002-04-30).
+   - Coverage: 93–96% of rows have growth from 2001 (75% in 1999, 87% in 2021: many new listings). From 2005, ~85% of latest quarters are dated by announcement.
+   - Correlations (per-date ranks): highest growth pair 0.84 (`rev_yoy_q` / `gp_yoy_q`), below the 0.92 drop threshold; max link to an old feature 0.28 (momentum) → new information.
+   - **Leak-power test** (dev rows 2005+, label = 3-month return vs SPY): rank IC of `rev_yoy_q` with real dates **+0.0018**; with fake early dates (quarter end + 1 day) **+0.0168**; placebo **+0.0002**. So a leak would show up clearly, and ours doesn't. Caveat: with honest dates, revenue growth alone barely ranks 3-month returns, so expect small gains if any.
+   - Placebo: same values per date, moved between stocks as six-value blocks (99.8% of rows end up with a different block), unrelated to real values (rank corr +0.0002).
+   - Backtest code unchanged for monthly: rebuilt v7_pit stats match the saved ones (max diff 2e-16). v7 weekly vs monthly (LightGBM top 10% + buffer): +7.29% vs +7.23% at 10 bps, +6.36% vs +6.63% at 25 bps → monthly (same as the earlier test).
 
 **Bar to beat (v6_pit: Jan 2001 → Jan 2021; SPY +7.3%/yr, equal-weight universe +8.2%/yr)**
 - Ridge rank IC **0.052**; Ridge top 10% + buffer **+8.7%/yr** (+7.8% at 25 bps); Ridge top-10 + buffer +8.3%/yr.
@@ -58,7 +87,7 @@ Last updated **2026-10-02**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
 - Fundamentals ARQ: filing dates 1993 → 2026, 17,045 tickers, revenue filled 97% (ART 92%).
 - 9,492 of the 10,043 v6 dataset stocks (95%) have ARQ rows. The v7 dataset has 10,902 stocks (young stocks added).
 - `daily.parquet` columns: `marketcap`, `ev`, `evebit`, `evebitda`, `pb`, `pe`, `ps`.
-- Not downloaded yet: Sharadar `metrics` table (access confirmed, ~1.4 MB).
+- Pinky pulls 7 Sharadar tables (`sharadar.BULK_TABLES`: tickers, stocks, fundamentals, sp500, actions, daily, events). Not downloaded yet: `metrics` (access confirmed, ~1.4 MB). No insider or institution tables: check plan access before Roadmap batch 7.
 
 **When you finish a chunk of work:** update this Resume section so the next chat can pick up.
 
@@ -73,10 +102,15 @@ Last updated **2026-10-02**. Phase 1 code: `c0cdfe7`. Phase 2 step 1 (v6_pit): `
 - pandas `to_numpy()` can return a read-only array → use `np.array(..., copy=True)` before writing into it.
 - Filtered Sharadar API queries return only the last year unless you pass `from_=`.
 - Sharadar tickers are unique (reused symbols get a suffix, e.g. `CNO1`).
+- `pd.merge_asof` needs both frames sorted by the `on` key **globally** (not ticker-first), else "left keys must be sorted". Among equal keys it takes the last right row → sort the right side by (news date, period) so the newest quarter wins.
+- Quarter math: `pd.DateOffset(months=3)` maps Sep 30 → Dec 30 (wrong); use `pd.offsets.MonthEnd(n)`.
+- SF1 has a few reports "filed" 0–9 days after period end (data errors); `fundamentals.first_filed` skips them.
+- Earnings events (code 22) start 2004-08-23; ADRs (6-K filers) have none → filing dates.
 - ~195 of 2.8M rows show one-day jumps > 100% on tiny stocks (likely split glitches); left in for the baseline.
 - Size: panels are 7,227 days × 17,340 stocks. Dataset build peaks ~14 GB RAM (machine: 48 GB, 18 cores, 1.3 TB free).
 - Untracked `data/reference/` comes from another chat — leave it alone.
 - `graphify update` backs up the previous graph into a dated folder (`graphify-out/YYYY-MM-DD/`, untracked). Don't commit them.
+- graphify does not skip dot-folders: third-party code there (e.g. `.agents/`) gets indexed unless it's listed in `.graphifyignore`.
 - API key safety: never print `.env`. Before a commit, check the staged diff with a count-only `grep -c -F` for the key.
 
 ## Rules (always on)
@@ -179,7 +213,7 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - **Dataset rows:** weekly (every 5th trading day); folds use the daily calendar. Since v7 (`young` fix), stocks are scored after ~1 month of prices; missing long-window features get the day's middle value. v5/v6 needed 1y of history.
 - **Sectors:** Sharadar sectors (current classification) for the cap. The custom "Tech/AI" bucket only applies to the old 128-stock universe.
 - **Risk:** no leverage. Sector cap 60%.
-- **Main signal:** undecided — depends on the open step 3 target decision.
+- **Main signal:** undecided. Step 3 keeps both A (rank label) and B (raw return); drop one only if it trails by > 4%/yr.
 - **Locked holdout:** `HOLDOUT_START = 2022-01-01`. Dev runs only use rows whose label ends before it (`train.dev_rows`). Score the holdout once, at the very end.
 
 ## Roadmap
@@ -241,6 +275,11 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - `artifacts/`, `models/` — outputs (gitignored). Per run: `walkforward_summary_<run>.md`, `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `score_groups_1y_<run>.csv`, `run_config_<run>.json`. `models/1y_<tag>/` holds last-fold models per tag (`1y_pit` = latest full pit run, overwritten; ablations get `1y_pit_no-<fix>`).
 - `docs/` — `WALKFORWARD_RESULTS.md`, `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`
 - `AGENTS.md`, `.cursor/rules/` — agent instructions. `graphify-out/` — knowledge graph.
+- Agent add-ons (2026-10-02; untracked, don't commit). Skills in `.agents/skills/` (listed in `skills-lock.json`):
+  - `residual-edge-analyzer`: does a portfolio beat SPY / equal-weight / momentum beyond their exposure? Needs a dated monthly return CSV, which Pinky doesn't save yet (rebuild from saved preds like `build_showcase.py`; no retraining).
+  - `shap`: which features drive LightGBM. The `shap` package isn't installed yet; it only adds numba, llvmlite, slicer, tqdm, packaging (core versions unchanged).
+  - `verification-before-completion`, `systematic-debugging` (obra/superpowers).
+  - Context7 plugin (current library docs), enabled for Pinky in `.cursor/settings.json`. `.graphifyignore` keeps `.agents/` out of the graph.
 
 ## Commands
 
@@ -259,4 +298,4 @@ Point-in-time liquid US universe, delisted stocks included, 1y signal, monthly t
 - GitHub (private): https://github.com/steveonshit/Pinky (`origin/main`) — push only when the user says.
 - Graphify CLI: `/Users/hqschool/Library/Python/3.12/bin` (if `graphify` isn't found: `export PATH="/Users/hqschool/Library/Python/3.12/bin:$PATH"`); run `graphify update .` after code changes.
 - Tip: use one chat at a time on Pinky (parallel chats can overwrite each other's edits). On 2026-09-26/27 two chats worked in turn, which confused where work happened.
-- Long chats get auto-summarized by Cursor (the agent then works from a summary; the full record is still saved). One very long chat also got a "Request blocked by Anthropic" error on a harmless question (likely a false positive). Fix for both: start a new chat — it picks up from this file.
+- Long chats get auto-summarized by Cursor (the agent then works from a summary; the full record is still saved). One very long chat also got a "Request blocked by Anthropic" error on a harmless question (likely a false positive). Fix for both: start a new chat — it picks up from this file. On 2026-10-03 the long step-3 chat lost track (it forgot it had started `fundamentals.py`), so before resuming, check `git status` and file times, not just the chat.

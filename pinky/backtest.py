@@ -1,7 +1,7 @@
 """
 Tradeable portfolio backtest on out-of-sample (walk-forward test) predictions.
 
-- Rebalance on the first test day of each month.
+- Rebalance on the first test day of each month (or every test date with `rebalance="weekly"`).
 - Hold equal-weight top-N by model score until the next rebalance
   (N fixed, or a fraction of each date's stocks).
 - Optional sector cap: no sector may exceed `max_sector_share` of picks
@@ -29,6 +29,7 @@ from pinky.metrics import daily_rank_ic
 from pinky.raw_io import adj_close_series, load_raw_ticker
 
 HOLD_DAYS_LAST = 21  # final period has no next rebalance; hold ~1 month
+HOLD_DAYS_LAST_WEEKLY = 5
 
 
 def load_price_panel(tickers: list[str]) -> pd.DataFrame:
@@ -51,6 +52,14 @@ def monthly_rebalance_dates(pred_dates: pd.Series) -> list[pd.Timestamp]:
     return list(first_of_month)
 
 
+def rebalance_dates(pred_dates: pd.Series, rebalance: str = "monthly") -> list[pd.Timestamp]:
+    if rebalance == "monthly":
+        return monthly_rebalance_dates(pred_dates)
+    if rebalance == "weekly":
+        return list(pd.DatetimeIndex(sorted(pd.unique(pred_dates))))
+    raise ValueError(f"rebalance must be 'monthly' or 'weekly', got {rebalance!r}")
+
+
 def _next_day(d: pd.Timestamp, calendar: pd.DatetimeIndex, lag: int = 1) -> pd.Timestamp | None:
     pos = calendar.searchsorted(d) + lag
     return calendar[pos] if pos < len(calendar) else None
@@ -60,10 +69,11 @@ def _period_end(
     i: int,
     rebal: list[pd.Timestamp],
     calendar: pd.DatetimeIndex,
+    hold_last: int = HOLD_DAYS_LAST,
 ) -> pd.Timestamp | None:
     if i + 1 < len(rebal):
         return _next_day(rebal[i + 1], calendar)
-    pos = calendar.searchsorted(rebal[i]) + 1 + HOLD_DAYS_LAST
+    pos = calendar.searchsorted(rebal[i]) + 1 + hold_last
     return calendar[min(pos, len(calendar) - 1)]
 
 
@@ -116,6 +126,7 @@ def run_backtest(
     sectors: dict[str, str] | None = None,
     top_frac: float | None = None,
     buffer_mult: float | None = None,
+    rebalance: str = "monthly",
 ) -> pd.DataFrame:
     """
     One row per holding period (gross, cost, net, SPY, universe, turnover).
@@ -123,16 +134,18 @@ def run_backtest(
     Signal at close of rebalance day D; trade at close of D+1 (no same-close fill).
     `top_frac` holds the top fraction of each date's stocks instead of `top_n`.
     `buffer_mult` keeps a holding while it ranks in the top `buffer_mult` x N.
+    `rebalance="weekly"` trades on every prediction date instead of monthly.
     """
     calendar = prices.index
-    rebal = monthly_rebalance_dates(preds["Date"])
+    rebal = rebalance_dates(preds["Date"], rebalance)
+    hold_last = HOLD_DAYS_LAST_WEEKLY if rebalance == "weekly" else HOLD_DAYS_LAST
     by_date = {d: g for d, g in preds.groupby("Date")}
     prev_drift = pd.Series(dtype=float)
     rows = []
 
     for i, signal_day in enumerate(rebal):
         d = _next_day(signal_day, calendar)
-        end = _period_end(i, rebal, calendar)
+        end = _period_end(i, rebal, calendar, hold_last)
         if d is None or end is None or end <= d:
             continue
 
@@ -309,6 +322,7 @@ __all__ = [
     "monthly_rebalance_dates",
     "pick_sector_share",
     "pick_top",
+    "rebalance_dates",
     "run_backtest",
     "summarize_backtest",
     "top_winners",

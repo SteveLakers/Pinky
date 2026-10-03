@@ -27,6 +27,14 @@ def _pct(x: float) -> str:
     return f"{100 * x:+.1f}%"
 
 
+def winner_crash_rates(p: pd.DataFrame, pred: str, k: int = BACKTEST_TOP_N) -> tuple[float, float]:
+    """Monthly top-k picks (first test date of each month): share in the day's top 10%, share < −50% vs SPY."""
+    first = p.groupby(p["Date"].dt.to_period("M"))["Date"].transform("min")
+    m = p[p["Date"] == first].dropna(subset=["excess_1y"])
+    top = m.sort_values(["Date", pred], ascending=[True, False]).groupby("Date").head(k)
+    return float(top["top_1y"].mean()), float((top["excess_1y"] < -0.5).mean())
+
+
 def run_column(run: str, acq: pd.Series) -> dict[str, str]:
     m = pd.read_csv(ARTIFACTS_DIR / f"walkforward_metrics_{run}.csv")
     s = pd.read_csv(ARTIFACTS_DIR / f"backtest_stats_1y_{run}.csv")
@@ -49,13 +57,18 @@ def run_column(run: str, acq: pd.Series) -> dict[str, str]:
             col[f"CAGR {portfolio} {split}, {signal}"] = _pct(cagr(signal, portfolio, split))
     spy = s[s["period"] == "all"]["cagr_spy"].iloc[0]
     spy_late = s[s["period"] == split]["cagr_spy"].iloc[0]
-    col["SPY CAGR (all | late)"] = f"{_pct(spy)} | {_pct(spy_late)}"
+    col["SPY CAGR (all / late)"] = f"{_pct(spy)} / {_pct(spy_late)}"
+    ew = s[s["period"] == "all"]["cagr_universe_ew"].iloc[0]
+    ew_late = s[s["period"] == split]["cagr_universe_ew"].iloc[0]
+    col["Equal-weight universe CAGR (all / late)"] = f"{_pct(ew)} / {_pct(ew_late)}"
 
     for signal, pred in SIGNALS.items():
         col[f"Precision@{BACKTEST_TOP_N}, {signal}"] = f"{precision_at_k(p, pred, 'top_1y', k=BACKTEST_TOP_N):.3f}"
         col[f"Acquired ≤ 6m, top-{BACKTEST_TOP_N}, {signal}"] = (
             f"{acquired_share(p, pred, acq, k=BACKTEST_TOP_N):.1%}"
         )
+        big, crash = winner_crash_rates(p, pred)
+        col[f"Monthly top-{BACKTEST_TOP_N} big winners / crashes, {signal}"] = f"{big:.1%} / {crash:.1%}"
     return col
 
 

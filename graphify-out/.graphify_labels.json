@@ -1,16 +1,21 @@
 {
   "0": "Pinky PRD (Product Requirements Document)",
-  "1": "preprocess.py",
+  "1": "check_growth_features.py",
   "2": "sharadar.py",
-  "3": "Pinky",
+  "3": "preprocess.py",
   "4": "__init__.py",
   "5": "universe.py",
   "6": "features.py",
   "7": "Pinky Architecture Plan",
-  "8": "walkforward.py",
+  "8": "fundamentals.py",
   "9": "config.py",
   "10": "build_showcase.py",
   "11": "Walk-Forward Results",
   "12": "train.py",
-  "13": "AGENTS.md"
+  "13": "AGENTS.md",
+  "14": "step3_verdict.py",
+  "15": "Pinky Eval Checklist (v1)",
+  "16": "Pinky",
+  "17": "5. In scope (v1)",
+  "18": "Metrics to report"
 }

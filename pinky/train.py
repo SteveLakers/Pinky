@@ -17,6 +17,9 @@ v6: same models, new yardstick — a shorter last fold tests 2020 (COVID crash),
 v7: four model fixes for pit runs (`MODEL_FIXES`; each can be switched off with `without`):
     return models learn each day's return rank, features are per-day percentile ranks,
     stocks younger than 1y are scored, and size (log market cap) is a feature.
+v8: fifth fix `growth` = six company growth features (fundamentals.py). `placebo` shuffles
+    them across stocks within each date (same values, no link to the stock); `seed` sets
+    model randomness. Monthly portfolio returns are saved for paired run comparisons.
 """
 
 from __future__ import annotations
@@ -61,6 +64,7 @@ from pinky.config import (
     UNIVERSE_STOCKS,
 )
 from pinky.dataset import load_dataset
+from pinky.fundamentals import GROWTH_FEATURES, shuffle_growth_within_date
 from pinky.metrics import (
     acquired_share,
     brier_score,
@@ -85,8 +89,9 @@ MODELS_DIR = PROJECT_ROOT / "models"
 DEFAULT_HORIZONS = ["1y"]
 SPLIT_YEAR = REPORT_SPLIT_YEAR
 
-VERSION = "v7"
-MODEL_FIXES = ("rank_label", "rank_features", "young", "size")
+VERSION = "v8"
+MODEL_FIXES = ("rank_label", "rank_features", "young", "size", "growth")
+DEFAULT_SEED = 42
 PRED_COLS = [
     "pred_excess_ridge",
     "pred_excess_lgbm",
@@ -110,12 +115,12 @@ def _xy_beat(df: pd.DataFrame, fcols: list[str], horizon: str):
     return x, y
 
 
-def _fit_return_models(x_train, y_train):
+def _fit_return_models(x_train, y_train, seed: int = DEFAULT_SEED):
     # Ridge = simple baseline we must beat
     ridge = Pipeline(
         [
             ("scaler", StandardScaler()),
-            ("model", Ridge(alpha=1.0, random_state=42)),
+            ("model", Ridge(alpha=1.0, random_state=seed)),
         ]
     )
     ridge.fit(x_train, y_train)
@@ -131,14 +136,14 @@ def _fit_return_models(x_train, y_train):
         colsample_bytree=0.5,
         reg_lambda=5.0,
         reg_alpha=0.1,
-        random_state=42,
+        random_state=seed,
         verbosity=-1,
     )
     lgbm.fit(x_train, y_train)
     return ridge, lgbm
 
 
-def _fit_beat_models(x_train, y_train):
+def _fit_beat_models(x_train, y_train, seed: int = DEFAULT_SEED):
     logit = Pipeline(
         [
             ("scaler", StandardScaler()),
@@ -146,7 +151,7 @@ def _fit_beat_models(x_train, y_train):
                 "model",
                 LogisticRegression(
                     max_iter=500,
-                    random_state=42,
+                    random_state=seed,
                     class_weight="balanced",
                 ),
             ),
@@ -164,7 +169,7 @@ def _fit_beat_models(x_train, y_train):
         colsample_bytree=0.5,
         reg_lambda=5.0,
         reg_alpha=0.1,
-        random_state=42,
+        random_state=seed,
         verbosity=-1,
     )
     lgbm.fit(x_train, y_train)
@@ -249,6 +254,7 @@ def run_horizon(
     calendar: pd.DatetimeIndex | None = None,
     rank_label: bool = False,
     zscore: bool = True,
+    seed: int = DEFAULT_SEED,
 ) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
     """Train/eval all folds for one horizon with CS prep + tuned LightGBM."""
     rows = []
@@ -260,8 +266,8 @@ def run_horizon(
         x_tr, y_tr = _xy_return(train_cs, fcols, horizon, rank_label=rank_label)
         x_tb, y_tb = _xy_beat(train_cs, fcols, horizon)
 
-        ridge, lgbm_ret = _fit_return_models(x_tr, y_tr)
-        logit, lgbm_beat = _fit_beat_models(x_tb, y_tb)
+        ridge, lgbm_ret = _fit_return_models(x_tr, y_tr, seed)
+        logit, lgbm_beat = _fit_beat_models(x_tb, y_tb, seed)
 
         metrics, preds = _eval_prepared(
             horizon,
@@ -589,7 +595,11 @@ def _backtest_lines(
         ]
         + split_rows
     )
-    return lines, table
+    periods = pd.concat(
+        [bt.drop(columns="picks").assign(signal=sig, portfolio=port) for (sig, port), bt in bts.items()],
+        ignore_index=True,
+    )
+    return lines, table, periods
 
 
 def _write_summary(
@@ -603,6 +613,8 @@ def _write_summary(
     sectors: dict[str, str] | None = None,
     acq: pd.Series | None = None,
     fixes: list[str] | None = None,
+    placebo: bool = False,
+    seed: int = DEFAULT_SEED,
 ) -> None:
     exclude = exclude or []
     if universe_desc is None:
@@ -613,7 +625,7 @@ def _write_summary(
         "",
         f"Universe: {universe_desc}",
         *([f"Removed from universe (train + test): {', '.join(exclude)}."] if exclude else []),
-        _prep_desc(fixes or []),
+        _prep_desc(fixes or [], placebo, seed),
         "Validation: expanding walk-forward + label purge (no random splits).",
         "Baseline to beat: **Ridge**.",
         "",
@@ -661,21 +673,28 @@ def _write_summary(
             lines += group_lines
             if not groups.empty:
                 groups.to_csv(path.parent / f"score_groups_{horizon}_{run_name}.csv", index=False)
-            bt_lines, bt_table = _backtest_lines(horizon, preds, prices, sectors, mom)
+            bt_lines, bt_table, bt_periods = _backtest_lines(horizon, preds, prices, sectors, mom)
             lines += bt_lines
             bt_table.to_csv(path.parent / f"backtest_stats_{horizon}_{run_name}.csv", index=False)
+            bt_periods.to_csv(path.parent / f"backtest_periods_{horizon}_{run_name}.csv", index=False)
 
     path.write_text("\n".join(lines))
 
 
-def _prep_desc(fixes: list[str]) -> str:
+def _prep_desc(fixes: list[str], placebo: bool = False, seed: int = DEFAULT_SEED) -> str:
     parts = [
         "per-day percentile-rank features" if "rank_features" in fixes else "per-day z-score features",
         "target = each day's return rank" if "rank_label" in fixes else "target = raw excess return",
         "stocks < 1y old scored" if "young" in fixes else "stocks need 1y of history",
         "size feature (log market cap)" if "size" in fixes else "no size feature",
+        "company growth features" if "growth" in fixes else "no growth features",
     ]
-    return "Prep: " + ", ".join(parts) + " + correlated-feature drop + regularized LightGBM."
+    desc = "Prep: " + ", ".join(parts) + " + correlated-feature drop + regularized LightGBM."
+    if placebo:
+        desc += " **Placebo: growth values shuffled across stocks within each date.**"
+    if seed != DEFAULT_SEED:
+        desc += f" Model seed {seed}."
+    return desc
 
 
 def _pit_universe_desc(n_stocks: int) -> str:
@@ -708,9 +727,34 @@ def rewrite_summary(run_name: str, horizons: list[str] | None = None) -> Path:
         sectors=sector_map(),
         acq=acquisition_dates(),
         fixes=config.get("fixes", []),
+        placebo=config.get("placebo", False),
+        seed=config.get("seed", DEFAULT_SEED),
     )
     print(f"Wrote {path}")
     return path
+
+
+def pit_training_frame(
+    df: pd.DataFrame,
+    fixes: list[str],
+    placebo: bool = False,
+    seed: int = DEFAULT_SEED,
+) -> pd.DataFrame:
+    """Pit dataset → model frame for the given fixes (placebo shuffle before ranking)."""
+    missing = [c for c in GROWTH_FEATURES if c not in df.columns]
+    if "growth" in fixes and missing:
+        raise ValueError(f"growth is on but the dataset lacks {missing}; rebuild: python -m pinky.pit_dataset")
+    if "young" not in fixes:
+        df = df[df["history_1y"] >= 1.0].drop(columns="history_1y")
+    if "size" not in fixes:
+        df = df.drop(columns="log_mcap")
+    if "growth" not in fixes:
+        df = df.drop(columns=GROWTH_FEATURES, errors="ignore")
+    elif placebo:
+        df = shuffle_growth_within_date(df, seed)
+    if "rank_features" in fixes:
+        df = cross_section_rank(df, ranking_feature_cols(df))
+    return df.reset_index(drop=True)
 
 
 def run_all(
@@ -720,6 +764,8 @@ def run_all(
     tag: str = "",
     pit: bool = False,
     without: list[str] | None = None,
+    placebo: bool = False,
+    seed: int = DEFAULT_SEED,
 ) -> pd.DataFrame:
     """Run walk-forward training. Default focus: 1y.
 
@@ -727,6 +773,8 @@ def run_all(
     `pit` uses the Sharadar point-in-time universe and only dev rows (holdout untouched).
     Pit runs use all `MODEL_FIXES` except those in `without` (tagged `no-<fix>`).
     Legacy runs use none of them.
+    `placebo` (pit, growth on) shuffles the growth features within each date (tagged
+    `placebo`); `seed` sets model randomness (tagged `s<seed>` unless the default).
     """
     horizons = horizons or list(DEFAULT_HORIZONS)
     exclude = exclude or []
@@ -735,21 +783,26 @@ def run_all(
     if unknown:
         raise ValueError(f"Unknown fixes {unknown}; expected some of {list(MODEL_FIXES)}")
     fixes = [f for f in MODEL_FIXES if f not in without] if pit else []
+    if (placebo or seed != DEFAULT_SEED) and not pit:
+        raise ValueError("placebo and seed options are for pit runs")
+    if placebo and "growth" not in fixes:
+        raise ValueError("placebo needs the growth features on")
     calendar = prices = sectors = universe_desc = acq = None
     if pit:
-        tag = "_".join(["pit", *([tag] if tag else []), *[f"no-{f}" for f in without]])
-        df = load_pit_dataset()
+        tag = "_".join(
+            [
+                "pit",
+                *([tag] if tag else []),
+                *[f"no-{f}" for f in without],
+                *(["placebo"] if placebo else []),
+                *([f"s{seed}"] if seed != DEFAULT_SEED else []),
+            ]
+        )
+        df = pit_training_frame(load_pit_dataset(), fixes, placebo, seed)
         calendar = pd.DatetimeIndex(benchmark_closeadj().index)
         prices = backtest_prices()
         sectors = sector_map()
         acq = acquisition_dates()
-        if "young" not in fixes:
-            df = df[df["history_1y"] >= 1.0].drop(columns="history_1y")
-        if "size" not in fixes:
-            df = df.drop(columns="log_mcap")
-        if "rank_features" in fixes:
-            df = cross_section_rank(df, ranking_feature_cols(df))
-        df = df.reset_index(drop=True)
     else:
         df = load_dataset()
     run_name = f"{VERSION}_{tag}" if tag else VERSION
@@ -759,6 +812,7 @@ def run_all(
     if pit:
         universe_desc = _pit_universe_desc(df["Ticker"].nunique())
         print(f"[fixes] on: {fixes or 'none'} | off: {without or 'none'}")
+        print(f"[seed] {seed} | placebo: {'growth shuffled within each date' if placebo else 'off'}")
     parts = []
     last_by_h = {}
     preds_by_h = {}
@@ -772,6 +826,7 @@ def run_all(
             calendar=calendar,
             rank_label="rank_label" in fixes,
             zscore="rank_features" not in fixes,
+            seed=seed,
         )
         parts.append(metrics)
         last_by_h[h] = last
@@ -787,7 +842,15 @@ def run_all(
         for h, preds in preds_by_h.items():
             preds.to_parquet(ARTIFACTS_DIR / f"oos_preds_{h}_{run_name}.parquet", index=False)
         (ARTIFACTS_DIR / f"run_config_{run_name}.json").write_text(
-            json.dumps({"version": VERSION, "fixes": fixes, "n_stocks": int(df["Ticker"].nunique())})
+            json.dumps(
+                {
+                    "version": VERSION,
+                    "fixes": fixes,
+                    "n_stocks": int(df["Ticker"].nunique()),
+                    "seed": seed,
+                    "placebo": placebo,
+                }
+            )
         )
         summary_path = ARTIFACTS_DIR / f"walkforward_summary_{run_name}.md"
         _write_summary(
@@ -801,6 +864,8 @@ def run_all(
             sectors=sectors,
             acq=acq,
             fixes=fixes,
+            placebo=placebo,
+            seed=seed,
         )
 
         for h, pack in last_by_h.items():
