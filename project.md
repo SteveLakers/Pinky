@@ -109,8 +109,9 @@ Data not downloaded yet: Sharadar `metrics` (access confirmed, ~1.4 MB).
 - graphify does not skip dot-folders: third-party code there (e.g. `.agents/`) gets indexed unless it's listed in `.graphifyignore`.
 - Cursor's sandbox blocks `pip install` into `.venv` ("Operation not permitted") → run pip with full permissions. In the sandbox, matplotlib warns that `~/.matplotlib` isn't writable (harmless; it uses a temp folder).
 - API key safety: never print `.env`. Before a commit, check the staged diff with a count-only `grep -c -F` for the key.
-- `.git/info/exclude` (local only, 2026-10-03) hides never-commit files from `git status`: `graphify-out/20*/`, `.agents/`, `product/`, `skills-lock.json`, `.cursor/settings.json`, `.graphifyignore`. Still never stage them. Side effect: workspace-wide Grep skips them → pass the folder as the search path.
-- `.cursor/settings.json` `plugins`: Cursor only reads `"enabled": true` (adds a project plugin) and ignores `false` (checked in its code, 2026-10-03), so the Vercel / Supabase / Railway `false` entries don't turn those plugins off.
+- `.git/info/exclude` (local, 2026-10-03) hides never-commit files from `git status`: `graphify-out/20*/`, `.agents/`, `product/`, `skills-lock.json`, `.cursor/settings.json`, `.graphifyignore`. Still never stage them. Workspace-wide Grep skips them → pass the folder as the search path.
+- `.cursor/settings.json` `plugins`: Cursor reads only `"enabled": true` and ignores `false` (its code, 2026-10-03), so the Vercel / Supabase / Railway `false` entries don't turn them off.
+- RTK (2026-10-03): a global hook (`~/.cursor/hooks.json`) rewrites agent shell commands to compact `rtk` versions (`git`, `grep`, `ls`, `cat`…). Runbook checks and the key check give the same results (tested). Raw output: `rtk proxy <cmd>`. Remove: `rtk init -g --agent cursor --uninstall`.
 
 ## Rules
 
