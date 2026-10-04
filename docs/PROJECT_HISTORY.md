@@ -31,6 +31,13 @@ From the user's 5-task list, done in one chat (commits `6fd9a2d`, `53b996f`). Ke
 - **`project.md` shortened** (every chat reads it): ~49 KB → ~15 KB. Step 3 runbook → `docs/STEP3_RUNBOOK.md`; state log, decision logs, results tables, full layout → this file (moved verbatim; fact check: no number or URL lost).
 - **Local git excludes** in `.git/info/exclude` (not `.gitignore`): `graphify-out/20*/`, `.agents/`, `product/`, `skills-lock.json`, `.cursor/settings.json`, `.graphifyignore`. `data/reference/` left alone.
 - **Plugins:** the user asked to turn Vercel / Supabase / Railway off for this project only: `"enabled": false` entries next to `context7-plugin` in `.cursor/settings.json`. Doesn't work (Cursor reads only `true` entries); entries kept. Context7 stays on.
+- **Plugins made ZerMap-only (same day, user's choice: off for Pinky, ZerMap must keep them).** Cursor loads plugins from 3 places (its code and logs): the account (every project); a project's `.cursor/settings.json` (`true` only; key = plugin name for `cursor-public`, else `marketplace/name`); Claude Code (`~/.claude/plugins/installed_plugins.json`, skipped in a project whose `.claude/settings.json` or `settings.local.json` sets the plugin to `false` in `enabledPlugins`). Done:
+  - ZerMap `.cursor/settings.json`: `vercel/vercel-plugin`, `supabase`, `railway` = true. The user then removed the account install of all three. Logs: account list empty; ZerMap's project list has all 3; Pinky's only Context7.
+  - Pinky `.claude/settings.local.json`: `"vercel-plugin@vercel": false` (Vercel was also installed in Claude Code, 2026-04-12). Listed in `.git/info/exclude`.
+  - Railway MCP server: removed from `~/.cursor/mcp.json` (now empty; backup `~/.cursor/mcp.json.bak-2026-10-03`), added to ZerMap `.cursor/mcp.json`.
+  - `use-railway` skill had 3 identical global copies: `~/.cursor/skills` (moved to ZerMap `.cursor/skills/`), `~/.claude/skills` (removed; backup `~/.cursor/use-railway-claude-skill-backup-2026-10-03.tar.gz`), `~/.agents/skills` (moved to `~/.cursor/skill-backups-2026-10-03/use-railway-from-agents/`).
+  - ZerMap's `.cursor/` changes are uncommitted in its repo.
+  - Never full "Uninstall" these plugins: it removes them from every project, ZerMap included.
 - **RTK 0.51.0** (`brew install rtk`, then `rtk init -g --agent cursor`): created `~/.cursor/hooks.json` with one `preToolUse` hook (`rtk hook cursor`, matcher `Shell`), global for all projects. Telemetry off.
 
 ## User decisions (2026-09-26)
