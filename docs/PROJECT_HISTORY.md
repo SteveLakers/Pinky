@@ -36,6 +36,8 @@ From the user's 5-task list, done in one chat (commits `6fd9a2d`, `53b996f`). Ke
   - Pinky `.claude/settings.local.json`: `"vercel-plugin@vercel": false` (Vercel was also installed in Claude Code, 2026-04-12). Listed in `.git/info/exclude`.
   - Railway MCP server: removed from `~/.cursor/mcp.json` (now empty; backup `~/.cursor/mcp.json.bak-2026-10-03`), added to ZerMap `.cursor/mcp.json`.
   - `use-railway` skill had 3 identical global copies: `~/.cursor/skills` (moved to ZerMap `.cursor/skills/`), `~/.claude/skills` (removed; backup `~/.cursor/use-railway-claude-skill-backup-2026-10-03.tar.gz`), `~/.agents/skills` (moved to `~/.cursor/skill-backups-2026-10-03/use-railway-from-agents/`).
+  - Checked after a full Cursor restart (2026-10-03 20:46): Pinky's window loads 0 Claude Code plugins and only Context7 from the marketplace; no Vercel / Supabase / Railway tools. ZerMap's windows load all 3 plus Claude Code's Vercel. Windows with no folder (and other projects) still get Claude Code's Vercel (enabled in `~/.claude/settings.json`).
+  - How to check: `rg 'loadClaudePlugin|listEnabledPlugins completed|Adding enabled plugin' ~/Library/Application\ Support/Cursor/logs/<latest>/window*/`. Find which window is which project by counting `Desktop/Pinky` vs `Desktop/ZerMap` mentions in each window folder. Use `rg --no-filename`, not `-h` (that prints help).
   - ZerMap's `.cursor/` changes are uncommitted in its repo.
   - Never full "Uninstall" these plugins: it removes them from every project, ZerMap included.
 - **RTK 0.51.0** (`brew install rtk`, then `rtk init -g --agent cursor`): created `~/.cursor/hooks.json` with one `preToolUse` hook (`rtk hook cursor`, matcher `Shell`), global for all projects. Telemetry off.
