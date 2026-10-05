@@ -53,6 +53,17 @@ The user asked to move everything for Pinky to the Claude app on this Mac. Two C
 - **Not ported:** RTK (Cursor-only hook), Cursor chat history, Cursor's Context7 extras (skill, `docs-researcher` agent, `/docs` command; Claude's plugin ships only the MCP server).
 - **Cursor-only gotchas (moved from `project.md`, for the fallback):** the sandbox blocks `pip install` into `.venv` ("Operation not permitted"; run pip with full permissions) and makes matplotlib warn that `~/.matplotlib` isn't writable (harmless; it uses a temp folder). RTK (global hook `~/.cursor/hooks.json`, all projects) rewrites agent shell commands to compact `rtk` versions (`git`, `grep`, `ls`, `cat`…); runbook checks give the same results (tested); its `git status` drops the last newline, so chained output can run together; raw output: `rtk proxy <cmd>`; remove: `rtk init -g --agent cursor --uninstall`. Run the key check in the normal sandbox (RTK leaves it unchanged; auto-review blocked a full-permissions call containing it). Plugin scope: Customize → plugin, from the project that keeps it, then reload; plugin sources and how to check: Setup cleanup (above). The Railway MCP server and `use-railway` skill are ZerMap-only too. Project skills in `.agents/skills/` load in Cursor (checked 2026-10-03).
 
+## First Claude chat (2026-10-05, Claude Opus 5.5)
+
+The user asked the first Claude chat to read the code, all Cursor chats and `project.md`, then ask questions. Answers and actions:
+- **Model:** the user's dropdown has Fable 5, not 5.1; this chat ran on Opus 5.5. Docs now say Fable 5. Not yet checked: whether `best` (start model, subagents) reaches Fable 5 on this account.
+- **LightGBM row sampling (user: "decide what is best"):** `subsample=0.7` never took effect (LightGBM also needs `subsample_freq` > 0), so v2–v8 trained every tree on all rows; seeds only changed column sampling and bin setup. Chosen: make the code say what ran (`subsample=1.0`). Checked on synthetic data: predictions bit-for-bit identical on seeds 42 / 7 / 99, return and beat models. Turning row sampling on stays a separate model change (own runs, new baselines).
+- **Railway (user: yes, ZerMap-only in Claude too):** Claude loaded a user-scope `railway` MCP server (`~/.claude.json`, command `railway mcp`) in every project, Pinky and DwellSense included. ZerMap already has its own (`ZerMap/.mcp.json`, enabled in its `.claude/settings.local.json`, plus project-scope Railway / Supabase / Vercel plugins). The app's auto-mode check blocked the agent's `claude mcp remove railway -s user`, so the user runs it. Undo: `claude mcp add -s user railway -- railway mcp`.
+- **Docs (user: yes):** `README.md`, `docs/ARCHITECTURE.md`, `docs/PRD.md` (v0.2) and `docs/EVAL.md` rewritten for the current Sharadar pipeline; they point to `project.md` for numbers. `project.md`'s backtest-defaults and repo-layout lines now point to `docs/ARCHITECTURE.md`.
+- **Open decisions (user: keep them all):** they stay in `project.md`, to decide at batch 2.
+- Context7 needs a one-time sign-in in Claude (`/mcp` in a terminal `claude` session).
+- The 14 Cursor chats are JSONL files in `~/.cursor/projects/Users-hqschool-Desktop-Pinky/agent-transcripts/`.
+
 ## User decisions (2026-09-26)
 
 - Phase 2 model fixes: **all four approved** (list under Roadmap).

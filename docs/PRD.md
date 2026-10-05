@@ -1,188 +1,63 @@
-# Pinky PRD (Product Requirements Document)
+# Pinky PRD (product requirements)
 
-**Version:** 0.1  
-**Date:** 2026-09-21  
-**Status:** Active — local prototype  
-**Owner:** HQ (local)
+**Version:** 0.2 · **Updated:** 2026-10-05 (v0.1: 2026-09-21) · **Owner:** HQ (local) · **Status:** research; no edge over SPY yet
 
----
+Current state, results and next steps live in `project.md`. This file holds the stable requirements.
 
 ## 1. Problem
 
-Most stock “prediction” tools ask: “Will this stock go up?”  
-In a rising market, almost everything can go up — so that question is weak.
+Most stock tools ask "will this stock go up?" In a rising market almost everything does. Pinky asks: **which stocks will beat SPY over the next year?**
 
-**Pinky asks a better question:**  
-Will this stock **beat SPY**, and **by how much**, over a chosen time horizon?
+## 2. Goal
 
----
+- Pick stocks that beat SPY and make a profit after costs.
+- Lean toward tech and toward finding future big winners early (the next NVDA or TSLA), but buy any sector (energy, industrials…) when it's the best pick.
+- Realistic target: beat SPY by a few % a year, reliably. A target of 10% a month was ruled out as unrealistic.
 
-## 2. Product goal
+## 3. User
 
-Build a **local** system that, for a liquid stock and horizon, outputs:
+The owner, for personal research and investing decisions. Not a public app, a broker tool or a trading bot.
 
-1. Expected **excess return vs SPY**
-2. **Probability** of beating SPY
-3. An **honest confidence range** (not fake certainty)
+## 4. Constraints
 
-Horizons (v1):
+- No leverage (the account can't use margin). At most 60% of the picks from one sector.
+- Runs locally on this Mac. Sharadar data never leaves it (license); data, models and keys are never committed.
+- Training runs only when the owner says `run`. Nothing is pushed to GitHub until the owner says so.
 
-| Label | Trading days (approx) |
-|-------|------------------------|
-| 3 months | 63 |
-| 6 months | 126 |
-| 1 year | 252 |
-| 2 years | 504 |
-
----
-
-## 3. Who it’s for
-
-- **Primary user:** you (builder / decision-maker)
-- **Not for (v1):** public app users, brokers, auto-trading bots
-
----
-
-## 4. What success looks like
-
-Pinky is successful when:
-
-- Predictions are **relative to SPY**, not absolute price calls
-- Evaluation uses **walk-forward + purge** (no random-split cheating)
-- LightGBM **beats a simple linear baseline** on agreed metrics
-- Results are reported with **honest** caveats (no faked data/metrics)
-
-Detailed pass/fail bar: `docs/EVAL.md`
-
----
-
-## 5. In scope (v1)
-
-### Data
-- Pull daily OHLCV via **yfinance**
-- Benchmark: **SPY**
-- Helpers (features only, not beat targets): **IWM, VIX, TNX, IRX**
-- Universe: liquid majors (currently **58** stocks; may expand)
-
-### Features
-- Stock technicals
-- Relative strength vs SPY / IWM
-- Macro (VIX / rates)
-- Multi-period momentum
-- Market regime (bull / high-vol)
-
-### Labels
-- `excess` = stock forward return − SPY forward return
-- `beat` = 1 if excess > 0 else 0  
-  (per stock, date, horizon)
-
-### Models
-- Per horizon, two heads:
-  - return model → expected excess vs SPY
-  - beat model → P(beat SPY)
-- **8 models total** in v1 (4 horizons × 2)
-- Plus **linear baseline** for honesty checks
-
-### Validation
-- Walk-forward only
-- Purge overlapping label windows
-- Metrics: rank quality, top basket vs SPY, probability calibration
-
-### Delivery (v1)
-- Local Python pipeline on your Mac
-- Saved datasets + trained model artifacts
-- Evaluation report before any UI
-
----
-
-## 6. Out of scope (v1)
-
-- Predicting exact future prices
-- Trading illiquid / tiny tickers
-- Live auto-trading / broker execution
-- Polished public UI before model quality is proven
-- Claiming guaranteed profits
-
----
-
-## 7. Functional requirements
+## 5. Requirements
 
 | ID | Requirement |
-|----|-------------|
-| FR1 | System can refresh raw market data for the configured universe |
-| FR2 | System can build a feature matrix with no future leakage in features |
-| FR3 | System can build excess/beat labels for all 4 horizons |
-| FR4 | System can join features + labels into a train-ready dataset |
-| FR5 | System can train LightGBM + linear baseline per horizon/head |
-| FR6 | System can run walk-forward evaluation with purge |
-| FR7 | System can produce a prediction for a ticker+horizon: excess, P(beat), confidence range |
-| FR8 | All metrics and data claims must be reproducible from saved files |
+|---|---|
+| FR1 | Download and refresh Sharadar data (prices, company reports, events, delistings) |
+| FR2 | Build a daily point-in-time universe of liquid US stocks, dead companies included |
+| FR3 | Build a weekly dataset where every input was public on its date |
+| FR4 | Train and test walk-forward with purge; never use the 2022+ holdout before the final test |
+| FR5 | Backtest monthly portfolios after costs, vs SPY, the equal-weight universe and momentum |
+| FR6 | Show the standard checks in every report (`docs/EVAL.md`) |
+| FR7 | Test each new data batch against a placebo, with a rule fixed before results |
+| FR8 | Every number reproducible from saved files; no invented data or metrics |
 
----
+Later (Phase 3, only if the model shows a real edge): position sizing, a monthly picks report, a paper-trading log.
 
-## 8. Non-functional requirements
+## 6. Out of scope
 
-| ID | Requirement |
-|----|-------------|
-| NFR1 | Runs locally; no cloud dependency required for v1 core flow |
-| NFR2 | No invented/fake market data |
-| NFR3 | Clear docs: architecture, eval checklist, this PRD |
-| NFR4 | Git checkpoints before major changes |
-| NFR5 | Training only when explicitly requested |
+Leverage or options, live or automatic trading, intraday trading, exact price targets, claims of guaranteed profit.
 
----
+## 7. Success
 
-## 9. Current status (as of 2026-09-21)
+1. On the 2001–2020 test years: beat SPY and the equal-weight universe in both 2001–08 and 2009–20, with few crashes among the top picks.
+2. Then confirm it once on the locked 2022+ holdout.
 
-**Done**
-- Architecture locked
-- Data pull (58 stocks + helpers)
-- Feature builder
-- Labels vs SPY
-- Train-ready joined dataset
-- Walk-forward + purge implementation
-- First walk-forward train/eval (LightGBM + linear baselines)
-- Eval checklist
-- Git commit history + private GitHub repo
+## 8. Risks
 
-**Not done**
-- Model that clearly beats linear baseline
-- Prediction API / UI
+| Risk | Guard |
+|---|---|
+| Look-ahead leaks | Point-in-time data, news dates, 59 date/leak checks, a leak-power test |
+| Survivorship and hindsight | Dead companies included; no hand-picked stock list |
+| Luck from testing many ideas | Rules locked before results, placebo, 3 seeds, a one-time holdout |
+| Tech concentration | 60% sector cap; results split before and after 2009 |
+| Costs and taxes | 10 and 25 bps costs in backtests; taxes not modeled |
 
----
+## 9. Roadmap
 
-## 10. Milestones
-
-1. **M0 — Design** ✅  
-2. **M1 — Data + features + labels** ✅  
-3. **M2 — Train-ready dataset + walk-forward/purge** ✅  
-4. **M3 — Train + evaluate** ✅ first run (soft bar FAIL — see `docs/WALKFORWARD_RESULTS.md`)  
-5. **M4 — Prediction interface** (only if a later model passes eval bar)
-
----
-
-## 11. Risks
-
-| Risk | Why it matters | Mitigation |
-|------|----------------|------------|
-| Inflated backtest scores | Overlapping labels / random splits | Walk-forward + purge mandatory |
-| Mega-cap bias | Universe full of historical winners | Broader liquid universe; monitor beat ~50% |
-| yfinance quality limits | Free data can be messy | Prototype only; upgrade data later if results real |
-| Overfitting | Too many features / too little honesty | Linear baseline; fold stability checks |
-
----
-
-## 12. Open decisions
-
-- When to expand beyond 58 names toward full NASDAQ-100 style
-- Exact walk-forward fold lengths / retrain cadence
-- Exact confidence-range method (quantile model vs conformal vs simple residual bands)
-- Whether/when to connect GitHub remote
-
----
-
-## 13. Related docs
-
-- `docs/ARCHITECTURE.md` — technical design
-- `docs/EVAL.md` — how we judge model quality
-- `project.md` — live project status + rules
+Phase 1 (honest evaluation) and Phase 2 steps 1–3 are done. Next come company-data batches, one at a time: margins, price strength, earnings reactions, reinvestment, quality, insiders and institutions, industry tailwind, valuation, analyst revisions. Phase 3 only if Phase 2 works. Details: `project.md` → Roadmap.

@@ -30,15 +30,15 @@
     "semantic_hash": ""
   },
   "project.md": {
-    "mtime": 1791050698.3727832,
-    "seen": 1791053198.766954,
-    "ast_hash": "9d0d77aff4a6f7359233b67f6f9afcb8",
+    "mtime": 1791163213.4717007,
+    "seen": 1791233363.13483,
+    "ast_hash": "29154ccb80ac41a454bb9e3ee1744c7a",
     "semantic_hash": ""
   },
   "requirements.txt": {
-    "mtime": 1790340526.4939883,
-    "seen": 1790340746.988815,
-    "ast_hash": "2637b013e3bd40c27abec7bd5d7cbc3e",
+    "mtime": 1791059564.8029292,
+    "seen": 1791233363.13483,
+    "ast_hash": "02c0eac2ad1e255939ba4e6d5d428057",
     "semantic_hash": ""
   },
   "pinky/features.py": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "pinky/train.py": {
-    "mtime": 1791052806.8587956,
-    "seen": 1791053198.766944,
-    "ast_hash": "c302d7034c9b9d0f3a9d6502906e22e7",
+    "mtime": 1791233343.6843934,
+    "seen": 1791233363.134819,
+    "ast_hash": "9a3cfcc6e7122453494818699de2c964",
     "semantic_hash": ""
   },
   "scripts/train_walkforward.py": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "docs/WALKFORWARD_RESULTS.md": {
-    "mtime": 1790947374.3774161,
-    "seen": 1791053198.766952,
-    "ast_hash": "022410073b7764b1eabcb1621b41241c",
+    "mtime": 1791062374.5429964,
+    "seen": 1791233363.13483,
+    "ast_hash": "59b30ee4508711aa5bdd1eef595ec162",
     "semantic_hash": ""
   },
   "pinky/backtest.py": {
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1790376512.1410306,
-    "seen": 1790465683.0613382,
-    "ast_hash": "71309de0692d538cd94205c301538917",
+    "mtime": 1791162430.5716767,
+    "seen": 1791233363.134825,
+    "ast_hash": "de1b13d062987cd393268fb07825301f",
     "semantic_hash": ""
   },
   "showcase/index.html": {
@@ -197,30 +197,6 @@
     "ast_hash": "6b3572bb78c2737ba0dbd62767af048d",
     "semantic_hash": ""
   },
-  "product/fonts/OFL-LibreFranklin.txt": {
-    "mtime": 1790777879.3024611,
-    "seen": 1790804552.306241,
-    "ast_hash": "b5f4d9a6c954a7793cfbf2955b649002",
-    "semantic_hash": ""
-  },
-  "product/fonts/OFL-Newsreader.txt": {
-    "mtime": 1790777879.3006136,
-    "seen": 1790804552.306241,
-    "ast_hash": "1738a90899631a6ba5dff435d25a0627",
-    "semantic_hash": ""
-  },
-  "product/index.html": {
-    "mtime": 1790944968.3946223,
-    "seen": 1790945118.693585,
-    "ast_hash": "260e591d106b10bad7ddad45474a21e4",
-    "semantic_hash": ""
-  },
-  ".cursor/settings.json": {
-    "mtime": 1791047719.1471913,
-    "seen": 1791053198.766935,
-    "ast_hash": "a68830b1515dd4b3cd9cad88d4e97c02",
-    "semantic_hash": ""
-  },
   "pinky/fundamentals.py": {
     "mtime": 1791052700.5650644,
     "seen": 1791053198.7669408,
@@ -237,6 +213,24 @@
     "mtime": 1791053048.3571382,
     "seen": 1791053198.7669492,
     "ast_hash": "aaf4049cbae018f9741cf90a382f43e8",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1791162460.2239306,
+    "seen": 1791233363.134826,
+    "ast_hash": "55f971f237d38c7dec51063cbfe5b645",
+    "semantic_hash": ""
+  },
+  "docs/PROJECT_HISTORY.md": {
+    "mtime": 1791162597.053007,
+    "seen": 1791233363.134828,
+    "ast_hash": "5bc5709398a0d3a7c94d0ed3dc25590b",
+    "semantic_hash": ""
+  },
+  "docs/STEP3_RUNBOOK.md": {
+    "mtime": 1791162513.560515,
+    "seen": 1791233363.134829,
+    "ast_hash": "0fbb7937c6101fc6aad829eb940dbb39",
     "semantic_hash": ""
   }
 }

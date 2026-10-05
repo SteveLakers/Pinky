@@ -1,80 +1,61 @@
 # Pinky
 
-Local research system that predicts **relative** stock performance vs the S&P 500 (**SPY**) — not whether a stock simply “goes up.”
+Local research project: can a model pick US stocks that beat the S&P 500 (**SPY**)?
 
-> Rising markets can lift almost everything. Pinky focuses on a harder question: **will this name beat SPY, and by how much?**
+- **Goal:** find stocks that beat SPY over the next year. Lean toward tech and toward finding future big winners early, but buy any sector when it's the best pick.
+- **Realistic target:** beat SPY by a few % a year, reliably. No leverage.
+- **Status:** not there yet. On an honest 2001–2020 backtest, the best version roughly matches SPY. Current numbers, decisions and next steps: [`project.md`](project.md).
 
-## What it does
-
-For a liquid stock and time horizon, Pinky aims to output:
-
-1. Expected **excess return vs SPY**
-2. **Probability** of beating SPY
-3. An **honest confidence range** (no fake certainty)
-
-Horizons (v1): **3m / 6m / 1y / 2y**
-
-## How it works (high level)
+## How it works
 
 ```text
-Market data (yfinance)
+Sharadar data (US stocks since 1998, dead companies included)
         ↓
-Features (technicals, relative strength, macro, regime)
+Daily point-in-time universe: stocks you could really have bought that day
+(price ≥ $5, ≥ $5M traded per day, NYSE / NASDAQ / NYSE American)
         ↓
-Labels vs SPY (excess return + beat/lose)
+Delisting-aware returns: a stock that leaves is sold into SPY;
+bankruptcies also take a −30% hit
         ↓
-Walk-forward training + purge (no random-split cheating)
+Weekly dataset: price features (+ size, + company data when tested);
+label = return vs SPY over the next year
         ↓
-Models: LightGBM (+ linear baseline)
+Walk-forward training: train on the past, test the next year, purge overlaps
+Models: Ridge, LightGBM, and a blend of the two
         ↓
-Evaluation → only then prediction UI
+Monthly portfolio backtest after trading costs, vs SPY and the equal-weight universe
 ```
 
-Details live in:
+- **No cheating with time:** every input uses only data public on that date (company numbers only after their earnings announcement or SEC filing). 2022 onward is locked as a final exam and used once, at the very end.
+- **New data must earn its place:** it has to beat a placebo (the same numbers shuffled between stocks) under a rule fixed before seeing results.
 
-- [`docs/PRD.md`](docs/PRD.md) — product requirements
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — design
-- [`docs/EVAL.md`](docs/EVAL.md) — how we judge quality
+Details: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (design), [`docs/EVAL.md`](docs/EVAL.md) (how results are judged), [`docs/PRD.md`](docs/PRD.md) (requirements), [`docs/WALKFORWARD_RESULTS.md`](docs/WALKFORWARD_RESULTS.md) (results by version).
 
-## What’s public vs private
+## What's in git and what isn't
 
-| Shared on GitHub | Kept off GitHub |
-|------------------|-----------------|
-| Product docs & architecture | Downloaded price files (`.parquet`) |
-| Pipeline code & scripts | Trained model weights / artifacts |
-| Eval checklist | API keys / `.env` |
-| High-level method | Anything you’d call “edge” configs later |
-
-Rebuild local data anytime with the scripts below. Models are not published until/unless we choose to.
-
-## Current status
-
-- ✅ Data pull (liquid multi-sector universe)
-- ✅ Feature builder (v1)
-- ✅ Labels vs SPY (4 horizons)
-- ⏳ Train-ready join + walk-forward/purge
-- ⏳ Training (only when explicitly started)
-- ⏳ Eval report / UI after models prove useful
+| In git | Never in git |
+|---|---|
+| Code, scripts, docs | Sharadar data (`data/`; the license forbids sharing it) |
+| Method and results write-ups | Trained models (`models/`) and run outputs (`artifacts/`) |
+| | API keys (`.env`) |
 
 ## Quick start (local)
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+Needs a Sharadar Core US Equities Bundle subscription. Put the key in `.env` as `SHARADAR_API_KEY=...` (git ignores it).
 
-PYTHONPATH=. python scripts/pull_data.py
-PYTHONPATH=. python scripts/build_features.py
-PYTHONPATH=. python scripts/build_labels.py
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+PYTHONPATH=. python scripts/pull_sharadar.py      # download data (~10 min)
+PYTHONPATH=. python -m pinky.universe             # daily universe + returns (~1 min)
+PYTHONPATH=. python -m pinky.pit_dataset          # weekly dataset (~1 min)
+PYTHONPATH=. python scripts/train_walkforward.py --pit --without=growth   # train + report (~8 min)
 ```
 
-## Design principles
+The report lands in `artifacts/walkforward_summary_<run>.md`. Run options and checks: [`project.md`](project.md) → Commands.
 
-- Beat **SPY**, don’t predict raw direction
-- **Walk-forward + purge** validation only
-- Never fake data or metrics
-- No polished UI before model quality is proven
+The yfinance files (`pinky/data_pull.py`, `raw_io.py`, `features.py`, `labels.py`) are the old prototype on 128 of today's big stocks, kept only to reproduce early results.
 
 ## Disclaimer
 
-This is an educational / research prototype. Not financial advice. Not a trading product.
+Educational research prototype. Not financial advice, not a trading product.

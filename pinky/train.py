@@ -126,13 +126,16 @@ def _fit_return_models(x_train, y_train, seed: int = DEFAULT_SEED):
     ridge.fit(x_train, y_train)
 
     # Smaller, more regularized LightGBM (fix #5)
+    # No row sampling: the old subsample=0.7 never took effect (LightGBM also needs
+    # subsample_freq > 0), so every run through v8 trained on all rows. Turning it on is a
+    # model change to test, not a fix.
     lgbm = lgb.LGBMRegressor(
         n_estimators=120,
         learning_rate=0.03,
         num_leaves=15,
         max_depth=4,
         min_child_samples=40,
-        subsample=0.7,
+        subsample=1.0,
         colsample_bytree=0.5,
         reg_lambda=5.0,
         reg_alpha=0.1,
@@ -165,7 +168,7 @@ def _fit_beat_models(x_train, y_train, seed: int = DEFAULT_SEED):
         num_leaves=15,
         max_depth=4,
         min_child_samples=40,
-        subsample=0.7,
+        subsample=1.0,  # no row sampling (see _fit_return_models)
         colsample_bytree=0.5,
         reg_lambda=5.0,
         reg_alpha=0.1,
