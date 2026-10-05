@@ -4,11 +4,13 @@ Moved from `project.md` on 2026-10-03. Current state and open user decisions: `p
 
 ## Runbook (done 2026-10-03; reuse for the next batch)
 
-**Ran 2026-10-03 as written:** all 13 runs EXIT 0 on the first try (no reruns), control reproduced v7 exactly, ~39 min of training + ~2 min verdict. For the next batch, change the run names / flags and keep the steps. Sandbox note: `caffeinate` needs full permissions.
+**Ran 2026-10-03 as written:** all 13 runs EXIT 0 on the first try (no reruns), control reproduced v7 exactly, ~39 min of training + ~2 min verdict. For the next batch, change the run names / flags and keep the steps. Cursor sandbox note: `caffeinate` needs full permissions.
+
+**Claude:** each command starts a fresh shell (only the working folder carries over), so run each code block below as **one** command; every block that runs Python starts by activating `.venv`.
 
 **0. Before anything**
 - **Go-ahead:** train only after the user says `run` (or clearly asks you to start training). The plan is locked (Step 3 notes below) → don't re-plan or re-ask; confirm in one line and start.
-- **Model:** launching is routine, but judging the results is hard work. If the chat is on Auto, ask the user to switch to the highest model **before launching**, and wait (model rule in `AGENTS.md`).
+- **Model:** launching is routine, but judging the results is hard work. If the chat isn't on the top model (Cursor on Auto; Claude: check the model dropdown), ask the user to switch to the highest model **before launching**, and wait (model rule in `AGENTS.md`).
 - **Locked:** no changes to features, rules or thresholds; no extra seeds or reruns to "fix" a result; no 2022+ data; no push; no showcase / product-page update.
 - **Expect modest results:** with honest dates, revenue growth alone barely ranked 3-month returns (leak-power test, IC +0.0018). DROP is a real possibility, and a valid answer.
 
@@ -26,7 +28,7 @@ for m in 1y_pit 1y_pit_no-rank_label; do [ -e "models/${m}_v7" ] || cp -Rp "mode
 - Keep the Mac awake and plugged in during the runs (sleep pauses them).
 
 **2. Launch: 3 batches, one after another (~40 min total)**
-- Run each block as **one** shell command in the background (Cursor Shell tool: `block_until_ms: 0`; the default sandbox is fine, v7 ran that way). The block's `wait` ends when its batch ends.
+- Run each block as **one** shell command in the background. Claude: Bash tool with `run_in_background: true` and `timeout: 7200000` (background commands stop after 30 min by default; 2 h is the max). Cursor: Shell tool `block_until_ms: 0` (the default sandbox is fine, v7 ran that way). The block's `wait` ends when its batch ends.
 - Every block repeats the 2 setup lines. Log: `artifacts/logs/train_<run>.log`; its last line becomes `EXIT <code>`. Log name = the run name the code builds from the options.
 
 Batch 1: control alone (~8 min). It must reproduce v7, so it tests the whole setup before the 12 real runs.
@@ -41,6 +43,7 @@ wait
 Control check: must print `OK`. If `STOP`: launch nothing more, tell the user, debug first (`.agents/skills/systematic-debugging/SKILL.md`). v7 used the same seed (42) and threads (3), so only tiny noise (~0.2%/yr) is expected.
 
 ```bash
+cd /Users/hqschool/Desktop/Pinky && source .venv/bin/activate
 PYTHONPATH=. python -c "
 import pandas as pd
 rows = {r: pd.read_csv(f'artifacts/backtest_stats_1y_{r}.csv').query('signal == \"LightGBM\" and portfolio == \"Top 10% + buffer\"').set_index('period')['cagr_net'] for r in ('v7_pit', 'v8_pit_no-growth')}
@@ -92,6 +95,7 @@ for f in artifacts/logs/train_v8_*.log; do printf '%-46s folds=%-3s %s\n' "$(bas
 **4. Check all 13 runs before the verdict**
 
 ```bash
+cd /Users/hqschool/Desktop/Pinky && source .venv/bin/activate
 ls artifacts/backtest_stats_1y_v8_*.csv | wc -l     # expect 13
 grep -L "EXIT 0" artifacts/logs/train_v8_*.log      # expect no output
 for f in artifacts/logs/train_v8_*.log; do n=$(basename "$f" .log); n=${n#train_}; grep -qF "=== Training horizon 1y ($n) ===" "$f" || echo "NAME MISMATCH: $f"; done     # expect no output
@@ -101,6 +105,7 @@ PYTHONPATH=. python -c "import json,glob; [print(f, json.load(open(f))) for f in
 **5. Verdict (~2–10 min; `--weekly` re-runs the backtests with weekly trading)**
 
 ```bash
+cd /Users/hqschool/Desktop/Pinky && source .venv/bin/activate
 PYTHONPATH=. python scripts/step3_verdict.py --weekly     # also writes artifacts/step3_verdict.md
 PYTHONPATH=. python scripts/compare_runs.py v7_pit v8_pit v8_pit_placebo v8_pit_no-growth v7_pit_no-rank_label v8_pit_no-rank_label v8_pit_no-rank_label_placebo
 ```
@@ -124,8 +129,8 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
 
 **7. Wrap up**
 - `docs/PROJECT_HISTORY.md`: add "Step 3 — growth features (v8)" under Key findings (verdict table + scoreboard); log every test, including reruns. `project.md`: update the Resume section (State / Open user decisions / Next) and the Key findings summary; keep it ~12–15 KB (details go to `docs/PROJECT_HISTORY.md`). `docs/WALKFORWARD_RESULTS.md`: add a v8 section like the v7 one.
-- Commit locally. Stage only files you changed (`project.md`, `docs/…`; if code changed, also run `graphify update .`). Key check (prints a count, never the key; must print 0; run it as its own command, in the normal sandbox): `git diff --cached | grep -c -F -f <(sed -n 's/^[^=#]*=//p' .env | tr -d '"' | tr -d "'" | awk 'length($0) >= 8') || true`
-- Never stage `data/`, `artifacts/`, `models/`, `product/`, `.agents/`, `skills-lock.json`, `.cursor/settings.json`, `.graphifyignore`, `graphify-out/YYYY-MM-DD/`. **No push.**
+- Commit locally. Stage only files you changed (`project.md`, `docs/…`; if code changed, also run `graphify update .`). Key check (prints a count, never the key; must print 0; run it as its own command; Cursor: in the normal sandbox): `git diff --cached | grep -c -F -f <(sed -n 's/^[^=#]*=//p' .env | tr -d '"' | tr -d "'" | awk 'length($0) >= 8') || true`
+- Never stage `data/`, `artifacts/`, `models/`, `product/`, `.agents/`, `skills-lock.json`, `.cursor/settings.json`, `.claude/settings.local.json`, the `.claude/skills/` links, `.graphifyignore`, `graphify-out/YYYY-MM-DD/`. **No push.**
 
 **8. Then ask the user (start none of these without an OK)**
 - **Residual-edge check** (no install; `.agents/skills/residual-edge-analyzer/`): is the portfolio's return more than its SPY / equal-weight / momentum exposure? Input: `artifacts/backtest_periods_1y_<run>.csv`, rows with `signal == "LightGBM"` and `portfolio == "Top 10% + buffer"`: `start` = date, `gross` = strategy, `spy` = market, `universe_ew` = equal-weight; momentum = `gross` of the `Momentum 12-1` rows (same portfolio and dates). Monthly; gross for every column.

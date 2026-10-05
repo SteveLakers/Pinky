@@ -9,7 +9,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-03**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7` (older milestone commits: `docs/PROJECT_HISTORY.md`).
+Last updated **2026-10-04**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7` (older milestone commits: `docs/PROJECT_HISTORY.md`).
 
 **State**
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
@@ -18,6 +18,7 @@ Last updated **2026-10-03**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - Showcase shows v6_pit (2026-09-27). Product page is live: https://pinky-research.vercel.app (numbers hand-copied, up to v7; re-check each by hand before any update). Update either **only when the user says**.
 - Every report includes: takeover share of top picks, 2009–2020 vs SPY (`REPORT_SPLIT_YEAR`), and the score-group table.
 - Local commits are **not pushed** (`git log origin/main..main --oneline`). User said: don't push yet.
+- **Tools (2026-10-04):** moved to the Claude app (Gotchas → Claude setup).
 
 **Open user decisions (2026-10-03)**
 - Residual-edge check on the final versions (A = `v8_pit_no-growth`, B = `v7_pit_no-rank_label`)?
@@ -106,15 +107,15 @@ Data not downloaded yet: Sharadar `metrics` (access confirmed, ~1.4 MB).
 - Run names come from the code (`train.run_all` builds them from the options), not from the log file name. Example: the v7 control was logged as `train_v7_pit_control.log`, but its files are named `v7_pit_no-rank_label_no-rank_features_no-young_no-size`. The step 3 runbook uses log name = run name and checks it.
 - Untracked `data/reference/` comes from another chat — leave it alone.
 - graphify does not skip dot-folders: third-party code there (e.g. `.agents/`) gets indexed unless it's listed in `.graphifyignore`.
-- Cursor's sandbox blocks `pip install` into `.venv` ("Operation not permitted") → run pip with full permissions. In the sandbox, matplotlib warns that `~/.matplotlib` isn't writable (harmless; it uses a temp folder).
-- API key safety: never print `.env`. Before a commit, check the staged diff with a count-only `grep -c -F` for the key (command: `docs/STEP3_RUNBOOK.md` step 7). Run it as its own command, in the normal sandbox: RTK leaves it unchanged, and auto-review blocked a full-permissions call containing it.
-- `.git/info/exclude` (local to this clone, 2026-10-03) hides never-commit files from `git status`: `graphify-out/20*/` (dated backups made by `graphify update`), `.agents/`, `product/`, `skills-lock.json`, `.cursor/settings.json`, `.claude/settings.local.json`, `.graphifyignore`. Still never stage them; put new never-commit paths there too, not in `.gitignore`. Project skills in `.agents/skills/` still load (checked). Workspace-wide Grep skips these paths → pass the folder as the search path.
-- Plugins (2026-10-03, user's choice): Vercel / Supabase / Railway, the Railway MCP server and the `use-railway` skill are ZerMap-only (checked after a restart: Pinky loads only Context7). Sources: the account (every project), a project's `.cursor/settings.json` (only `"enabled": true` counts), Claude Code's `~/.claude/plugins` (Vercel; off here via `.claude/settings.local.json`). Change scope in Customize → plugin, from the project that keeps it; never "Uninstall" (removes it everywhere); then reload. How to check, details: `docs/PROJECT_HISTORY.md`.
-- RTK (2026-10-03): a global hook (`~/.cursor/hooks.json`, all projects) rewrites agent shell commands to compact `rtk` versions (`git`, `grep`, `ls`, `cat`…). Runbook checks give the same results (tested). Its `git status` drops the last newline, so chained output can run together. Raw output: `rtk proxy <cmd>`. Remove: `rtk init -g --agent cursor --uninstall`.
+- API key safety: never print `.env`. Before a commit, check the staged diff with a count-only `grep -c -F` for the key (command: `docs/STEP3_RUNBOOK.md` step 7). Run it as its own command.
+- `.git/info/exclude` (local to this clone, 2026-10-03) hides never-commit files from `git status`: `graphify-out/20*/` (dated backups made by `graphify update`), `.agents/`, `product/`, `skills-lock.json`, `.cursor/settings.json`, `.claude/settings.local.json`, the 5 skill links in `.claude/skills/`, `.graphifyignore`. Still never stage them; put new never-commit paths there too, not in `.gitignore`. Workspace-wide Grep skips these paths → pass the folder as the search path.
+- **Claude setup (2026-10-04):** Code tab, **Local** environment, folder `~/Desktop/Pinky` (never Cloud: no data there; Sharadar license). Rules: `CLAUDE.md` (loads `AGENTS.md`, adds Claude notes). `.claude/settings.local.json` (never commit): start model `best` (Fable 5.1 if the plan has it, else Opus 5.5; the app's dropdown sets each session's model); every subagent forced onto `best`; Context7 on (installed for Pinky only); Vercel off. Skills: `.claude/skills/`. Not ported: RTK, Cursor chat history.
+- Plugins (user's choice, 2026-10-03): Pinky uses only Context7; Vercel / Supabase / Railway are ZerMap-only. Never "Uninstall" a plugin (removes it everywhere); change its scope (Claude: `.claude/settings.local.json` → `enabledPlugins`).
+- Cursor only (fallback): sandbox, RTK and plugin-scope notes → `docs/PROJECT_HISTORY.md` → Move to the Claude app.
 
 ## Rules
 
-Core rules: `AGENTS.md` (always on; every agent and subagent gets it; keep it short). Graphify: `.cursor/rules/graphify.mdc` (on request). Add or change rules only there, never in this file.
+Core rules: `AGENTS.md` (always on; every agent and subagent gets it, Claude through `CLAUDE.md`; keep it short). Claude-only notes: `CLAUDE.md`. Graphify: the `graphify` skill (`.claude/skills/graphify/SKILL.md`; old Cursor copy `.cursor/rules/graphify.mdc`). Add or change rules only there, never in this file.
 
 ## Repo layout
 
@@ -123,11 +124,11 @@ Full layout with details: `docs/PROJECT_HISTORY.md`.
 - `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `step3_verdict`, legacy build scripts.
 - `data/sharadar/` (~6 GB, gitignored, never share). `artifacts/`, `models/` (gitignored): per-run outputs named `<file>_<run>`; logs `artifacts/logs/train_<run>.log`. `models/1y_<tag>/` = last fold only; v7's models: `1y_pit_v7`, `1y_pit_no-rank_label_v7`.
 - `showcase/`, `product/` (public page), `docs/` (also `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`), `graphify-out/`.
-- Agent add-ons (untracked; don't commit; none change training): skills in `.agents/skills/` (`residual-edge-analyzer`, `shap`, `verification-before-completion`, `systematic-debugging`), Context7 plugin. SHAP 0.52.0 is installed in `.venv`; don't follow the skill's `uv venv` step. Residual-edge input recipe: runbook step 8.
+- Agent add-ons (untracked; don't commit; none change training): skills in `.agents/skills/` (`residual-edge-analyzer`, `shap`, `verification-before-completion`, `systematic-debugging`; linked into `.claude/skills/`), Context7 plugin (Cursor and Claude). SHAP 0.52.0 is installed in `.venv`; don't follow the skill's `uv venv` step. Residual-edge input recipe: runbook step 8.
 
 ## Commands
 
-- Activate venv: `source .venv/bin/activate` (run everything from the repo root with `PYTHONPATH=.`)
+- Activate venv: `source .venv/bin/activate` (run everything from the repo root with `PYTHONPATH=.`). Claude: in the same command, e.g. `source .venv/bin/activate && PYTHONPATH=. python …`
 - Sharadar pipeline:
   1. Pull: `python scripts/pull_sharadar.py` (~10 min, needs network)
   2. Universe panels: `python -m pinky.universe` (~1 min)
@@ -137,9 +138,9 @@ Full layout with details: `docs/PROJECT_HISTORY.md`.
   - stdout is buffered when redirected to a file → use `python -u` to watch fold progress in a log.
   - Rebuild a report without retraining: `python scripts/train_walkforward.py --report-only=v7_pit` (uses the saved metrics CSV + preds parquet).
   - Compare runs: `python scripts/compare_runs.py v6_pit v7_pit ...`
-- Showcase: `python scripts/build_showcase.py` (~1 min; run name = `RUN` at the top). To view it in the IDE browser, serve it: `cd showcase && python3 -m http.server 8765` (`file://` is blocked).
+- Showcase: `python scripts/build_showcase.py` (~1 min; run name = `RUN` at the top). View: in the Claude app, click `showcase/index.html` in the chat (opens in the Browser pane). Cursor's IDE browser blocks `file://`: serve it with `cd showcase && python3 -m http.server 8765`.
 - Product page (Vercel Hobby; update only when the user says): redeploy, take-down and local-view commands → `docs/PROJECT_HISTORY.md` (State log, product page bullets). Never commit `product/.vercel/`.
 - GitHub (private): https://github.com/steveonshit/Pinky (`origin/main`).
-- Graphify CLI: `/Users/hqschool/Library/Python/3.12/bin` (if `graphify` isn't found: `export PATH="/Users/hqschool/Library/Python/3.12/bin:$PATH"`).
+- Graphify CLI: `/Users/hqschool/Library/Python/3.12/bin/graphify` (not on the shell PATH: use the full path, or `export PATH=…` in the same command).
 - Legacy 128-stock pipeline commands: `docs/PROJECT_HISTORY.md`.
-- Chats: use one chat at a time on Pinky (parallel chats overwrite each other's edits). Long chats get auto-summarized and can lose track → start a new chat. Before editing or resuming, check `git log -3`, `git status` and file times, not just the chat. Details: `docs/PROJECT_HISTORY.md`.
+- Chats: use one chat at a time on Pinky, Cursor and Claude together (parallel chats overwrite each other's edits). Long chats get auto-summarized and can lose track → start a new chat. Before editing or resuming, check `git log -3`, `git status` and file times, not just the chat. Details: `docs/PROJECT_HISTORY.md`.

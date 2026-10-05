@@ -42,6 +42,17 @@ From the user's 5-task list, done in one chat (commits `6fd9a2d`, `53b996f`). Ke
   - Never full "Uninstall" these plugins: it removes them from every project, ZerMap included.
 - **RTK 0.51.0** (`brew install rtk`, then `rtk init -g --agent cursor`): created `~/.cursor/hooks.json` with one `preToolUse` hook (`rtk hook cursor`, matcher `Shell`), global for all projects. Telemetry off.
 
+## Move to the Claude app (2026-10-04, user-approved)
+
+The user asked to move everything for Pinky to the Claude app on this Mac. Two Cursor chats got the request; the first stopped mid-way, the second finished it (config only). Cursor files stay as a fallback.
+- **Rules:** `CLAUDE.md` loads `AGENTS.md` and adds Claude notes (sessions, model, subagents, shell, skills). `AGENTS.md` rule 14 is tool-neutral now: check the model; ask only if it isn't the top one or you can't tell.
+- **Model:** `.claude/settings.local.json` → `model: best`, plus `CLAUDE_CODE_SUBAGENT_MODEL=best` and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` (without them, Explore runs on Opus when the main chat runs Fable). Checked in the docs and in the app's bundled Claude Code 2.1.286: the variable goes through the same parser as `--model`, which maps `best` to Fable if available, else Opus. The app's model dropdown sets each session's model.
+- **Plugins:** Context7 installed in Claude for Pinky only (local scope; remote MCP server, nothing to install). The `upstash/context7` marketplace was added to `~/.claude/settings.json` (`extraKnownMarketplaces`); backups `~/.claude/plugins/*.bak-2026-10-04`. Vercel stays off for Pinky.
+- **Skills:** `.claude/skills/` links to the 4 skills in `.agents/skills/` and to `~/.agents/skills/find-skills`; the graphify rule is a skill now. Links listed in `.git/info/exclude`; `.claude/` added to `.graphifyignore`.
+- **Claude shell facts (docs + bundled binary):** each Bash call starts a fresh shell (venv activation and `export PATH` don't carry over); background commands stop after 30 min by default (max 2 h via `timeout`); `graphify` isn't on the shell PATH. Runbook and `project.md` updated for these.
+- **Not ported:** RTK (Cursor-only hook), Cursor chat history, Cursor's Context7 extras (skill, `docs-researcher` agent, `/docs` command; Claude's plugin ships only the MCP server).
+- **Cursor-only gotchas (moved from `project.md`, for the fallback):** the sandbox blocks `pip install` into `.venv` ("Operation not permitted"; run pip with full permissions) and makes matplotlib warn that `~/.matplotlib` isn't writable (harmless; it uses a temp folder). RTK (global hook `~/.cursor/hooks.json`, all projects) rewrites agent shell commands to compact `rtk` versions (`git`, `grep`, `ls`, `cat`…); runbook checks give the same results (tested); its `git status` drops the last newline, so chained output can run together; raw output: `rtk proxy <cmd>`; remove: `rtk init -g --agent cursor --uninstall`. Run the key check in the normal sandbox (RTK leaves it unchanged; auto-review blocked a full-permissions call containing it). Plugin scope: Customize → plugin, from the project that keeps it, then reload; plugin sources and how to check: Setup cleanup (above). The Railway MCP server and `use-railway` skill are ZerMap-only too. Project skills in `.agents/skills/` load in Cursor (checked 2026-10-03).
+
 ## User decisions (2026-09-26)
 
 - Phase 2 model fixes: **all four approved** (list under Roadmap).
