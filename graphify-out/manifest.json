@@ -24,15 +24,15 @@
     "semantic_hash": ""
   },
   "docs/ARCHITECTURE.md": {
-    "mtime": 1789077825.2275774,
-    "seen": 1790014934.576135,
-    "ast_hash": "8480d35f410d40ad7e4e1a171431a61d",
+    "mtime": 1791233630.8645494,
+    "seen": 1791343933.59923,
+    "ast_hash": "f5a9c32a250990e09090e959fb51c246",
     "semantic_hash": ""
   },
   "project.md": {
-    "mtime": 1791163213.4717007,
-    "seen": 1791233363.13483,
-    "ast_hash": "29154ccb80ac41a454bb9e3ee1744c7a",
+    "mtime": 1791343932.8897448,
+    "seen": 1791343933.599233,
+    "ast_hash": "e12417e5b1535288bfa7b40892451dcb",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -96,21 +96,21 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790040540.9941745,
-    "seen": 1790171736.438835,
-    "ast_hash": "c84b0ca2ecb34528d23d26611be08fd1",
+    "mtime": 1791233509.1423583,
+    "seen": 1791343933.59923,
+    "ast_hash": "56836317adfd7792918e84ef071f3245",
     "semantic_hash": ""
   },
   "docs/EVAL.md": {
-    "mtime": 1790017061.6149633,
-    "seen": 1790171736.4388359,
-    "ast_hash": "717402f6de74e148f262ac6eca6caef7",
+    "mtime": 1791233530.2915406,
+    "seen": 1791343933.599231,
+    "ast_hash": "1322caa10542c2a6a1d331526b3267c2",
     "semantic_hash": ""
   },
   "docs/PRD.md": {
-    "mtime": 1790174389.069365,
-    "seen": 1790175556.92974,
-    "ast_hash": "1754640c7e778abc7cf5f915519adf9f",
+    "mtime": 1791233530.305294,
+    "seen": 1791343933.599231,
+    "ast_hash": "5aca6b917498010389dbf7b99aa2f893",
     "semantic_hash": ""
   },
   "pinky/metrics.py": {
@@ -216,21 +216,27 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1791162460.2239306,
-    "seen": 1791233363.134826,
-    "ast_hash": "55f971f237d38c7dec51063cbfe5b645",
+    "mtime": 1791233547.1445923,
+    "seen": 1791343933.59923,
+    "ast_hash": "79cc7eaa5a022712bc449e9266ca9774",
     "semantic_hash": ""
   },
   "docs/PROJECT_HISTORY.md": {
-    "mtime": 1791162597.053007,
-    "seen": 1791233363.134828,
-    "ast_hash": "5bc5709398a0d3a7c94d0ed3dc25590b",
+    "mtime": 1791343932.8899384,
+    "seen": 1791343933.599232,
+    "ast_hash": "ec3ba21f0202ed33d3a9345141b988cd",
     "semantic_hash": ""
   },
   "docs/STEP3_RUNBOOK.md": {
     "mtime": 1791162513.560515,
     "seen": 1791233363.134829,
     "ast_hash": "0fbb7937c6101fc6aad829eb940dbb39",
+    "semantic_hash": ""
+  },
+  "scripts/product_numbers.py": {
+    "mtime": 1791343699.534942,
+    "seen": 1791343933.599227,
+    "ast_hash": "3412dd80ef35c30b6799591d19babff5",
     "semantic_hash": ""
   }
 }

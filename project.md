@@ -9,17 +9,17 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-05**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7` (older milestone commits: `docs/PROJECT_HISTORY.md`).
+Last updated **2026-10-06**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7` (older milestone commits: `docs/PROJECT_HISTORY.md`).
 
 **State**
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
 - **Step 3 — growth features (v8), done 2026-10-03:** 13 runs, all clean on the first try; control reproduced v7 exactly; no leak flag. Locked verdict: **growth DROP on A and B** (real − placebo +0.26%/yr and +0.98%/yr; bar +1.0%). Both continue **without growth**, monthly trading.
 - **Final versions:** A (rank label) = `v8_pit_no-growth` (v7_pit inputs) **+7.23%/yr**; B (raw return) = `v7_pit_no-rank_label` **+5.83%/yr**. SPY +7.3%, equal-weight universe +8.0%.
-- Showcase shows v6_pit (2026-09-27). Product page is live: https://pinky-research.vercel.app (numbers hand-copied, up to v7; re-check each by hand before any update). Update either **only when the user says**.
+- Showcase shows v6_pit (2026-09-27). Product page https://pinky-research.vercel.app: **redesigned locally 2026-10-06** (v8 numbers, all from `scripts/product_numbers.py` → `artifacts/product_numbers.json`; old page `product/index.backup-2026-10-02.html`; presenter notes `product/presenter-notes.md`), **not published yet: waiting for the user's OK**. Update either only when the user says.
 - Every report includes: takeover share of top picks, 2009–2020 vs SPY (`REPORT_SPLIT_YEAR`), and the score-group table.
 - Local commits are **not pushed** (`git log origin/main..main --oneline`). User said: don't push yet.
 - **Tools (2026-10-04):** moved to the Claude app (Gotchas → Claude setup).
-- **2026-10-05:** Cursor chats read; `README.md` and `docs/` ARCHITECTURE, PRD, EVAL rewritten; LightGBM `subsample` fixed in code (no result change, Gotchas). User's step: `claude mcp remove railway -s user` (Gotchas → Claude setup).
+- **2026-10-05:** Cursor chats read; old docs rewritten; LightGBM `subsample` fixed in code (no result change). User's step: `claude mcp remove railway -s user` (Gotchas → Claude setup).
 
 **Open user decisions (2026-10-03; user 2026-10-05: keep them all, decide at batch 2)**
 - Residual-edge check on the final versions (A = `v8_pit_no-growth`, B = `v7_pit_no-rank_label`)?

@@ -64,6 +64,15 @@ The user asked the first Claude chat to read the code, all Cursor chats and `pro
 - Context7 needs a one-time sign-in in Claude (`/mcp` in a terminal `claude` session).
 - The 14 Cursor chats are JSONL files in `~/.cursor/projects/Users-hqschool-Desktop-Pinky/agent-transcripts/`.
 
+## Product page redesign (2026-10-06, Claude Opus 5.5)
+
+User asked (on Opus 5.5, declined switching to Fable 5): more visuals, more animations, more sections, text and look less "AI", keep the style, no secret sauce; loosely follow the teacher's brief (one-page project spec shown in class, good visuals instead of screenshots, stand out, a live link for Mr. Lake); then teach the user everything on the page.
+- `product/index.html` rebuilt: hero with spec sheet, ticker tape, stats band, 11 numbered sections (bar, how it works, the field, the test, build log, where it stands with a version toggle, findings, sectors, latest test v8 with placebo and leak checks, next, FAQ), pinky-promise band; ~20 inline SVG / canvas visuals with scroll animations (reduced-motion and no-JS fallbacks). Still no vendor, model names, thresholds, costs or sector cap.
+- Numbers: all recomputed from saved artifacts by `scripts/product_numbers.py` (new; writes `artifacts/product_numbers.json`); the 59 date / leak checks were rerun (59/59). One mistake caught before any preview: the $10,000-growth chart data had been typed by hand; replaced with the computed series and checked point by point.
+- Checked in headless Chrome at 1920, 1440, 1280, 768 and 390 px wide: every section and chart reveals, no horizontal overflow, no JS errors.
+- Old page kept as `product/index.backup-2026-10-02.html`; presenter study guide `product/presenter-notes.md` (both local only, not uploaded: `.vercelignore` allows only `index.html` and `fonts/`).
+- Not published yet: waiting for the user's OK.
+
 ## User decisions (2026-09-26)
 
 - Phase 2 model fixes: **all four approved** (list under Roadmap).
