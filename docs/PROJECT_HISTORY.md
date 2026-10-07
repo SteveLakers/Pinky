@@ -72,6 +72,7 @@ User asked (on Opus 5.5, declined switching to Fable 5): more visuals, more anim
 - Checked in headless Chrome at 1920, 1440, 1280, 768 and 390 px wide: every section and chart reveals, no horizontal overflow, no JS errors.
 - Old page kept as `product/index.backup-2026-10-02.html`; presenter study guide `product/presenter-notes.md` (both local only, not uploaded: `.vercelignore` allows only `index.html` and `fonts/`).
 - Not published yet: waiting for the user's OK.
+- **Local preview in the Claude app:** the app's preview server can't read `~/Desktop` ("Operation not permitted"), so copy `product/` to the session scratchpad (`rsync -a --exclude .vercel product/ <scratchpad>/preview/`) and point `.claude/launch.json` (local only, in `.git/info/exclude`) at that folder: `cd <folder> && exec python3 -m http.server 8766 --bind 127.0.0.1`. Re-copy after each edit. Full-page screenshots: headless Chrome with `--force-prefers-reduced-motion` (everything shown in its final state); phone width needs an iframe wrapper, because Chrome windows can't be narrower than ~500 px.
 
 ## User decisions (2026-09-26)
 
