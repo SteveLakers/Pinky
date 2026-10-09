@@ -21,9 +21,9 @@ Last updated **2026-10-09**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - **Tools:** Claude app since 2026-10-04 (Gotchas → Claude setup). 2026-10-05: Cursor chats read, old docs rewritten, LightGBM `subsample` fixed in code (no result change). Still the user's step: `claude mcp remove railway -s user`.
 
 **User decisions for batch 2 (2026-10-09; log: `docs/PROJECT_HISTORY.md` → Batch 2 decisions)**
-- **Keep rule:** step 3's rule (real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half, mean of seeds 42/7/99) **plus** real ≥ the same version without the new features (same 3 seeds). Needs baselines on seeds 7 and 99 for A and B (only seed 42 exists).
+- **Keep rule:** step 3's rule (real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half, mean of seeds 42/7/99) **plus** real ≥ the same version without the new features (same 3 seeds). Baselines: A and B without the new features on all 3 seeds (6 runs; seed 42 rerun so every fold is saved).
 - **Save every fold's model** (~9 MB per run): small `train.py` change before batch 2 training; predictions must stay bit-identical.
-- **Still open:** SHAP / residual-edge on the final versions (A = `v8_pit_no-growth`, B = `v7_pit_no-rank_label`); user unsure. Suggestion: SHAP on all-fold models from batch 2's baselines; residual-edge once a version beats SPY.
+- **SHAP + residual-edge:** run both on the 6 baseline runs once they exist (all 20 years of models; B gets its monthly returns file). User: "do what's best for accuracy".
 
 **Next:** Roadmap batch 2 (margin expansion), same protocol as step 3 (placebo, 3 seeds). Write the batch 2 plan (features, the keep rule above, fold saving) and get the user's OK **before any run**. **Careful:** `--pit` still turns `growth` on by default (it's in `MODEL_FIXES`), so runs without growth need `--without=growth` (or change the default in `train.py`; ask first).
 

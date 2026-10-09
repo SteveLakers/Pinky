@@ -66,11 +66,11 @@ The user asked the first Claude chat to read the code, all Cursor chats and `pro
 
 ## Batch 2 decisions (2026-10-09, Claude Opus 5.5)
 
-User chose to continue on Opus 5.5 ("we use opus 5.5 now"). Settled 3 of the 4 open decisions from 2026-10-03:
-- **Keep rule for batch 2:** yes, add "real ≥ the same version without the new features (mean of seeds 42/7/99)" to step 3's real-vs-placebo rule. Reason: in step 3, extra columns cost A ~1%/yr even with real data, and real − placebo can't see that. Only seed 42 baselines exist (`v8_pit_no-growth`, `v7_pit_no-rank_label`) → 4 more runs (seeds 7, 99 for A and B).
+User chose to continue on Opus 5.5 for this chat only (`CLAUDE.md` keeps Fable as the top model). Settled the 4 open decisions from 2026-10-03:
+- **Keep rule for batch 2:** yes, add "real ≥ the same version without the new features (mean of seeds 42/7/99)" to step 3's real-vs-placebo rule. Reason: in step 3, extra columns cost A ~1%/yr even with real data, and real − placebo can't see that. Only seed 42 baselines exist (`v8_pit_no-growth`, `v7_pit_no-rank_label`), without saved folds → 6 baseline runs (seeds 42, 7, 99 for A and B).
 - **Save every fold's model:** yes (~9 MB per run; small `train.py` change before training; predictions must stay bit-identical).
 - **Push to GitHub:** yes. Before the push: no data / artifacts / models files in the unpushed commits (checked by path), key check 0.
-- **SHAP / residual-edge on the final versions:** still open (user wants to talk it through).
+- **SHAP / residual-edge:** run both on the 6 baseline runs (user: "do what's best for accurate and training"). Why not now: only 2020 models are saved (COVID year), and B (`v7_pit_no-rank_label`) has no `backtest_periods` file (made before v8).
 
 ## Product page redesign v2 (2026-10-07, Claude Opus 5.5)
 
