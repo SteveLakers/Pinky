@@ -9,7 +9,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-07**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7` (older milestone commits: `docs/PROJECT_HISTORY.md`).
+Last updated **2026-10-09**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7` (older milestone commits: `docs/PROJECT_HISTORY.md`).
 
 **State**
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
@@ -17,16 +17,15 @@ Last updated **2026-10-07**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - **Final versions:** A (rank label) = `v8_pit_no-growth` (v7_pit inputs) **+7.23%/yr**; B (raw return) = `v7_pit_no-rank_label` **+5.83%/yr**. SPY +7.3%, equal-weight universe +8.0%.
 - Showcase: v6_pit (2026-09-27). Product page https://pinky-research.vercel.app = the user's class project spec (link goes to the teacher, Mr. Lake): **v2 live since 2026-10-07** (details: `docs/PROJECT_HISTORY.md` → Product page redesign v2; study guide `product/presenter-notes.md`). Update either only when the user says.
 - Every report includes: takeover share of top picks, 2009–2020 vs SPY (`REPORT_SPLIT_YEAR`), and the score-group table.
-- Local commits are **not pushed** (`git log origin/main..main --oneline`). User said: don't push yet.
+- GitHub: pushed 2026-10-09 (user OK). Every later push needs the user's OK again (`git log origin/main..main --oneline`).
 - **Tools:** Claude app since 2026-10-04 (Gotchas → Claude setup). 2026-10-05: Cursor chats read, old docs rewritten, LightGBM `subsample` fixed in code (no result change). Still the user's step: `claude mcp remove railway -s user`.
 
-**Open user decisions (2026-10-03; user 2026-10-05: keep them all, decide at batch 2)**
-- Residual-edge check on the final versions (A = `v8_pit_no-growth`, B = `v7_pit_no-rank_label`)?
-- SHAP (installed) on the final versions' last-fold models (2020 only): A `models/1y_pit_no-growth`, B `models/1y_pit_no-rank_label_v7`?
-- Next batch (Roadmap 2, margin expansion): add the keep condition "real ≥ baseline without the new features, same 3 seeds"? (Step 3: extra columns cost A ~1%/yr even with real data.) Save every fold's model (~9 MB per run; small `train.py` change before training)?
-- Push to GitHub?
+**User decisions for batch 2 (2026-10-09; log: `docs/PROJECT_HISTORY.md` → Batch 2 decisions)**
+- **Keep rule:** step 3's rule (real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half, mean of seeds 42/7/99) **plus** real ≥ the same version without the new features (same 3 seeds). Needs baselines on seeds 7 and 99 for A and B (only seed 42 exists).
+- **Save every fold's model** (~9 MB per run): small `train.py` change before batch 2 training; predictions must stay bit-identical.
+- **Still open:** SHAP / residual-edge on the final versions (A = `v8_pit_no-growth`, B = `v7_pit_no-rank_label`); user unsure. Suggestion: SHAP on all-fold models from batch 2's baselines; residual-edge once a version beats SPY.
 
-**Next:** Roadmap batch 2 (margin expansion), same protocol as step 3 (placebo, 3 seeds). Propose the keep-rule and get the user's OK **before any run**. **Careful:** `--pit` still turns `growth` on by default (it's in `MODEL_FIXES`), so runs without growth need `--without=growth` (or change the default in `train.py`; ask first).
+**Next:** Roadmap batch 2 (margin expansion), same protocol as step 3 (placebo, 3 seeds). Write the batch 2 plan (features, the keep rule above, fold saving) and get the user's OK **before any run**. **Careful:** `--pit` still turns `growth` on by default (it's in `MODEL_FIXES`), so runs without growth need `--without=growth` (or change the default in `train.py`; ask first).
 
 **When you finish a chunk of work:** update this Resume section so the next chat can pick up. Keep this file ~12–15 KB (`wc -c project.md`; every chat reads it): current state only. Move finished-step details (logs, decision logs, results tables) to `docs/PROJECT_HISTORY.md` and leave a 1–2 line summary + pointer here.
 
@@ -36,7 +35,7 @@ Last updated **2026-10-07**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - **Price data predicts how much a stock moves, not which way** (v5). v6 Ridge's lead was all 2001–08, and 25% of its top-10 were takeover targets (base rate 2.2%): safe, not skill. 2020 broke every model.
 - **Rank label (A) = the big lever:** IC ~doubles, but picks become calm stocks that rarely crash **and rarely win big** (top-10: 3.9% big winners, 2.3% crashes; random 10%). Without it (B), LightGBM is the best winner-finder so far (13.4% big winners, 8.0% crashes).
 - **Higher IC ≠ better top picks:** v7's IC comes mostly from the bottom of the list; neither A nor B has a top 10% that beats the average stock. Judge the top of the list (score-group table).
-- **Growth (v8):** too weak for the bar. **Extra columns cost A ~1%/yr, real or fake**, which the real-vs-placebo rule can't see (open decision above). Weekly trading loses at 25 bps → stay monthly.
+- **Growth (v8):** too weak for the bar. **Extra columns cost A ~1%/yr, real or fake**, which the real-vs-placebo rule can't see (batch 2 adds a check). Weekly trading loses at 25 bps → stay monthly.
 - Top-10 CAGRs are noisy by a few %/yr → judge on IC and top 10% first.
 
 ## User goals & expectations

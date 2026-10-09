@@ -64,6 +64,14 @@ The user asked the first Claude chat to read the code, all Cursor chats and `pro
 - Context7 needs a one-time sign-in in Claude (`/mcp` in a terminal `claude` session).
 - The 14 Cursor chats are JSONL files in `~/.cursor/projects/Users-hqschool-Desktop-Pinky/agent-transcripts/`.
 
+## Batch 2 decisions (2026-10-09, Claude Opus 5.5)
+
+User chose to continue on Opus 5.5 ("we use opus 5.5 now"). Settled 3 of the 4 open decisions from 2026-10-03:
+- **Keep rule for batch 2:** yes, add "real ≥ the same version without the new features (mean of seeds 42/7/99)" to step 3's real-vs-placebo rule. Reason: in step 3, extra columns cost A ~1%/yr even with real data, and real − placebo can't see that. Only seed 42 baselines exist (`v8_pit_no-growth`, `v7_pit_no-rank_label`) → 4 more runs (seeds 7, 99 for A and B).
+- **Save every fold's model:** yes (~9 MB per run; small `train.py` change before training; predictions must stay bit-identical).
+- **Push to GitHub:** yes. Before the push: no data / artifacts / models files in the unpushed commits (checked by path), key check 0.
+- **SHAP / residual-edge on the final versions:** still open (user wants to talk it through).
+
 ## Product page redesign v2 (2026-10-07, Claude Opus 5.5)
 
 User asked (on Opus 5.5, chose to continue rather than switch to Fable 5): the page still read like an article; make it more concise, more visual, more interactive, then teach them everything on it. User's choices: "a little dark matrix vibe"; hide details behind clicks (keep every fact).
