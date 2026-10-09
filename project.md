@@ -15,7 +15,7 @@ Last updated **2026-10-07**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
 - **Step 3 — growth features (v8), done 2026-10-03:** 13 runs, all clean on the first try; control reproduced v7 exactly; no leak flag. Locked verdict: **growth DROP on A and B** (real − placebo +0.26%/yr and +0.98%/yr; bar +1.0%). Both continue **without growth**, monthly trading.
 - **Final versions:** A (rank label) = `v8_pit_no-growth` (v7_pit inputs) **+7.23%/yr**; B (raw return) = `v7_pit_no-rank_label` **+5.83%/yr**. SPY +7.3%, equal-weight universe +8.0%.
-- Showcase: v6_pit (2026-09-27). Product page https://pinky-research.vercel.app = the user's class project spec (link goes to the teacher, Mr. Lake): **redesigned locally 2026-10-06, not published yet: waiting for the user's "publish"** (details: `docs/PROJECT_HISTORY.md` → Product page redesign; study guide `product/presenter-notes.md`). Update either only when the user says.
+- Showcase: v6_pit (2026-09-27). Product page https://pinky-research.vercel.app = the user's class project spec (link goes to the teacher, Mr. Lake): **v2 live since 2026-10-07** (details: `docs/PROJECT_HISTORY.md` → Product page redesign v2; study guide `product/presenter-notes.md`). Update either only when the user says.
 - Every report includes: takeover share of top picks, 2009–2020 vs SPY (`REPORT_SPLIT_YEAR`), and the score-group table.
 - Local commits are **not pushed** (`git log origin/main..main --oneline`). User said: don't push yet.
 - **Tools:** Claude app since 2026-10-04 (Gotchas → Claude setup). 2026-10-05: Cursor chats read, old docs rewritten, LightGBM `subsample` fixed in code (no result change). Still the user's step: `claude mcp remove railway -s user`.
@@ -119,7 +119,7 @@ Core rules: `AGENTS.md` (always on; every agent and subagent gets it, Claude thr
 
 Full layout with details: `docs/PROJECT_HISTORY.md`.
 - `pinky/`: the pipeline (module map, features, switches: `docs/ARCHITECTURE.md`; settings and `HOLDOUT_START`: `config.py`), plus legacy 128-stock files.
-- `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `step3_verdict`, `product_numbers`, legacy build scripts.
+- `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `step3_verdict`, `product_numbers`, `product_page_data`, legacy build scripts.
 - `data/sharadar/` (~6 GB, gitignored, never share). `artifacts/`, `models/` (gitignored): per-run outputs named `<file>_<run>`; logs `artifacts/logs/train_<run>.log`. `models/1y_<tag>/` = last fold only; v7's models: `1y_pit_v7`, `1y_pit_no-rank_label_v7`.
 - `showcase/`, `product/` (public page), `docs/` (also `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`), `graphify-out/`.
 - Agent add-ons (untracked; don't commit; none change training): skills in `.agents/skills/` (`residual-edge-analyzer`, `shap`, `verification-before-completion`, `systematic-debugging`; linked into `.claude/skills/`), Context7 plugin (Cursor and Claude). SHAP 0.52.0 is installed in `.venv`; don't follow the skill's `uv venv` step. Residual-edge input recipe: runbook step 8.
@@ -137,7 +137,7 @@ Full layout with details: `docs/PROJECT_HISTORY.md`.
   - Rebuild a report without retraining: `python scripts/train_walkforward.py --report-only=v7_pit` (uses the saved metrics CSV + preds parquet).
   - Compare runs: `python scripts/compare_runs.py v6_pit v7_pit ...`
 - Showcase: `python scripts/build_showcase.py` (~1 min; run name = `RUN` at the top). View: click `showcase/index.html` in the Claude chat (Browser pane); Cursor needs `cd showcase && python3 -m http.server 8765`.
-- Product page (Vercel Hobby; update only when the user says): numbers from `python scripts/product_numbers.py` (~5 min) → `artifacts/product_numbers.json`; paste data arrays from it, never type them. Redeploy and take-down commands → `docs/PROJECT_HISTORY.md` (State log). Local preview in the Claude app: `docs/PROJECT_HISTORY.md` → Product page redesign. Never commit `product/.vercel/`.
+- Product page (Vercel Hobby; update only when the user says): numbers: `python scripts/product_numbers.py` (~5 min) → `artifacts/product_numbers.json`, then `python scripts/product_page_data.py` fills the page's data block and every `data-v` number (never type them). Redeploy and take-down commands → `docs/PROJECT_HISTORY.md` (State log). Local preview in the Claude app: `docs/PROJECT_HISTORY.md` → Product page redesign. Never commit `product/.vercel/`.
 - GitHub (private): https://github.com/steveonshit/Pinky (`origin/main`).
 - Graphify CLI: `/Users/hqschool/Library/Python/3.12/bin/graphify` (not on the shell PATH: use the full path, or `export PATH=…` in the same command).
 - Legacy 128-stock pipeline commands: `docs/PROJECT_HISTORY.md`.
