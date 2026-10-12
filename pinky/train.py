@@ -20,6 +20,9 @@ v7: four model fixes for pit runs (`MODEL_FIXES`; each can be switched off with 
 v8: fifth fix `growth` = six company growth features (fundamentals.py). `placebo` shuffles
     them across stocks within each date (same values, no link to the stock); `seed` sets
     model randomness. Monthly portfolio returns are saved for paired run comparisons.
+v9: `growth` is opt-in (`FEATURE_GROUPS`, switched on with `with_`), so a plain pit run is
+    version A without growth (= v8_pit_no-growth). Every fold's models are saved under
+    models/<run>/<horizon>/fold_NN/ (before: only the last fold, in a folder shared by versions).
 """
 
 from __future__ import annotations
@@ -89,8 +92,9 @@ MODELS_DIR = PROJECT_ROOT / "models"
 DEFAULT_HORIZONS = ["1y"]
 SPLIT_YEAR = REPORT_SPLIT_YEAR
 
-VERSION = "v8"
-MODEL_FIXES = ("rank_label", "rank_features", "young", "size", "growth")
+VERSION = "v9"
+MODEL_FIXES = ("rank_label", "rank_features", "young", "size")
+FEATURE_GROUPS = ("growth",)  # company data under test: off unless `with_` names it
 DEFAULT_SEED = 42
 PRED_COLS = [
     "pred_excess_ridge",
@@ -259,10 +263,15 @@ def run_horizon(
     zscore: bool = True,
     seed: int = DEFAULT_SEED,
 ) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
-    """Train/eval all folds for one horizon with CS prep + tuned LightGBM."""
+    """Train/eval all folds for one horizon with CS prep + tuned LightGBM.
+
+    Returns fold metrics, models (`folds`: every fold's fitted models, feature columns and
+    dates; `test_cs`: the last fold's prepared test rows) and out-of-sample predictions.
+    """
     rows = []
     pred_parts = []
-    last_models: dict = {}
+    folds = []
+    test_cs = None
 
     for fold in iter_walk_forward_folds(df, horizon, calendar=calendar):
         train_cs, test_cs, fcols = prepare_fold_frames(fold.train, fold.test, zscore=zscore)
@@ -285,15 +294,20 @@ def run_horizon(
         )
         rows.append(metrics)
         pred_parts.append(preds)
-        last_models = {
-            "feature_cols": fcols,
-            "ridge": ridge,
-            "lgbm_return": lgbm_ret,
-            "logit": logit,
-            "lgbm_beat": lgbm_beat,
-            "fold": fold,
-            "test_cs": test_cs,
-        }
+        folds.append(
+            {
+                "fold_id": fold.fold_id,
+                "train_start": fold.train_start,
+                "train_end": fold.train_end,
+                "test_start": fold.test_start,
+                "test_end": fold.test_end,
+                "feature_cols": fcols,
+                "ridge": ridge,
+                "lgbm_return": lgbm_ret,
+                "logit": logit,
+                "lgbm_beat": lgbm_beat,
+            }
+        )
         print(
             f"[{horizon}] fold {fold.fold_id}: "
             f"feats={len(fcols)} | "
@@ -305,7 +319,30 @@ def run_horizon(
             f"univ={metrics['universe_mean_excess']:.3f}"
         )
 
-    return pd.DataFrame(rows), last_models, pd.concat(pred_parts, ignore_index=True)
+    models = {"folds": folds, "test_cs": test_cs}
+    return pd.DataFrame(rows), models, pd.concat(pred_parts, ignore_index=True)
+
+
+def save_models(models_by_h: dict, run_name: str) -> Path:
+    """Every fold's models → models/<run>/<horizon>/fold_NN/, plus folds.json (fold dates)."""
+    root = MODELS_DIR / run_name
+    dates = ("train_start", "train_end", "test_start", "test_end")
+    for h, pack in models_by_h.items():
+        out = root / h
+        for m in pack["folds"]:
+            d = out / f"fold_{m['fold_id']:02d}"
+            d.mkdir(parents=True, exist_ok=True)
+            joblib.dump(m["lgbm_return"], d / "lgbm_return.joblib")
+            joblib.dump(m["lgbm_beat"], d / "lgbm_beat.joblib")
+            joblib.dump(m["ridge"], d / "ridge_return.joblib")
+            joblib.dump(m["logit"], d / "logit_beat.joblib")
+            (d / "feature_cols.txt").write_text("\n".join(m["feature_cols"]))
+        table = [
+            {"fold_id": m["fold_id"], **{k: m[k].date().isoformat() for k in dates}}
+            for m in pack["folds"]
+        ]
+        (out / "folds.json").write_text(json.dumps(table, indent=1))
+    return root
 
 
 def _fmt_pct(x: float) -> str:
@@ -760,6 +797,26 @@ def pit_training_frame(
     return df.reset_index(drop=True)
 
 
+def pit_tag(
+    tag: str = "",
+    without: list[str] | None = None,
+    with_: list[str] | None = None,
+    placebo: bool = False,
+    seed: int = DEFAULT_SEED,
+) -> str:
+    """Output tag of a pit run, built from its options (run name = `<VERSION>_<tag>`)."""
+    return "_".join(
+        [
+            "pit",
+            *([tag] if tag else []),
+            *[f"no-{f}" for f in without or []],
+            *[f"with-{g}" for g in FEATURE_GROUPS if g in (with_ or [])],
+            *(["placebo"] if placebo else []),
+            *([f"s{seed}"] if seed != DEFAULT_SEED else []),
+        ]
+    )
+
+
 def run_all(
     horizons: list[str] | None = None,
     save: bool = True,
@@ -767,6 +824,7 @@ def run_all(
     tag: str = "",
     pit: bool = False,
     without: list[str] | None = None,
+    with_: list[str] | None = None,
     placebo: bool = False,
     seed: int = DEFAULT_SEED,
 ) -> pd.DataFrame:
@@ -774,33 +832,33 @@ def run_all(
 
     `exclude` drops tickers from train and test; `tag` keeps that run's outputs separate.
     `pit` uses the Sharadar point-in-time universe and only dev rows (holdout untouched).
-    Pit runs use all `MODEL_FIXES` except those in `without` (tagged `no-<fix>`).
-    Legacy runs use none of them.
+    Pit runs use all `MODEL_FIXES` except those in `without` (tagged `no-<fix>`), plus the
+    `FEATURE_GROUPS` named in `with_` (tagged `with-<group>`). Legacy runs use none of them.
     `placebo` (pit, growth on) shuffles the growth features within each date (tagged
     `placebo`); `seed` sets model randomness (tagged `s<seed>` unless the default).
     """
     horizons = horizons or list(DEFAULT_HORIZONS)
     exclude = exclude or []
     without = without or []
-    unknown = sorted(set(without) - set(MODEL_FIXES))
+    with_ = with_ or []
+    unknown = sorted(set(without) - set(MODEL_FIXES)) + sorted(set(with_) - set(FEATURE_GROUPS))
     if unknown:
-        raise ValueError(f"Unknown fixes {unknown}; expected some of {list(MODEL_FIXES)}")
-    fixes = [f for f in MODEL_FIXES if f not in without] if pit else []
-    if (placebo or seed != DEFAULT_SEED) and not pit:
-        raise ValueError("placebo and seed options are for pit runs")
+        raise ValueError(
+            f"Unknown options {unknown}; without takes some of {list(MODEL_FIXES)}, "
+            f"with takes some of {list(FEATURE_GROUPS)}"
+        )
+    fixes = (
+        [f for f in MODEL_FIXES if f not in without] + [g for g in FEATURE_GROUPS if g in with_]
+        if pit
+        else []
+    )
+    if (placebo or seed != DEFAULT_SEED or with_) and not pit:
+        raise ValueError("with, placebo and seed options are for pit runs")
     if placebo and "growth" not in fixes:
-        raise ValueError("placebo needs the growth features on")
+        raise ValueError("placebo needs the growth features on (with growth)")
     calendar = prices = sectors = universe_desc = acq = None
     if pit:
-        tag = "_".join(
-            [
-                "pit",
-                *([tag] if tag else []),
-                *[f"no-{f}" for f in without],
-                *(["placebo"] if placebo else []),
-                *([f"s{seed}"] if seed != DEFAULT_SEED else []),
-            ]
-        )
+        tag = pit_tag(tag, without, with_, placebo, seed)
         df = pit_training_frame(load_pit_dataset(), fixes, placebo, seed)
         calendar = pd.DatetimeIndex(benchmark_closeadj().index)
         prices = backtest_prices()
@@ -814,16 +872,17 @@ def run_all(
         print(f"[universe] removed {exclude} → {df['Ticker'].nunique()} stocks")
     if pit:
         universe_desc = _pit_universe_desc(df["Ticker"].nunique())
-        print(f"[fixes] on: {fixes or 'none'} | off: {without or 'none'}")
+        off = [f for f in (*MODEL_FIXES, *FEATURE_GROUPS) if f not in fixes]
+        print(f"[fixes] on: {fixes or 'none'} | off: {off or 'none'}")
         print(f"[seed] {seed} | placebo: {'growth shuffled within each date' if placebo else 'off'}")
     parts = []
-    last_by_h = {}
+    models_by_h = {}
     preds_by_h = {}
 
     for h in horizons:
         print(f"\n=== Training horizon {h} ({run_name}) ===")
         df_h = dev_rows(df, h, calendar) if pit else df
-        metrics, last, preds = run_horizon(
+        metrics, models, preds = run_horizon(
             df_h,
             h,
             calendar=calendar,
@@ -832,7 +891,7 @@ def run_all(
             seed=seed,
         )
         parts.append(metrics)
-        last_by_h[h] = last
+        models_by_h[h] = models
         preds_by_h[h] = preds
 
     all_metrics = pd.concat(parts, ignore_index=True)
@@ -871,21 +930,13 @@ def run_all(
             seed=seed,
         )
 
-        for h, pack in last_by_h.items():
-            out = MODELS_DIR / (f"{h}_{tag}" if tag else h)
-            out.mkdir(parents=True, exist_ok=True)
-            joblib.dump(pack["lgbm_return"], out / "lgbm_return.joblib")
-            joblib.dump(pack["lgbm_beat"], out / "lgbm_beat.joblib")
-            joblib.dump(pack["ridge"], out / "ridge_return.joblib")
-            joblib.dump(pack["logit"], out / "logit_beat.joblib")
-            (out / "feature_cols.txt").write_text("\n".join(pack["feature_cols"]))
+        models_root = save_models(models_by_h, run_name)
 
-        if "1y" in last_by_h:
-            pack = last_by_h["1y"]
-            test = pack["test_cs"]
-            fcols = pack["feature_cols"]
-            x = test[fcols].to_numpy(dtype=float)
-            p = pack["lgbm_beat"].predict_proba(x)[:, 1]
+        if "1y" in models_by_h:
+            last = models_by_h["1y"]["folds"][-1]
+            test = models_by_h["1y"]["test_cs"]
+            x = test[last["feature_cols"]].to_numpy(dtype=float)
+            p = last["lgbm_beat"].predict_proba(x)[:, 1]
             y = test["beat_1y"].to_numpy(dtype=float)
             calibration_table(y, p).to_csv(
                 ARTIFACTS_DIR / f"calibration_1y_last_fold_{run_name}.csv", index=False
@@ -893,7 +944,7 @@ def run_all(
 
         print(f"\nWrote {metrics_path}")
         print(f"Wrote {summary_path}")
-        print(f"Wrote models under {MODELS_DIR}")
+        print(f"Wrote models under {models_root}")
 
     return all_metrics
 
