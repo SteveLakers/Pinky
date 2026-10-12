@@ -13,7 +13,7 @@ Rank every liquid US stock by how much it should beat SPY over the next year, an
 | 1. Download | `scripts/pull_sharadar.py` → `pinky/sharadar.py` | `data/sharadar/*.parquet` (7 tables) |
 | 2. Universe + returns | `python -m pinky.universe` | `data/sharadar/panels/*.parquet` (Date × Ticker) |
 | 3. Dataset | `python -m pinky.pit_dataset` (+ `pinky/fundamentals.py`) | `data/sharadar/derived/pit_dataset.parquet` |
-| 4. Train + evaluate | `scripts/train_walkforward.py --pit` → `pinky/train.py` | `artifacts/*_<run>.*`, `models/1y_<tag>/` |
+| 4. Train + evaluate | `scripts/train_walkforward.py --pit` → `pinky/train.py` | `artifacts/*_<run>.*`, `models/<run>/1y/fold_NN/` |
 | 5. Compare / judge | `scripts/compare_runs.py`, `scripts/step3_verdict.py` | tables, `artifacts/step3_verdict.md` |
 
 ## Data (Sharadar Core US Equities Bundle)
@@ -52,8 +52,8 @@ That gives about 1,200–2,850 stocks a day and 11,561 distinct stocks (1998–2
   - Return models: Ridge (the baseline) and LightGBM (120 trees, depth 4, 15 leaves, half the columns per tree, no row sampling). Target: each day's return rank (version A) or the raw excess return (version B).
   - Blend: the average of the two models' daily ranks.
   - Beat-SPY classifiers (logistic regression, LightGBM): reported only, not used for picks.
-- **Switches** (`MODEL_FIXES`, all on with `--pit`; turn some off with `--without=`): `rank_label`, `rank_features`, `young`, `size`, `growth`. Also `--placebo` (growth values shuffled between stocks within each date) and `--seed=N`.
-- Run names come from the options (for example `v8_pit_no-growth`), not from log file names.
+- **Switches** (`MODEL_FIXES`, all on with `--pit`; turn some off with `--without=`): `rank_label`, `rank_features`, `young`, `size`. **Company data under test** (`FEATURE_GROUPS`, off unless `--with=`; since v9): `growth`. Also `--placebo` (growth values shuffled between stocks within each date) and `--seed=N`.
+- Run names come from the options (for example `v9_pit_no-rank_label_s7`, `v9_pit_with-growth_placebo`), not from log file names. v9's plain `v9_pit` = v8's `v8_pit_no-growth` (same predictions).
 
 ## Backtest (`pinky/backtest.py`)
 
@@ -66,7 +66,7 @@ That gives about 1,200–2,850 stocks a day and 11,561 distinct stocks (1998–2
 
 ## Outputs (`artifacts/`, `models/`; never in git)
 
-Per run: `walkforward_summary_<run>.md` (the report), `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `backtest_periods_1y_<run>.csv` (monthly returns), `score_groups_1y_<run>.csv` and `run_config_<run>.json`; the log is `artifacts/logs/train_<run>.log`. `models/1y_<tag>/` keeps only the last fold's models. `--report-only=<run>` rebuilds a report without retraining.
+Per run: `walkforward_summary_<run>.md` (the report), `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `backtest_periods_1y_<run>.csv` (monthly returns), `score_groups_1y_<run>.csv` and `run_config_<run>.json`; the log is `artifacts/logs/train_<run>.log`. `models/<run>/1y/fold_NN/` keeps every fold's models, with `folds.json` (fold dates) next to them (since v9; older runs: `models/1y_<tag>/`, last fold only, shared across versions). `--report-only=<run>` rebuilds a report without retraining.
 
 ## Locked decisions
 

@@ -6,6 +6,8 @@ Moved from `project.md` on 2026-10-03. Current state and open user decisions: `p
 
 **Ran 2026-10-03 as written:** all 13 runs EXIT 0 on the first try (no reruns), control reproduced v7 exactly, ~39 min of training + ~2 min verdict. For the next batch, change the run names / flags and keep the steps. Cursor sandbox note: `caffeinate` needs full permissions.
 
+**Since v9 (2026-10-12):** growth is off by default: turn it on with `--with=growth` (`--without=growth` now errors), so v8 names map to v9 as `v8_pit_no-growth` → `v9_pit`, `v8_pit` → `v9_pit_with-growth`, `v8_pit_placebo` → `v9_pit_with-growth_placebo`. Every fold's models go to `models/<run>/1y/fold_NN/`, so step 1's model-copy line is obsolete.
+
 **Claude:** each command starts a fresh shell (only the working folder carries over), so run each code block below as **one** command; every block that runs Python starts by activating `.venv`.
 
 **0. Before anything**

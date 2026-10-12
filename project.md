@@ -9,23 +9,24 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-09**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7` (older milestone commits: `docs/PROJECT_HISTORY.md`).
+Last updated **2026-10-12**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7`. Batch 2 prep (v9 code): `7f0b6c4` (older milestone commits: `docs/PROJECT_HISTORY.md`).
 
 **State**
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
-- **Step 3 — growth features (v8), done 2026-10-03:** 13 runs, all clean on the first try; control reproduced v7 exactly; no leak flag. Locked verdict: **growth DROP on A and B** (real − placebo +0.26%/yr and +0.98%/yr; bar +1.0%). Both continue **without growth**, monthly trading.
-- **Final versions:** A (rank label) = `v8_pit_no-growth` (v7_pit inputs) **+7.23%/yr**; B (raw return) = `v7_pit_no-rank_label` **+5.83%/yr**. SPY +7.3%, equal-weight universe +8.0%.
+- **Step 3 — growth features (v8), done 2026-10-03:** locked verdict **growth DROP on A and B** (real − placebo +0.26%/yr and +0.98%/yr; bar +1.0%). User 2026-10-12: growth data matters, we haven't found the best way to use it → kept in the code (opt-in); retest better versions later (Roadmap: growth round 2).
+- **Batch 2 prep, done 2026-10-12 (v9):** growth is opt-in (`--with=growth`), so a plain `--pit` run = A without growth; every fold's models are saved (`models/<run>/1y/fold_NN/`). 6 baseline runs (A and B × seeds 42/7/99) all clean; seed 42 reproduces A and B exactly (2,031,316 predictions identical).
+- **Final versions = batch 2 baselines** (LightGBM top 10% + buffer, net of 10 bps, mean of 3 seeds): A = `v9_pit` (+ `_s7`, `_s99`) **+7.14%/yr** (2001–08 −2.03%, 2009–20 +13.74%); B = `v9_pit_no-rank_label` (+ seeds) **+6.10%/yr** (−2.50%, +12.26%). SPY +7.28% (−2.74%, +14.53%), equal-weight universe +8.01%. Seed 42 alone: A +7.23%, B +5.83%.
 - Showcase: v6_pit (2026-09-27). Product page https://pinky-research.vercel.app = the user's class project spec (link goes to the teacher, Mr. Lake): **v2 live since 2026-10-07** (details: `docs/PROJECT_HISTORY.md` → Product page redesign v2; study guide `product/presenter-notes.md`). Update either only when the user says.
 - Every report includes: takeover share of top picks, 2009–2020 vs SPY (`REPORT_SPLIT_YEAR`), and the score-group table.
-- GitHub: pushed 2026-10-09 (user OK). Every later push needs the user's OK again (`git log origin/main..main --oneline`).
-- **Tools:** Claude app since 2026-10-04 (Gotchas → Claude setup). 2026-10-05: Cursor chats read, old docs rewritten, LightGBM `subsample` fixed in code (no result change). 2026-10-09: ECC plugin installed for every project (Gotchas → Plugins). Still the user's step: `claude mcp remove railway -s user`.
+- GitHub: pushed 2026-10-12 (user OK). Every later push needs the user's OK again (`git log origin/main..main --oneline`).
+- **Tools:** Claude app since 2026-10-04, ECC plugin since 2026-10-09 (Gotchas → Claude setup, Plugins). Still the user's step: `claude mcp remove railway -s user`.
 
-**User decisions for batch 2 (2026-10-09; log: `docs/PROJECT_HISTORY.md` → Batch 2 decisions)**
-- **Keep rule:** step 3's rule (real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half, mean of seeds 42/7/99) **plus** real ≥ the same version without the new features (same 3 seeds). Baselines: A and B without the new features on all 3 seeds (6 runs; seed 42 rerun so every fold is saved).
-- **Save every fold's model** (~9 MB per run): small `train.py` change before batch 2 training; predictions must stay bit-identical.
-- **SHAP + residual-edge:** run both on the 6 baseline runs once they exist (all 20 years of models; B gets its monthly returns file). User: "do what's best for accuracy".
+**User decisions for batch 2 (2026-10-09 / 10-12; log: `docs/PROJECT_HISTORY.md` → Batch 2 decisions)**
+- **Keep rule:** step 3's rule (real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half, mean of seeds 42/7/99) **plus** real ≥ the baseline above (same 3 seeds).
+- **SHAP + residual-edge:** run both on the 6 baseline runs (all 20 folds saved; B's monthly returns now exist). User: "do what's best for accuracy".
+- **Open:** 2 extra runs with growth on (A and B, seed 42, `--with=growth`; must equal `v8_pit` / `v8_pit_no-rank_label`), so SHAP shows how much weight growth gets each year (input for growth round 2)?
 
-**Next:** Roadmap batch 2 (margin expansion), same protocol as step 3 (placebo, 3 seeds). Write the batch 2 plan (features, the keep rule above, fold saving) and get the user's OK **before any run**. **Careful:** `--pit` still turns `growth` on by default (it's in `MODEL_FIXES`), so runs without growth need `--without=growth` (or change the default in `train.py`; ask first).
+**Next:** SHAP + residual-edge on the baselines (decided), then write the batch 2 plan (margin expansion: features, placebo for the new group, the keep rule above) and get the user's OK **before any run**.
 
 **When you finish a chunk of work:** update this Resume section so the next chat can pick up. Keep this file ~12–15 KB (`wc -c project.md`; every chat reads it): current state only. Move finished-step details (logs, decision logs, results tables) to `docs/PROJECT_HISTORY.md` and leave a 1–2 line summary + pointer here.
 
@@ -35,7 +36,7 @@ Last updated **2026-10-09**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - **Price data predicts how much a stock moves, not which way** (v5). v6 Ridge's lead was all 2001–08, and 25% of its top-10 were takeover targets (base rate 2.2%): safe, not skill. 2020 broke every model.
 - **Rank label (A) = the big lever:** IC ~doubles, but picks become calm stocks that rarely crash **and rarely win big** (top-10: 3.9% big winners, 2.3% crashes; random 10%). Without it (B), LightGBM is the best winner-finder so far (13.4% big winners, 8.0% crashes).
 - **Higher IC ≠ better top picks:** v7's IC comes mostly from the bottom of the list; neither A nor B has a top 10% that beats the average stock. Judge the top of the list (score-group table).
-- **Growth (v8):** too weak for the bar. **Extra columns cost A ~1%/yr, real or fake**, which the real-vs-placebo rule can't see (batch 2 adds a check). Weekly trading loses at 25 bps → stay monthly.
+- **Growth (v8):** too weak for the bar. **Extra columns cost A ~1%/yr, real or fake**, which the real-vs-placebo rule can't see (batch 2 adds a check). Against the 3-seed baselines: growth A −0.84%/yr, B +0.10%/yr (B: +1.24% in 2009–20, −1.37% in 2001–08). Weekly trading loses at 25 bps → stay monthly.
 - Top-10 CAGRs are noisy by a few %/yr → judge on IC and top 10% first.
 
 ## User goals & expectations
@@ -64,7 +65,7 @@ Full wording: `docs/PROJECT_HISTORY.md`.
 **Done:** Phase 1 (honest evaluation, v5_pit); Phase 2 step 1 (evaluation fixes, v6_pit) and step 2 (four model fixes, v7_pit). Details: `docs/PROJECT_HISTORY.md`.
 
 **Phase 2 — company data**, added in batches; keep only what beats the baseline:
-1. Growth + revenue acceleration — **tested 2026-10-03 (v8): DROP** on both targets
+1. Growth + revenue acceleration — **tested 2026-10-03 (v8): DROP** on both targets; kept in the code (`--with=growth`). User wants a **growth round 2** (ideas: growth surprises (see 4), multi-year growth, a longer horizon; measure growth's weight with SHAP first; pick 2–3 variants before any results)
 2. **Margin expansion** ← next
 3. Price strength (momentum, 52-week-high proximity, vs sector)
 4. Earnings reactions / surprises
@@ -106,9 +107,9 @@ Monthly rebalance, equal weight, **10 bps per side** (25 bps re-priced), 60% sec
 - graphify does not skip dot-folders: third-party code there (e.g. `.agents/`) gets indexed unless it's listed in `.graphifyignore`.
 - API key safety: never print `.env`. Before a commit, check the staged diff with a count-only `grep -c -F` for the key (command: `docs/STEP3_RUNBOOK.md` step 7). Run it as its own command.
 - `.git/info/exclude` (local to this clone) hides never-commit files from `git status` (dated graphify backups, `.agents/`, `product/`, local Claude / Cursor settings, skill links, `.claude/launch.json`…; the file is the full list). Never stage them; put new never-commit paths there, not in `.gitignore`. Workspace-wide Grep skips these paths → pass the folder as the search path.
-- **Claude setup (2026-10-04):** Code tab, **Local**, folder `~/Desktop/Pinky` (never Cloud: Sharadar license). Rules: `CLAUDE.md` (loads `AGENTS.md`). `.claude/settings.local.json` (never commit): start model `best`, every subagent forced onto `best` (this account has Fable 5, not 5.1; the dropdown sets each session's model), Context7 on (one-time sign-in: `/mcp` in a terminal `claude` session), Vercel off. Railway: a user-scope MCP server in `~/.claude.json` loads everywhere until the user runs `claude mcp remove railway -s user` (ZerMap has its own). Old Cursor chats (JSONL): `~/.cursor/projects/Users-hqschool-Desktop-Pinky/agent-transcripts/`. More, incl. Cursor-fallback notes: `docs/PROJECT_HISTORY.md` → Move to the Claude app.
+- **Claude setup:** Code tab, **Local**, folder `~/Desktop/Pinky` (never Cloud: Sharadar license). Rules: `CLAUDE.md` (loads `AGENTS.md`); settings `.claude/settings.local.json` (never commit). Full notes (start model, subagents, Context7 sign-in, Railway, old Cursor chats): `docs/PROJECT_HISTORY.md` → Claude and plugin setup.
 - Claude app Browser pane: while hidden it doesn't render (animations, IntersectionObserver and screenshots stall). Test animated pages in headless Chrome over CDP.
-- Plugins: Pinky uses Context7 + ECC (user's choice, 2026-10-09); Vercel / Supabase / Railway are ZerMap-only. **ECC** (`ecc@ecc`): user scope, hooks off, ~31K tokens per session; bundles chrome-devtools-mcp (own Chrome profile, `~/.cache/chrome-devtools-mcp/`). `~/.claude/settings.json` → `env`: every subagent forced onto `best` (most ECC agents ask for Sonnet/Haiku), chrome-devtools usage stats off. Never "Uninstall" a plugin (removes it everywhere); change its scope (Claude: `.claude/settings.local.json` → `enabledPlugins`).
+- Plugins: Pinky uses Context7 + ECC (user's choice, 2026-10-09); Vercel / Supabase / Railway are ZerMap-only. Never "Uninstall" a plugin (removes it everywhere); change its scope (Claude: `.claude/settings.local.json` → `enabledPlugins`). ECC details: `docs/PROJECT_HISTORY.md` → Claude and plugin setup.
 
 ## Rules
 
@@ -119,7 +120,7 @@ Core rules: `AGENTS.md` (always on; every agent and subagent gets it, Claude thr
 Full layout with details: `docs/PROJECT_HISTORY.md`.
 - `pinky/`: the pipeline (module map, features, switches: `docs/ARCHITECTURE.md`; settings and `HOLDOUT_START`: `config.py`), plus legacy 128-stock files.
 - `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `step3_verdict`, `product_numbers`, `product_page_data`, legacy build scripts.
-- `data/sharadar/` (~6 GB, gitignored, never share). `artifacts/`, `models/` (gitignored): per-run outputs named `<file>_<run>`; logs `artifacts/logs/train_<run>.log`. `models/1y_<tag>/` = last fold only; v7's models: `1y_pit_v7`, `1y_pit_no-rank_label_v7`.
+- `data/sharadar/` (~6 GB, gitignored, never share). `artifacts/`, `models/` (gitignored): per-run outputs named `<file>_<run>`; logs `artifacts/logs/train_<run>.log`. `models/<run>/1y/fold_NN/` = every fold's models + `folds.json` (v9+, ~9 MB per run); older runs: `models/1y_<tag>/` = last fold only (v7's: `1y_pit_v7`, `1y_pit_no-rank_label_v7`).
 - `showcase/`, `product/` (public page), `docs/` (also `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`), `graphify-out/`.
 - Agent add-ons (untracked; don't commit; none change training): skills in `.agents/skills/` (`residual-edge-analyzer`, `shap`, `verification-before-completion`, `systematic-debugging`; linked into `.claude/skills/`), Context7 plugin (Cursor and Claude). SHAP 0.52.0 is installed in `.venv`; don't follow the skill's `uv venv` step. Residual-edge input recipe: runbook step 8.
 
@@ -130,8 +131,8 @@ Full layout with details: `docs/PROJECT_HISTORY.md`.
   1. Pull: `python scripts/pull_sharadar.py` (~10 min, needs network)
   2. Universe panels: `python -m pinky.universe` (~1 min)
   3. Dataset: `python -m pinky.pit_dataset` (~1 min)
-  4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min alone; output name = `train.VERSION` + `_pit`, currently `v8_pit`)
-  - Ablations: `--without=rank_label,size` (see `train.MODEL_FIXES`). Several runs fit in parallel: `OMP_NUM_THREADS=3` each, 6 runs ≈ 13 min on v7 (18 cores, 48 GiB RAM). Launch commands: `docs/STEP3_RUNBOOK.md`.
+  4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min alone; output name = `train.VERSION` + `_pit`, currently `v9_pit` = A without growth)
+  - Ablations: `--without=rank_label,size` (`train.MODEL_FIXES`). Company data under test: `--with=growth` (`train.FEATURE_GROUPS`, off by default since v9; `--without=growth` errors). Several runs fit in parallel: `OMP_NUM_THREADS=3` each, 6 runs ≈ 13 min on v7 (18 cores, 48 GiB RAM). Launch commands: `docs/STEP3_RUNBOOK.md`.
   - stdout is buffered when redirected to a file → use `python -u` to watch fold progress in a log.
   - Rebuild a report without retraining: `python scripts/train_walkforward.py --report-only=v7_pit` (uses the saved metrics CSV + preds parquet).
   - Compare runs: `python scripts/compare_runs.py v6_pit v7_pit ...`

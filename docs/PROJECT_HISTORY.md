@@ -64,6 +64,12 @@ The user asked the first Claude chat to read the code, all Cursor chats and `pro
 - Context7 needs a one-time sign-in in Claude (`/mcp` in a terminal `claude` session).
 - The 14 Cursor chats are JSONL files in `~/.cursor/projects/Users-hqschool-Desktop-Pinky/agent-transcripts/`.
 
+## Claude and plugin setup (moved from project.md 2026-10-12, unchanged)
+
+- **Claude setup (2026-10-04):** Code tab, **Local**, folder `~/Desktop/Pinky` (never Cloud: Sharadar license). Rules: `CLAUDE.md` (loads `AGENTS.md`). `.claude/settings.local.json` (never commit): start model `best`, every subagent forced onto `best` (this account has Fable 5, not 5.1; the dropdown sets each session's model), Context7 on (one-time sign-in: `/mcp` in a terminal `claude` session), Vercel off. Railway: a user-scope MCP server in `~/.claude.json` loads everywhere until the user runs `claude mcp remove railway -s user` (ZerMap has its own). Old Cursor chats (JSONL): `~/.cursor/projects/Users-hqschool-Desktop-Pinky/agent-transcripts/`. More, incl. Cursor-fallback notes: `docs/PROJECT_HISTORY.md` → Move to the Claude app.
+- Plugins: Pinky uses Context7 + ECC (user's choice, 2026-10-09); Vercel / Supabase / Railway are ZerMap-only. **ECC** (`ecc@ecc`): user scope, hooks off, ~31K tokens per session; bundles chrome-devtools-mcp (own Chrome profile, `~/.cache/chrome-devtools-mcp/`). `~/.claude/settings.json` → `env`: every subagent forced onto `best` (most ECC agents ask for Sonnet/Haiku), chrome-devtools usage stats off. Never "Uninstall" a plugin (removes it everywhere); change its scope (Claude: `.claude/settings.local.json` → `enabledPlugins`).
+- **Tools (State line, 2026-10-09):** Claude app since 2026-10-04 (Gotchas → Claude setup). 2026-10-05: Cursor chats read, old docs rewritten, LightGBM `subsample` fixed in code (no result change). 2026-10-09: ECC plugin installed for every project (Gotchas → Plugins). Still the user's step: `claude mcp remove railway -s user`.
+
 ## Batch 2 decisions (2026-10-09, Claude Opus 5.5)
 
 User chose to continue on Opus 5.5 for this chat only (`CLAUDE.md` keeps Fable as the top model). Settled the 4 open decisions from 2026-10-03:
@@ -71,6 +77,23 @@ User chose to continue on Opus 5.5 for this chat only (`CLAUDE.md` keeps Fable a
 - **Save every fold's model:** yes (~9 MB per run; small `train.py` change before training; predictions must stay bit-identical).
 - **Push to GitHub:** yes. Before the push: no data / artifacts / models files in the unpushed commits (checked by path), key check 0.
 - **SHAP / residual-edge:** run both on the 6 baseline runs (user: "do what's best for accurate and training"). Why not now: only 2020 models are saved (COVID year), and B (`v7_pit_no-rank_label`) has no `backtest_periods` file (made before v8).
+
+### Step 2: code prep + baseline runs (2026-10-12, Claude Opus 5.5 Max)
+
+User decisions: **growth opt-in** (kept, off unless asked; user: "growth data is definitely important… we just haven't found the best way to use it yet", maybe the time frame is too short or growth doesn't weigh enough), **one model folder per run with every fold**, **run the 6 baselines now** (they double as the check that the code change broke nothing), **push after the key check**.
+- Code `7f0b6c4` (v9): `MODEL_FIXES` = rank_label, rank_features, young, size (on; `--without=`); `FEATURE_GROUPS` = growth (off; `--with=`, runs tagged `with-<group>`); `--without=growth` now errors; models in `models/<run>/1y/fold_NN/` + `folds.json`.
+- Smoke test before training (2001–03 folds, 3 threads): predictions identical to `v8_pit_no-growth` and `v7_pit_no-rank_label`; every reloaded fold model reproduces its predictions. Also confirms on real data that the 2026-10-05 LightGBM `subsample` edit changed nothing.
+- 6 runs (`v9_pit`, `v9_pit_no-rank_label`, each also `_s7`, `_s99`; 6 at once, 3 threads each, ~15 min, on battery with `caffeinate -i`): all 20 folds, EXIT 0, 8.5–8.6 MB of models each. Seed 42 = the saved runs exactly (2,031,316 predictions and the 44-row backtest tables identical).
+- New baselines (LightGBM top 10% + buffer, net of 10 bps; all / 2001–08 / 2009–20):
+
+| | Seed 42 | Seed 7 | Seed 99 | Mean |
+|---|---|---|---|---|
+| A (`v9_pit`) | +7.23% / −1.55% / +13.52% | +7.12% / −2.24% / +13.85% | +7.08% / −2.31% / +13.84% | **+7.14% / −2.03% / +13.74%** |
+| B (`v9_pit_no-rank_label`) | +5.83% / −2.27% / +11.60% | +6.07% / −2.95% / +12.55% | +6.40% / −2.29% / +12.63% | **+6.10% / −2.50% / +12.26%** |
+
+SPY +7.28% / −2.74% / +14.53%; equal-weight universe +8.01%.
+- Growth against these 3-seed baselines (step 3's real runs, mean of 3 seeds): A −0.84%/yr (−2.07% / +0.12%), B **+0.10%/yr** (−1.37% / +1.24%). Earlier chat estimate for B, from the 1-seed baseline: +0.37%/yr (corrected for the user).
+- Growth discussion (input for "growth round 2"): past growth is public and mostly priced in (e.g. Lakonishok, Shleifer & Vishny 1994: fastest past growers did worse afterward); what tends to move prices is growth vs expectations (Roadmap 4). Ideas: growth surprises, multi-year growth, a longer horizon (2y labels exist; noisier); measure growth's weight per year with SHAP first; pick 2–3 variants before any results. Not answered yet: 2 extra growth runs (A, B, seed 42, `--with=growth`) for that SHAP check.
 
 ## Product page redesign v2 (2026-10-07, Claude Opus 5.5)
 

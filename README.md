@@ -49,7 +49,7 @@ pip install -r requirements.txt
 PYTHONPATH=. python scripts/pull_sharadar.py      # download data (~10 min)
 PYTHONPATH=. python -m pinky.universe             # daily universe + returns (~1 min)
 PYTHONPATH=. python -m pinky.pit_dataset          # weekly dataset (~1 min)
-PYTHONPATH=. python scripts/train_walkforward.py --pit --without=growth   # train + report (~8 min)
+PYTHONPATH=. python scripts/train_walkforward.py --pit   # train + report (~8 min)
 ```
 
 The report lands in `artifacts/walkforward_summary_<run>.md`. Run options and checks: [`project.md`](project.md) → Commands.
