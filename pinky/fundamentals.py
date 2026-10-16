@@ -1,5 +1,5 @@
 """
-Point-in-time company growth features from Sharadar SF1 (as-reported only).
+Point-in-time company growth and margin features from Sharadar SF1 (as-reported only).
 
 Uses ARQ (quarterly) and ART (trailing 12 months). Never MR*: those rows are dated at
 period end and leak ~2.5 months.
@@ -15,6 +15,9 @@ News date = the day a report's numbers became public:
 Features attach with merge_asof(allow_exact_matches=False), so a number is used only on
 dates strictly after its news date. A report published after a newer one (late catch-up
 filing) never replaces the newer one.
+
+Margins (batch 2): gross and operating margin over the last 12 months (ART), and their change
+vs the same quarter a year ago (ARQ, in margin points). Revenue <= 0 -> missing.
 """
 
 from __future__ import annotations
@@ -32,6 +35,8 @@ GROWTH_FEATURES = [
     "days_since_news",
     "has_growth",
 ]
+MARGIN_FEATURES = ["gm_ttm", "gm_chg_q", "om_ttm", "om_chg_q"]
+GROUP_FEATURES = {"growth": GROWTH_FEATURES, "margins": MARGIN_FEATURES}
 
 EARNINGS_EVENT_CODE = "22"
 MIN_DAYS_AFTER_PERIOD = 10
@@ -111,6 +116,21 @@ def add_yoy(reports: pd.DataFrame, col: str, months: int = 12) -> pd.Series:
     return pd.Series(np.where(ok, m[col] / m[f"{col}_prev"] - 1.0, np.nan), index=reports.index)
 
 
+def margin(reports: pd.DataFrame, col: str) -> pd.Series:
+    """col / revenue; missing unless revenue > 0."""
+    rev = reports["revenue"]
+    return (reports[col] / rev.where(rev > 0)).astype("float64")
+
+
+def add_change(reports: pd.DataFrame, col: str, months: int = 12) -> pd.Series:
+    """col minus the same calendar period `months` earlier; the earlier report public first."""
+    cur = reports[["ticker", "calendardate", col, "news_date"]]
+    prev = cur.assign(calendardate=cur["calendardate"] + pd.offsets.MonthEnd(months))
+    m = cur.merge(prev, on=["ticker", "calendardate"], how="left", suffixes=("", "_prev"), validate="one_to_one")
+    ok = m["news_date_prev"].notna() & (m["news_date_prev"] <= m["news_date"])
+    return pd.Series(np.where(ok, m[col] - m[f"{col}_prev"], np.nan), index=reports.index)
+
+
 def add_accel(reports: pd.DataFrame, yoy_col: str = "rev_yoy_q") -> pd.Series:
     """This quarter's YoY minus last quarter's; last quarter must have been public first."""
     cur = reports[["ticker", "calendardate", yoy_col, "news_date"]]
@@ -152,6 +172,32 @@ def ttm_growth_reports(
     anns = announcements if announcements is not None else load_announcements()
     reports = with_news_dates(reports, anns)
     reports["rev_yoy_ttm"] = add_yoy(reports, "revenue")
+    return reports
+
+
+def quarterly_margin_reports(
+    raw: pd.DataFrame | None = None,
+    announcements: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    reports = first_filed(raw) if raw is not None else _load_dimension("ARQ", ["revenue", "gp", "opinc"])
+    anns = announcements if announcements is not None else load_announcements()
+    reports = with_news_dates(reports, anns)
+    reports["gm_q"] = margin(reports, "gp")
+    reports["om_q"] = margin(reports, "opinc")
+    reports["gm_chg_q"] = add_change(reports, "gm_q")
+    reports["om_chg_q"] = add_change(reports, "om_q")
+    return reports
+
+
+def ttm_margin_reports(
+    raw: pd.DataFrame | None = None,
+    announcements: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    reports = first_filed(raw) if raw is not None else _load_dimension("ART", ["revenue", "gp", "opinc"])
+    anns = announcements if announcements is not None else load_announcements()
+    reports = with_news_dates(reports, anns)
+    reports["gm_ttm"] = margin(reports, "gp")
+    reports["om_ttm"] = margin(reports, "opinc")
     return reports
 
 
@@ -224,33 +270,75 @@ def attach_growth_features(rows: pd.DataFrame) -> pd.DataFrame:
     return rows.merge(extra, on=["Date", "Ticker"], how="left", validate="one_to_one")
 
 
-def shuffle_growth_within_date(df: pd.DataFrame, seed: int) -> pd.DataFrame:
-    """Placebo: give each row another same-date row's six growth values (block kept together)."""
-    missing = sorted(set(GROWTH_FEATURES) - set(df.columns))
+def margin_feature_frame(
+    rows: pd.DataFrame,
+    quarterly: pd.DataFrame | None = None,
+    ttm: pd.DataFrame | None = None,
+    with_dates: bool = False,
+) -> pd.DataFrame:
+    """Date, Ticker + the four margin columns (+ news/period dates of the used reports if `with_dates`)."""
+    keys = pd.DataFrame({"Date": _dates(rows["Date"]), "Ticker": rows["Ticker"].astype(str)})
+    if keys.duplicated(["Date", "Ticker"]).any():
+        raise ValueError("margin attach needs unique Date, Ticker rows")
+
+    q = quarterly if quarterly is not None else quarterly_margin_reports()
+    t = ttm if ttm is not None else ttm_margin_reports()
+    out = _asof_attach(keys, q, ["gm_chg_q", "om_chg_q"], QUARTER_STALE_DAYS, "q")
+    out = _asof_attach(out, t, ["gm_ttm", "om_ttm"], TTM_STALE_DAYS, "t")
+    for c in MARGIN_FEATURES:
+        out[c] = out[c].astype("float32")
+    helpers = ["news_q", "period_q", "news_t", "period_t"] if with_dates else []
+    return out[["Date", "Ticker", *MARGIN_FEATURES, *helpers]]
+
+
+def attach_margin_features(rows: pd.DataFrame) -> pd.DataFrame:
+    """Add the four margin columns to a Date/Ticker frame (row order kept)."""
+    extra = margin_feature_frame(rows[["Date", "Ticker"]])
+    extra = extra.astype({"Date": rows["Date"].dtype, "Ticker": rows["Ticker"].dtype})
+    return rows.merge(extra, on=["Date", "Ticker"], how="left", validate="one_to_one")
+
+
+def shuffle_within_date(df: pd.DataFrame, cols: list[str], seed: int) -> pd.DataFrame:
+    """Placebo: give each row another same-date row's values of `cols` (block kept together)."""
+    missing = sorted(set(cols) - set(df.columns))
     if missing:
-        raise ValueError(f"placebo needs all growth columns; missing {missing}")
+        raise ValueError(f"placebo needs all of its columns; missing {missing}")
     if not df.index.is_unique:
         raise ValueError("placebo needs a unique index")
     rng = np.random.default_rng(seed)
     base = df.sort_values("Date", kind="stable").index
     order = df.assign(_r=rng.random(len(df))).sort_values(["Date", "_r"], kind="stable").index
     out = df.copy()
-    out.loc[base, GROWTH_FEATURES] = df.loc[order, GROWTH_FEATURES].to_numpy()
+    out.loc[base, cols] = df.loc[order, cols].to_numpy()
     return out
 
 
+def shuffle_growth_within_date(df: pd.DataFrame, seed: int) -> pd.DataFrame:
+    """Placebo for the six growth columns (v8 name; same shuffle as `shuffle_within_date`)."""
+    return shuffle_within_date(df, GROWTH_FEATURES, seed)
+
+
 __all__ = [
+    "GROUP_FEATURES",
     "GROWTH_FEATURES",
+    "MARGIN_FEATURES",
     "add_accel",
+    "add_change",
     "add_yoy",
     "attach_growth_features",
+    "attach_margin_features",
     "earnings_announcements",
     "first_filed",
     "growth_feature_frame",
     "load_announcements",
+    "margin",
+    "margin_feature_frame",
     "published_reports",
     "quarterly_growth_reports",
+    "quarterly_margin_reports",
     "shuffle_growth_within_date",
+    "shuffle_within_date",
     "ttm_growth_reports",
+    "ttm_margin_reports",
     "with_news_dates",
 ]

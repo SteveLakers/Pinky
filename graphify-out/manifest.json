@@ -24,15 +24,15 @@
     "semantic_hash": ""
   },
   "docs/ARCHITECTURE.md": {
-    "mtime": 1792155549.9246342,
-    "seen": 1792156207.106891,
-    "ast_hash": "ecb0e35c3658a65d65abb0509386c808",
+    "mtime": 1792157569.8411765,
+    "seen": 1792157622.484236,
+    "ast_hash": "5e604ca533a33b28303b7301ff2e2b47",
     "semantic_hash": ""
   },
   "project.md": {
-    "mtime": 1792156197.266524,
-    "seen": 1792156207.106894,
-    "ast_hash": "cf81fd7c911499ee6d8c5446270bb516",
+    "mtime": 1792157613.4873495,
+    "seen": 1792157622.484239,
+    "ast_hash": "f1eeb4704ba116a19b7ac25b92a1ddf0",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -120,15 +120,15 @@
     "semantic_hash": ""
   },
   "pinky/train.py": {
-    "mtime": 1791835311.7813904,
-    "seen": 1791836166.38483,
-    "ast_hash": "139b21d6b322a96d47cd1df4247e38fe",
+    "mtime": 1792157178.9048424,
+    "seen": 1792157622.484226,
+    "ast_hash": "9009eb5aec09851f91d433fe0ab72e9b",
     "semantic_hash": ""
   },
   "scripts/train_walkforward.py": {
-    "mtime": 1791835311.8922884,
-    "seen": 1791836166.3848362,
-    "ast_hash": "a7509b9e3305f376a633feea96db9028",
+    "mtime": 1792157194.4856856,
+    "seen": 1792157622.484235,
+    "ast_hash": "e00bde693e8f72ede6cde7af8bf33864",
     "semantic_hash": ""
   },
   "pinky/preprocess.py": {
@@ -168,9 +168,9 @@
     "semantic_hash": ""
   },
   "pinky/pit_dataset.py": {
-    "mtime": 1791051398.2508552,
-    "seen": 1791053198.766943,
-    "ast_hash": "5dea046e48cfffc0b8e97f9419ab98fc",
+    "mtime": 1792157095.8453212,
+    "seen": 1792157622.484225,
+    "ast_hash": "93b92b4f3ec2a27d138220afe14b18d4",
     "semantic_hash": ""
   },
   "pinky/sharadar.py": {
@@ -198,15 +198,15 @@
     "semantic_hash": ""
   },
   "pinky/fundamentals.py": {
-    "mtime": 1791052700.5650644,
-    "seen": 1791053198.7669408,
-    "ast_hash": "f3084edef619c9972fdd78be0952d54b",
+    "mtime": 1792157087.4512365,
+    "seen": 1792157622.484223,
+    "ast_hash": "367c59d35db846494d5252c96e7615d7",
     "semantic_hash": ""
   },
   "scripts/check_growth_features.py": {
-    "mtime": 1791052715.555881,
-    "seen": 1791053198.766947,
-    "ast_hash": "364a6045eff6daa0db0d31d92a11f802",
+    "mtime": 1792157194.4864445,
+    "seen": 1792157622.4842298,
+    "ast_hash": "28b972d0929fc647897d76ed17d3828c",
     "semantic_hash": ""
   },
   "scripts/step3_verdict.py": {
@@ -222,9 +222,9 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_HISTORY.md": {
-    "mtime": 1792156181.686182,
-    "seen": 1792156207.106892,
-    "ast_hash": "6d0261243de632049d8e9a601b758df9",
+    "mtime": 1792157613.4871144,
+    "seen": 1792157622.4842381,
+    "ast_hash": "821fd8654751c72c40704adcd896856a",
     "semantic_hash": ""
   },
   "docs/STEP3_RUNBOOK.md": {
@@ -252,9 +252,27 @@
     "semantic_hash": ""
   },
   "scripts/shap_report.py": {
-    "mtime": 1792155828.8494854,
-    "seen": 1792156207.1068878,
-    "ast_hash": "da8dcf3b4ab99145cbbdf1120d14d915",
+    "mtime": 1792157194.486001,
+    "seen": 1792157622.484234,
+    "ast_hash": "264edb53bcc983430237f8e389121c6f",
+    "semantic_hash": ""
+  },
+  "scripts/batch_verdict.py": {
+    "mtime": 1792157493.1052272,
+    "seen": 1792157622.4842281,
+    "ast_hash": "0e8859d97eb1d18eee1c7af203c8ce1e",
+    "semantic_hash": ""
+  },
+  "scripts/check_margin_features.py": {
+    "mtime": 1792157304.679526,
+    "seen": 1792157622.484231,
+    "ast_hash": "182e552bf334e0f5f8ce60e5812b60fb",
+    "semantic_hash": ""
+  },
+  "docs/BATCH2_PLAN.md": {
+    "mtime": 1792157583.9966817,
+    "seen": 1792157622.484237,
+    "ast_hash": "45cfc6c58ef8006577922fa6660914b9",
     "semantic_hash": ""
   }
 }

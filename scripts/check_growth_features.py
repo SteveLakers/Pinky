@@ -3,7 +3,8 @@
 Date and leak checks for the v8 growth features (no training, no 2022+ labels).
 
 1. Made-up cases for each date rule (previews, catch-up filings, same-day rows, staleness).
-2. Dataset: old columns identical to the v7 backup; exactly the six growth columns added.
+2. Dataset: old columns identical to the v7 backup; the six growth columns added (plus batch 2's
+   four margin columns after them, checked in check_margin_features.py).
 3. Real data: announcement window, quarter owner, strictly-after, staleness, never-backwards.
 4. Independent slow re-implementation (plain Python, no merge_asof) on sampled rows.
 5. Volume around announcement vs filing dates (real news moves volume).
@@ -137,13 +138,14 @@ def dataset_structure(new: pd.DataFrame) -> None:
     old = pd.read_parquet(V7_PATH)
     check(len(old) == len(new), f"same row count ({len(old):,} vs {len(new):,})")
     check(old[["Date", "Ticker"]].equals(new[["Date", "Ticker"]]), "same rows in the same order")
-    added = [c for c in new.columns if c not in old.columns]
+    later = F.MARGIN_FEATURES  # batch 2 columns, added after growth
+    added = [c for c in new.columns if c not in old.columns and c not in later]
     removed = [c for c in old.columns if c not in new.columns]
     check(added == F.GROWTH_FEATURES and not removed, f"added exactly the six growth columns: {added}")
     changed = [c for c in old.columns if not old[c].equals(new[c])]
     check(not changed, f"all {len(old.columns)} old columns identical" + (f" (changed: {changed})" if changed else ""))
-    fnew = [c for c in feature_columns(new) if c not in feature_columns(old)]
-    check(fnew == F.GROWTH_FEATURES, f"model inputs gain exactly the six growth columns ({len(feature_columns(new))} total)")
+    fnew = [c for c in feature_columns(new) if c not in feature_columns(old) and c not in later]
+    check(fnew == F.GROWTH_FEATURES, f"model inputs gain exactly the six growth columns (+ {len(later)} margin columns)")
     dtypes = {c: str(new[c].dtype) for c in F.GROWTH_FEATURES}
     check(all(v == "float32" for v in dtypes.values()), "growth columns are float32")
 

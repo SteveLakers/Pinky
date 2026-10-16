@@ -3,7 +3,7 @@
 
 Usage:
   python scripts/train_walkforward.py [horizons...] [--ex-winners] [--pit] [--without=young,size]
-                                      [--with=growth] [--placebo] [--seed=N]
+                                      [--with=growth,margins] [--placebo[=<group>]] [--seed=N]
   python scripts/train_walkforward.py --report-only=<run name, e.g. v6_pit>
 
 --ex-winners removes HINDSIGHT_WINNERS from train + test (outputs tagged `ex5`).
@@ -12,8 +12,8 @@ Usage:
   (outputs tagged `no-<fix>`).
 --with switches on company data under test (train.FEATURE_GROUPS, off by default; outputs
   tagged `with-<group>`).
---placebo shuffles the growth features across stocks within each date (needs --with=growth;
-  outputs tagged `placebo`).
+--placebo=<group> shuffles that group's features across stocks within each date (the group
+  must be on via --with; outputs tagged `placebo-<group>`). Bare --placebo = growth (v8 tag `placebo`).
 --seed sets model randomness (outputs tagged `s<N>` unless N is the default 42).
 --report-only rebuilds a saved pit run's report from its predictions (no retraining).
 """
@@ -27,13 +27,17 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     ex_winners = "--ex-winners" in args
     pit = "--pit" in args
-    placebo = "--placebo" in args
+    placebo = next(
+        ("growth" if a == "--placebo" else a.split("=", 1)[1] for a in args if a == "--placebo" or a.startswith("--placebo=")),
+        None,
+    )
     report_only = next((a.split("=", 1)[1] for a in args if a.startswith("--report-only=")), None)
     without = next((a.split("=", 1)[1].split(",") for a in args if a.startswith("--without=")), [])
     with_ = next((a.split("=", 1)[1].split(",") for a in args if a.startswith("--with=")), [])
     seed = int(next((a.split("=", 1)[1] for a in args if a.startswith("--seed=")), DEFAULT_SEED))
     known = ("--ex-winners", "--pit", "--placebo", "--report-only=", "--without=", "--with=", "--seed=")
     unknown = [a for a in args if a.startswith("--") and not a.startswith(known)]
+    unknown += [a for a in args if a.startswith("--placebo") and a != "--placebo" and not a.startswith("--placebo=")]
     if unknown:
         sys.exit(f"Unknown options: {unknown}")
     horizons = [a for a in args if not a.startswith("--")] or list(DEFAULT_HORIZONS)

@@ -109,6 +109,14 @@ User: "1 yes, go" (2 growth runs + SHAP and residual edge). New scripts: `script
   - With growth: growth gets **22%** of the ranking weight in both (A 14–29% by year; B 8–30%, rising to 25–30% in 2016–20) and ~20% of the top-pick lift. Direction is **negative** for growth levels (sales growth 12 months −0.62 A / −0.50 B; gross profit growth −0.25 / −0.66): faster past growth → lower score. Sales acceleration slightly positive (+0.2).
 - **Exploratory data check** (no decision rests on it; dev rows 2001–2020, weekly, equal weight per date): fastest 20% sales growers (typical +44%/yr) had the **worst median next-year return vs SPY (−5.8%; −3.4% in 2001–08, −7.4% in 2009–20)** but the most big winners (top 10% next year: 12.6% vs 8–10%) and the most crashes (trailing SPY by > 50%: 11.3% vs 3.5–7%). Quarterly growth: same pattern (−4.7% median, 12.7% big winners, 10.8% crashes). Middle growers did best on the median. So "growth weighs too little" is not the problem: the model already leans on it, and past growth is a lottery ticket (more NVDAs, more crashes). Growth round 2 should look for what separates the winners from the crashers among fast growers (margins → batch 2, earnings surprises / price reaction → Roadmap 4).
 
+### Batch 2 code: margins (2026-10-16, Claude Opus 5.5)
+
+User approved both parts of `docs/BATCH2_PLAN.md` (24 runs: margins alone + growth with margins) and chose to continue on Opus 5.5 (not Fable 5) for this chat. Built before any training:
+- `pinky/fundamentals.py`: `MARGIN_FEATURES` (`gm_ttm`, `gm_chg_q`, `om_ttm`, `om_chg_q`; growth's date rules) + generic `shuffle_within_date` (growth's shuffle is now a wrapper, same RNG → old placebo runs reproduce).
+- `pinky/pit_dataset.py`: margins attached after growth; dataset rebuilt, v9 backup `pit_dataset_v9.parquet`.
+- `pinky/train.py` (VERSION stays v9): `FEATURE_GROUPS` = growth, margins; `placebo` names a group (`--placebo=margins` → tag `placebo-margins`; bare `--placebo` = growth, tag `placebo` as before).
+- `scripts/check_margin_features.py` 50/50 (details: `docs/BATCH2_PLAN.md` → Code checks); `check_growth_features.py` still 59/59. `scripts/batch_verdict.py 2` = the locked rule, smoke-tested on existing runs. `shap_report.py` knows the margins family.
+
 ## Product page redesign v2 (2026-10-07, Claude Opus 5.5)
 
 User asked (on Opus 5.5, chose to continue rather than switch to Fable 5): the page still read like an article; make it more concise, more visual, more interactive, then teach them everything on it. User's choices: "a little dark matrix vibe"; hide details behind clicks (keep every fact).

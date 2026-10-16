@@ -23,6 +23,8 @@ v8: fifth fix `growth` = six company growth features (fundamentals.py). `placebo
 v9: `growth` is opt-in (`FEATURE_GROUPS`, switched on with `with_`), so a plain pit run is
     version A without growth (= v8_pit_no-growth). Every fold's models are saved under
     models/<run>/<horizon>/fold_NN/ (before: only the last fold, in a folder shared by versions).
+    Batch 2 (same v9 defaults): `margins` group (four margin features); `placebo` names the group
+    it shuffles (True = growth, as in v8), so growth can stay real while margins are shuffled.
 """
 
 from __future__ import annotations
@@ -67,7 +69,7 @@ from pinky.config import (
     UNIVERSE_STOCKS,
 )
 from pinky.dataset import load_dataset
-from pinky.fundamentals import GROWTH_FEATURES, shuffle_growth_within_date
+from pinky.fundamentals import GROUP_FEATURES, shuffle_within_date
 from pinky.metrics import (
     acquired_share,
     brier_score,
@@ -94,7 +96,7 @@ SPLIT_YEAR = REPORT_SPLIT_YEAR
 
 VERSION = "v9"
 MODEL_FIXES = ("rank_label", "rank_features", "young", "size")
-FEATURE_GROUPS = ("growth",)  # company data under test: off unless `with_` names it
+FEATURE_GROUPS = ("growth", "margins")  # company data under test: off unless `with_` names it
 DEFAULT_SEED = 42
 PRED_COLS = [
     "pred_excess_ridge",
@@ -653,7 +655,7 @@ def _write_summary(
     sectors: dict[str, str] | None = None,
     acq: pd.Series | None = None,
     fixes: list[str] | None = None,
-    placebo: bool = False,
+    placebo: bool | str | None = None,
     seed: int = DEFAULT_SEED,
 ) -> None:
     exclude = exclude or []
@@ -721,17 +723,24 @@ def _write_summary(
     path.write_text("\n".join(lines))
 
 
-def _prep_desc(fixes: list[str], placebo: bool = False, seed: int = DEFAULT_SEED) -> str:
+def placebo_group(placebo: bool | str | None) -> str | None:
+    """The feature group a run shuffles: True (v8 / early v9 configs) = growth; False / None = none."""
+    return "growth" if placebo is True else (placebo or None)
+
+
+def _prep_desc(fixes: list[str], placebo: bool | str | None = None, seed: int = DEFAULT_SEED) -> str:
+    placebo = placebo_group(placebo)
     parts = [
         "per-day percentile-rank features" if "rank_features" in fixes else "per-day z-score features",
         "target = each day's return rank" if "rank_label" in fixes else "target = raw excess return",
         "stocks < 1y old scored" if "young" in fixes else "stocks need 1y of history",
         "size feature (log market cap)" if "size" in fixes else "no size feature",
         "company growth features" if "growth" in fixes else "no growth features",
+        *(["margin features"] if "margins" in fixes else []),
     ]
     desc = "Prep: " + ", ".join(parts) + " + correlated-feature drop + regularized LightGBM."
     if placebo:
-        desc += " **Placebo: growth values shuffled across stocks within each date.**"
+        desc += f" **Placebo: {placebo} values shuffled across stocks within each date.**"
     if seed != DEFAULT_SEED:
         desc += f" Model seed {seed}."
     return desc
@@ -777,21 +786,26 @@ def rewrite_summary(run_name: str, horizons: list[str] | None = None) -> Path:
 def pit_training_frame(
     df: pd.DataFrame,
     fixes: list[str],
-    placebo: bool = False,
+    placebo: bool | str | None = None,
     seed: int = DEFAULT_SEED,
 ) -> pd.DataFrame:
     """Pit dataset → model frame for the given fixes (placebo shuffle before ranking)."""
-    missing = [c for c in GROWTH_FEATURES if c not in df.columns]
-    if "growth" in fixes and missing:
-        raise ValueError(f"growth is on but the dataset lacks {missing}; rebuild: python -m pinky.pit_dataset")
+    placebo = placebo_group(placebo)
+    for g in FEATURE_GROUPS:
+        missing = [c for c in GROUP_FEATURES[g] if c not in df.columns]
+        if g in fixes and missing:
+            raise ValueError(f"{g} is on but the dataset lacks {missing}; rebuild: python -m pinky.pit_dataset")
+    if placebo and placebo not in fixes:
+        raise ValueError(f"placebo shuffles {placebo}, which is off")
     if "young" not in fixes:
         df = df[df["history_1y"] >= 1.0].drop(columns="history_1y")
     if "size" not in fixes:
         df = df.drop(columns="log_mcap")
-    if "growth" not in fixes:
-        df = df.drop(columns=GROWTH_FEATURES, errors="ignore")
-    elif placebo:
-        df = shuffle_growth_within_date(df, seed)
+    for g in FEATURE_GROUPS:
+        if g not in fixes:
+            df = df.drop(columns=GROUP_FEATURES[g], errors="ignore")
+    if placebo:
+        df = shuffle_within_date(df, GROUP_FEATURES[placebo], seed)
     if "rank_features" in fixes:
         df = cross_section_rank(df, ranking_feature_cols(df))
     return df.reset_index(drop=True)
@@ -801,17 +815,21 @@ def pit_tag(
     tag: str = "",
     without: list[str] | None = None,
     with_: list[str] | None = None,
-    placebo: bool = False,
+    placebo: bool | str | None = None,
     seed: int = DEFAULT_SEED,
 ) -> str:
-    """Output tag of a pit run, built from its options (run name = `<VERSION>_<tag>`)."""
+    """Output tag of a pit run, built from its options (run name = `<VERSION>_<tag>`).
+
+    A growth placebo keeps v8's tag `placebo`; other groups get `placebo-<group>`.
+    """
+    placebo = placebo_group(placebo)
     return "_".join(
         [
             "pit",
             *([tag] if tag else []),
             *[f"no-{f}" for f in without or []],
             *[f"with-{g}" for g in FEATURE_GROUPS if g in (with_ or [])],
-            *(["placebo"] if placebo else []),
+            *([("placebo" if placebo == "growth" else f"placebo-{placebo}")] if placebo else []),
             *([f"s{seed}"] if seed != DEFAULT_SEED else []),
         ]
     )
@@ -825,7 +843,7 @@ def run_all(
     pit: bool = False,
     without: list[str] | None = None,
     with_: list[str] | None = None,
-    placebo: bool = False,
+    placebo: bool | str | None = None,
     seed: int = DEFAULT_SEED,
 ) -> pd.DataFrame:
     """Run walk-forward training. Default focus: 1y.
@@ -834,13 +852,15 @@ def run_all(
     `pit` uses the Sharadar point-in-time universe and only dev rows (holdout untouched).
     Pit runs use all `MODEL_FIXES` except those in `without` (tagged `no-<fix>`), plus the
     `FEATURE_GROUPS` named in `with_` (tagged `with-<group>`). Legacy runs use none of them.
-    `placebo` (pit, growth on) shuffles the growth features within each date (tagged
-    `placebo`); `seed` sets model randomness (tagged `s<seed>` unless the default).
+    `placebo` names one group that is on (True = growth) and shuffles its features within each
+    date (tagged `placebo` for growth, `placebo-<group>` otherwise); `seed` sets model
+    randomness (tagged `s<seed>` unless the default).
     """
     horizons = horizons or list(DEFAULT_HORIZONS)
     exclude = exclude or []
     without = without or []
     with_ = with_ or []
+    placebo = placebo_group(placebo)
     unknown = sorted(set(without) - set(MODEL_FIXES)) + sorted(set(with_) - set(FEATURE_GROUPS))
     if unknown:
         raise ValueError(
@@ -854,8 +874,8 @@ def run_all(
     )
     if (placebo or seed != DEFAULT_SEED or with_) and not pit:
         raise ValueError("with, placebo and seed options are for pit runs")
-    if placebo and "growth" not in fixes:
-        raise ValueError("placebo needs the growth features on (with growth)")
+    if placebo and placebo not in fixes:
+        raise ValueError(f"placebo={placebo} needs that group on (with {placebo}); groups: {list(FEATURE_GROUPS)}")
     calendar = prices = sectors = universe_desc = acq = None
     if pit:
         tag = pit_tag(tag, without, with_, placebo, seed)
@@ -874,7 +894,7 @@ def run_all(
         universe_desc = _pit_universe_desc(df["Ticker"].nunique())
         off = [f for f in (*MODEL_FIXES, *FEATURE_GROUPS) if f not in fixes]
         print(f"[fixes] on: {fixes or 'none'} | off: {off or 'none'}")
-        print(f"[seed] {seed} | placebo: {'growth shuffled within each date' if placebo else 'off'}")
+        print(f"[seed] {seed} | placebo: {f'{placebo} shuffled within each date' if placebo else 'off'}")
     parts = []
     models_by_h = {}
     preds_by_h = {}
@@ -910,7 +930,7 @@ def run_all(
                     "fixes": fixes,
                     "n_stocks": int(df["Ticker"].nunique()),
                     "seed": seed,
-                    "placebo": placebo,
+                    "placebo": placebo or False,
                 }
             )
         )
