@@ -135,6 +135,7 @@ How to read the verdict (the script applies the locked rule; don't re-judge by h
 - Never stage `data/`, `artifacts/`, `models/`, `product/`, `.agents/`, `skills-lock.json`, `.cursor/settings.json`, `.claude/settings.local.json`, the `.claude/skills/` links, `.graphifyignore`, `graphify-out/YYYY-MM-DD/`. **No push.**
 
 **8. Then ask the user (start none of these without an OK)**
+- Since 2026-10-16 both checks are scripts: `scripts/residual_edge.py` and `scripts/shap_report.py` (v9+ runs; usage in their docstrings).
 - **Residual-edge check** (no install; `.agents/skills/residual-edge-analyzer/`): is the portfolio's return more than its SPY / equal-weight / momentum exposure? Input: `artifacts/backtest_periods_1y_<run>.csv`, rows with `signal == "LightGBM"` and `portfolio == "Top 10% + buffer"`: `start` = date, `gross` = strategy, `spy` = market, `universe_ew` = equal-weight; momentum = `gross` of the `Momentum 12-1` rows (same portfolio and dates). Monthly; gross for every column.
 - **SHAP** (which features drive LightGBM): installed 2026-10-03, ready. Only last-fold models are saved (trained on data before 2020, tested on 2020).
 - **Next batch:** Roadmap batch 2 (margin expansion), same protocol (placebo, 3 seeds, propose the keep-rule before any run).

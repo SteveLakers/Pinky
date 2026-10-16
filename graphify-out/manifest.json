@@ -24,15 +24,15 @@
     "semantic_hash": ""
   },
   "docs/ARCHITECTURE.md": {
-    "mtime": 1791835444.6908865,
-    "seen": 1791836166.3848379,
-    "ast_hash": "148ffc4deae4d92d691f00aa8b617851",
+    "mtime": 1792155549.9246342,
+    "seen": 1792156207.106891,
+    "ast_hash": "ecb0e35c3658a65d65abb0509386c808",
     "semantic_hash": ""
   },
   "project.md": {
-    "mtime": 1791835510.8443437,
-    "seen": 1791836166.38484,
-    "ast_hash": "23e351ea7e056fba92fccf932c41b8d4",
+    "mtime": 1792156197.266524,
+    "seen": 1792156207.106894,
+    "ast_hash": "cf81fd7c911499ee6d8c5446270bb516",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -222,15 +222,15 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_HISTORY.md": {
-    "mtime": 1791552147.9061947,
-    "seen": 1791836166.3848388,
-    "ast_hash": "654deb7f6914e89a8b7a23001738bddb",
+    "mtime": 1792156181.686182,
+    "seen": 1792156207.106892,
+    "ast_hash": "6d0261243de632049d8e9a601b758df9",
     "semantic_hash": ""
   },
   "docs/STEP3_RUNBOOK.md": {
-    "mtime": 1791835444.6918626,
-    "seen": 1791836166.3848388,
-    "ast_hash": "6059f8895986364895a3d240a862c34b",
+    "mtime": 1792155549.9260805,
+    "seen": 1792156207.106893,
+    "ast_hash": "638e8dc8021ac6bae5edddf3ab5cd611",
     "semantic_hash": ""
   },
   "scripts/product_numbers.py": {
@@ -243,6 +243,18 @@
     "mtime": 1791373937.3735034,
     "seen": 1791375828.175703,
     "ast_hash": "1f5d3100d479f651a617c156f7bdbbf2",
+    "semantic_hash": ""
+  },
+  "scripts/residual_edge.py": {
+    "mtime": 1792155323.2390044,
+    "seen": 1792156207.1068869,
+    "ast_hash": "346b662ff1203cad65668b27fe70afe7",
+    "semantic_hash": ""
+  },
+  "scripts/shap_report.py": {
+    "mtime": 1792155828.8494854,
+    "seen": 1792156207.1068878,
+    "ast_hash": "da8dcf3b4ab99145cbbdf1120d14d915",
     "semantic_hash": ""
   }
 }

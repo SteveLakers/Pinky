@@ -15,6 +15,7 @@ Rank every liquid US stock by how much it should beat SPY over the next year, an
 | 3. Dataset | `python -m pinky.pit_dataset` (+ `pinky/fundamentals.py`) | `data/sharadar/derived/pit_dataset.parquet` |
 | 4. Train + evaluate | `scripts/train_walkforward.py --pit` → `pinky/train.py` | `artifacts/*_<run>.*`, `models/<run>/1y/fold_NN/` |
 | 5. Compare / judge | `scripts/compare_runs.py`, `scripts/step3_verdict.py` | tables, `artifacts/step3_verdict.md` |
+| 6. Explain | `scripts/residual_edge.py` (residual-edge skill), `scripts/shap_report.py` | `artifacts/residual_edge/`, `artifacts/shap/` |
 
 ## Data (Sharadar Core US Equities Bundle)
 

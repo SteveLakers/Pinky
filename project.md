@@ -9,13 +9,14 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-12**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7`. Batch 2 prep (v9 code): `7f0b6c4` (older milestone commits: `docs/PROJECT_HISTORY.md`).
+Last updated **2026-10-16**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7`. Batch 2 prep (v9 code): `7f0b6c4` (older milestone commits: `docs/PROJECT_HISTORY.md`).
 
 **State**
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
-- **Step 3 — growth features (v8), done 2026-10-03:** locked verdict **growth DROP on A and B** (real − placebo +0.26%/yr and +0.98%/yr; bar +1.0%). User 2026-10-12: growth data matters, we haven't found the best way to use it → kept in the code (opt-in); retest better versions later (Roadmap: growth round 2).
-- **Batch 2 prep, done 2026-10-12 (v9):** growth is opt-in (`--with=growth`), so a plain `--pit` run = A without growth; every fold's models are saved (`models/<run>/1y/fold_NN/`). 6 baseline runs (A and B × seeds 42/7/99) all clean; seed 42 reproduces A and B exactly (2,031,316 predictions identical).
+- **Step 3 (v8 growth), 2026-10-03:** DROP on A and B (real − placebo +0.26 / +0.98%/yr; bar +1.0%). User 2026-10-12: keep growth (opt-in) and retest better versions (Roadmap: growth round 2).
+- **Batch 2 prep (v9), 2026-10-12:** growth opt-in (`--with=growth`); every fold's models saved (`models/<run>/1y/fold_NN/`); 6 baseline runs clean, seed 42 = the old A and B exactly.
 - **Final versions = batch 2 baselines** (LightGBM top 10% + buffer, net of 10 bps, mean of 3 seeds): A = `v9_pit` (+ `_s7`, `_s99`) **+7.14%/yr** (2001–08 −2.03%, 2009–20 +13.74%); B = `v9_pit_no-rank_label` (+ seeds) **+6.10%/yr** (−2.50%, +12.26%). SPY +7.28% (−2.74%, +14.53%), equal-weight universe +8.01%. Seed 42 alone: A +7.23%, B +5.83%.
+- **Residual edge + SHAP, 2026-10-16:** no reliable edge in A or B; what the models do and what growth does: Key findings (last bullet); details: `docs/PROJECT_HISTORY.md` → Residual edge + SHAP.
 - Showcase: v6_pit (2026-09-27). Product page https://pinky-research.vercel.app = the user's class project spec (link goes to the teacher, Mr. Lake): **v2 live since 2026-10-07** (details: `docs/PROJECT_HISTORY.md` → Product page redesign v2; study guide `product/presenter-notes.md`). Update either only when the user says.
 - Every report includes: takeover share of top picks, 2009–2020 vs SPY (`REPORT_SPLIT_YEAR`), and the score-group table.
 - GitHub: pushed 2026-10-12 (user OK). Every later push needs the user's OK again (`git log origin/main..main --oneline`).
@@ -23,10 +24,9 @@ Last updated **2026-10-12**. Step 3 commits: code + date/leak checks `349d0d6`, 
 
 **User decisions for batch 2 (2026-10-09 / 10-12; log: `docs/PROJECT_HISTORY.md` → Batch 2 decisions)**
 - **Keep rule:** step 3's rule (real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half, mean of seeds 42/7/99) **plus** real ≥ the baseline above (same 3 seeds).
-- **SHAP + residual-edge:** run both on the 6 baseline runs (all 20 folds saved; B's monthly returns now exist). User: "do what's best for accuracy".
-- **Open:** 2 extra runs with growth on (A and B, seed 42, `--with=growth`; must equal `v8_pit` / `v8_pit_no-rank_label`), so SHAP shows how much weight growth gets each year (input for growth round 2)?
+- SHAP + residual-edge on the baselines and the 2 growth runs (user: "1 yes, go"): done 2026-10-16 (above).
 
-**Next:** SHAP + residual-edge on the baselines (decided), then write the batch 2 plan (margin expansion: features, placebo for the new group, the keep rule above) and get the user's OK **before any run**.
+**Next:** write the batch 2 plan (margin expansion: features, placebo for the new group, the keep rule above; consider margins among fast growers, the growth round 2 lead) and get the user's OK **before any run**. Local commits since `c7678fc` are not pushed (ask).
 
 **When you finish a chunk of work:** update this Resume section so the next chat can pick up. Keep this file ~12–15 KB (`wc -c project.md`; every chat reads it): current state only. Move finished-step details (logs, decision logs, results tables) to `docs/PROJECT_HISTORY.md` and leave a 1–2 line summary + pointer here.
 
@@ -38,6 +38,7 @@ Last updated **2026-10-12**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - **Higher IC ≠ better top picks:** v7's IC comes mostly from the bottom of the list; neither A nor B has a top 10% that beats the average stock. Judge the top of the list (score-group table).
 - **Growth (v8):** too weak for the bar. **Extra columns cost A ~1%/yr, real or fake**, which the real-vs-placebo rule can't see (batch 2 adds a check). Against the 3-seed baselines: growth A −0.84%/yr, B +0.10%/yr (B: +1.24% in 2009–20, −1.37% in 2001–08). Weekly trading loses at 25 bps → stay monthly.
 - Top-10 CAGRs are noisy by a few %/yr → judge on IC and top 10% first.
+- **What the models are (2026-10-16):** both BASELINE_EXPLAINED (A alpha +1.85%/yr vs the equal-weight universe, t = 1.0; B +0.2%, t = 0.1). A = calm-stock picker (price swings 57% of ranking weight), B = trend picker (75% of its top picks' lift); both shun stocks with < 1 year of trading; short-term inputs and volume do ~nothing. Growth (when on) gets 22% of the weight but faster growth → lower score; in the data the fastest growers have the worst median next year, yet the most big winners and crashes (a lottery ticket).
 
 ## User goals & expectations
 
@@ -119,7 +120,7 @@ Core rules: `AGENTS.md` (always on; every agent and subagent gets it, Claude thr
 
 Full layout with details: `docs/PROJECT_HISTORY.md`.
 - `pinky/`: the pipeline (module map, features, switches: `docs/ARCHITECTURE.md`; settings and `HOLDOUT_START`: `config.py`), plus legacy 128-stock files.
-- `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `step3_verdict`, `product_numbers`, `product_page_data`, legacy build scripts.
+- `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `step3_verdict`, `residual_edge`, `shap_report`, `product_numbers`, `product_page_data`, legacy build scripts.
 - `data/sharadar/` (~6 GB, gitignored, never share). `artifacts/`, `models/` (gitignored): per-run outputs named `<file>_<run>`; logs `artifacts/logs/train_<run>.log`. `models/<run>/1y/fold_NN/` = every fold's models + `folds.json` (v9+, ~9 MB per run); older runs: `models/1y_<tag>/` = last fold only (v7's: `1y_pit_v7`, `1y_pit_no-rank_label_v7`).
 - `showcase/`, `product/` (public page), `docs/` (also `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`), `graphify-out/`.
 - Agent add-ons (untracked; don't commit; none change training): skills in `.agents/skills/` (`residual-edge-analyzer`, `shap`, `verification-before-completion`, `systematic-debugging`; linked into `.claude/skills/`), Context7 plugin (Cursor and Claude). SHAP 0.52.0 is installed in `.venv`; don't follow the skill's `uv venv` step. Residual-edge input recipe: runbook step 8.
@@ -136,6 +137,7 @@ Full layout with details: `docs/PROJECT_HISTORY.md`.
   - stdout is buffered when redirected to a file → use `python -u` to watch fold progress in a log.
   - Rebuild a report without retraining: `python scripts/train_walkforward.py --report-only=v7_pit` (uses the saved metrics CSV + preds parquet).
   - Compare runs: `python scripts/compare_runs.py v6_pit v7_pit ...`
+  - Explain runs: `python scripts/residual_edge.py A=v9_pit,v9_pit_s7,v9_pit_s99` (seconds) and `python scripts/shap_report.py A=v9_pit,...` (~5 min for 6 runs; v9+ runs, all folds). Design and outputs: each script's docstring.
 - Showcase: `python scripts/build_showcase.py` (~1 min; run name = `RUN` at the top). View: click `showcase/index.html` in the Claude chat (Browser pane); Cursor needs `cd showcase && python3 -m http.server 8765`.
 - Product page (Vercel Hobby; update only when the user says): numbers: `python scripts/product_numbers.py` (~5 min) → `artifacts/product_numbers.json`, then `python scripts/product_page_data.py` fills the page's data block and every `data-v` number (never type them). Redeploy and take-down commands → `docs/PROJECT_HISTORY.md` (State log). Local preview in the Claude app: `docs/PROJECT_HISTORY.md` → Product page redesign. Never commit `product/.vercel/`.
 - GitHub (private): https://github.com/steveonshit/Pinky (`origin/main`).
