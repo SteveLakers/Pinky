@@ -5,7 +5,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 - **Favor tech**, and especially **finding future big winners** early ("the next NVDA/TSLA").
 - **Still buy other sectors** (energy, industrials, etc.) when they're the best picks — not tech-only.
 
-**Docs:** history, decision logs, results tables → `docs/PROJECT_HISTORY.md`. When the user says `run`, follow `docs/STEP3_RUNBOOK.md` (with the new batch's run names / flags).
+**Docs:** history, decision logs, results tables → `docs/PROJECT_HISTORY.md`. Batch 2 plan → `docs/BATCH2_PLAN.md`. When the user says `run`, follow `docs/STEP3_RUNBOOK.md` (with the new batch's run names / flags).
 
 ## ▶ Resume here (new chat: read this first)
 
@@ -26,7 +26,7 @@ Last updated **2026-10-16**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - **Keep rule:** step 3's rule (real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half, mean of seeds 42/7/99) **plus** real ≥ the baseline above (same 3 seeds).
 - SHAP + residual-edge on the baselines and the 2 growth runs (user: "1 yes, go"): done 2026-10-16 (above).
 
-**Next:** write the batch 2 plan (margin expansion: features, placebo for the new group, the keep rule above; consider margins among fast growers, the growth round 2 lead) and get the user's OK **before any run**. Local commits since `c7678fc` are not pushed (ask).
+**Next:** batch 2 plan drafted: `docs/BATCH2_PLAN.md` (4 margin features; 24 runs: margins alone + growth with margins). Show the user a short summary and get their OK **before any code or run**. Don't push (user, 2026-10-16: no).
 
 **When you finish a chunk of work:** update this Resume section so the next chat can pick up. Keep this file ~12–15 KB (`wc -c project.md`; every chat reads it): current state only. Move finished-step details (logs, decision logs, results tables) to `docs/PROJECT_HISTORY.md` and leave a 1–2 line summary + pointer here.
 
