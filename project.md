@@ -5,29 +5,29 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 - **Favor tech**, and especially **finding future big winners** early ("the next NVDA/TSLA").
 - **Still buy other sectors** (energy, industrials, etc.) when they're the best picks — not tech-only.
 
-**Docs:** history, decision logs, results tables → `docs/PROJECT_HISTORY.md`. Batch 2 plan → `docs/BATCH2_PLAN.md`. When the user says `run`, follow `docs/STEP3_RUNBOOK.md` (with the new batch's run names / flags).
+**Docs:** history, decision logs, results tables → `docs/PROJECT_HISTORY.md`. Batch 2 plan → `docs/BATCH2_PLAN.md`. Growth round 2 draft → `docs/GROWTH_ROUND2_PLAN.md`. When the user says `run`, follow `docs/STEP3_RUNBOOK.md` (with the new batch's run names / flags).
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-16**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7`. Batch 2 prep (v9 code): `7f0b6c4`. Batch 2 code: `git log --grep "Batch 2 code"` (older milestone commits: `docs/PROJECT_HISTORY.md`).
+Last updated **2026-10-19**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7`. Batch 2 prep (v9 code): `7f0b6c4`. Batch 2 code / results: `git log --grep "Batch 2"` (older milestone commits: `docs/PROJECT_HISTORY.md`).
 
 **State**
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
 - **Step 3 (v8 growth), 2026-10-03:** DROP on A and B (real − placebo +0.26 / +0.98%/yr; bar +1.0%). User 2026-10-12: keep growth (opt-in) and retest better versions (Roadmap: growth round 2).
 - **Batch 2 prep (v9), 2026-10-12:** growth opt-in (`--with=growth`); every fold's models saved (`models/<run>/1y/fold_NN/`); 6 baseline runs clean, seed 42 = the old A and B exactly.
 - **Final versions = batch 2 baselines** (LightGBM top 10% + buffer, net of 10 bps, mean of 3 seeds): A = `v9_pit` (+ `_s7`, `_s99`) **+7.14%/yr** (2001–08 −2.03%, 2009–20 +13.74%); B = `v9_pit_no-rank_label` (+ seeds) **+6.10%/yr** (−2.50%, +12.26%). SPY +7.28% (−2.74%, +14.53%), equal-weight universe +8.01%. Seed 42 alone: A +7.23%, B +5.83%.
-- **Batch 2 code (margins), 2026-10-16:** user approved both parts (24 runs); 4 margin features + `--placebo=<group>` built; checks 50/50 (no leak; honest margin changes barely rank 3-month returns → expect small gains); v9 baselines proven still valid. **Not trained.** Details: `docs/BATCH2_PLAN.md`.
+- **Batch 2 (margins), 2026-10-19: DROP on all 4 tests** (margins alone / growth + margins × A / B; 24 runs, all clean; no leak flag). A: real − placebo +0.12 / +0.77%/yr, real − baseline −0.19 / −0.08%; B: real *worse* than placebo (−1.25 / −1.47%/yr). Finals stay the baselines. Code: 4 margin features (opt-in `--with=margins`) + `--placebo=<group>`. Numbers: `docs/WALKFORWARD_RESULTS.md` → v9 batch 2.
 - **Residual edge + SHAP, 2026-10-16:** no reliable edge in A or B; what the models do and what growth does: Key findings (last bullet); details: `docs/PROJECT_HISTORY.md` → Residual edge + SHAP.
 - Showcase: v6_pit (2026-09-27). Product page https://pinky-research.vercel.app = the user's class project spec (link goes to the teacher, Mr. Lake): **v2 live since 2026-10-07** (details: `docs/PROJECT_HISTORY.md` → Product page redesign v2; study guide `product/presenter-notes.md`). Update either only when the user says.
 - Every report includes: takeover share of top picks, 2009–2020 vs SPY (`REPORT_SPLIT_YEAR`), and the score-group table.
 - GitHub: pushed 2026-10-12 (user OK). Every later push needs the user's OK again (`git log origin/main..main --oneline`).
-- **Tools:** Claude app since 2026-10-04, ECC plugin since 2026-10-09 (Gotchas → Claude setup, Plugins). Still the user's step: `claude mcp remove railway -s user`.
+- **Tools:** Claude app since 2026-10-04, ECC plugin since 2026-10-09 (Gotchas → Claude setup, Plugins). **Subagents fail for now** (2026-10-19: `best` sends them to `claude-fable-5-1` → "out of usage credits"). User-scope Railway MCP server: gone (checked 2026-10-19).
 
 **User decisions for batch 2 (2026-10-09 / 10-12; log: `docs/PROJECT_HISTORY.md` → Batch 2 decisions)**
 - **Keep rule:** step 3's rule (real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half, mean of seeds 42/7/99) **plus** real ≥ the baseline above (same 3 seeds).
 - 2026-10-16: both parts of `docs/BATCH2_PLAN.md` approved (24 runs; Part 2 tie-break: if two tests KEEP for a version, the higher real mean wins).
 
-**Next:** train batch 2 when the user says `run`: `docs/BATCH2_PLAN.md` → Runbook (4 batches of 6, ~1 h), then `scripts/batch_verdict.py 2`. Don't push (user, 2026-10-16: no).
+**Next:** growth round 2 draft `docs/GROWTH_ROUND2_PLAN.md` (pick: one 4-column group led by the price reaction to earnings; 12 runs): show the user a short summary, get their OK **before any code or run**. Optional, ask first: SHAP on the margin runs. Don't push (user, 2026-10-16: no).
 
 **When you finish a chunk of work:** update this Resume section so the next chat can pick up. Keep this file ~12–15 KB (`wc -c project.md`; every chat reads it): current state only. Move finished-step details (logs, decision logs, results tables) to `docs/PROJECT_HISTORY.md` and leave a 1–2 line summary + pointer here.
 
@@ -37,6 +37,7 @@ Last updated **2026-10-16**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - **Price data predicts how much a stock moves, not which way** (v5). v6 Ridge's lead was all 2001–08, and 25% of its top-10 were takeover targets (base rate 2.2%): safe, not skill. 2020 broke every model.
 - **Rank label (A) = the big lever:** IC ~doubles, but picks become calm stocks that rarely crash **and rarely win big** (top-10: 3.9% big winners, 2.3% crashes; random 10%). Without it (B), LightGBM is the best winner-finder so far (13.4% big winners, 8.0% crashes).
 - **Higher IC ≠ better top picks:** v7's IC comes mostly from the bottom of the list; neither A nor B has a top 10% that beats the average stock. Judge the top of the list (score-group table).
+- **Margins (batch 2):** DROP. A: helps 2001–08, hurts 2009–20 (a "profitable, steady" tilt). B: real margins lose to shuffled ones. Among fast growers, margin *change* doesn't pick winners; **loss-making** fast growers are the lottery tickets (17% big winners, 18% crashes vs 11% / 9.5% profitable).
 - **Growth (v8):** too weak for the bar. **Extra columns cost A ~1%/yr, real or fake**, which the real-vs-placebo rule can't see (batch 2 adds a check). Against the 3-seed baselines: growth A −0.84%/yr, B +0.10%/yr (B: +1.24% in 2009–20, −1.37% in 2001–08). Weekly trading loses at 25 bps → stay monthly.
 - Top-10 CAGRs are noisy by a few %/yr → judge on IC and top 10% first.
 - **What the models are (2026-10-16):** both BASELINE_EXPLAINED (A alpha +1.85%/yr vs the equal-weight universe, t = 1.0; B +0.2%, t = 0.1). A = calm-stock picker (price swings 57% of ranking weight), B = trend picker (75% of its top picks' lift); both shun stocks with < 1 year of trading; short-term inputs and volume do ~nothing. Growth (when on) gets 22% of the weight but faster growth → lower score; in the data the fastest growers have the worst median next year, yet the most big winners and crashes (a lottery ticket).
@@ -67,8 +68,8 @@ Full wording: `docs/PROJECT_HISTORY.md`.
 **Done:** Phase 1 (honest evaluation, v5_pit); Phase 2 step 1 (evaluation fixes, v6_pit) and step 2 (four model fixes, v7_pit). Details: `docs/PROJECT_HISTORY.md`.
 
 **Phase 2 — company data**, added in batches; keep only what beats the baseline:
-1. Growth + revenue acceleration — **tested 2026-10-03 (v8): DROP** on both targets; kept in the code (`--with=growth`). User wants a **growth round 2** (ideas: growth surprises (see 4), multi-year growth, a longer horizon; measure growth's weight with SHAP first; pick 2–3 variants before any results)
-2. **Margin expansion** ← next (code ready 2026-10-16; 24 runs pending)
+1. Growth + revenue acceleration — **tested 2026-10-03 (v8): DROP** on both targets; kept in the code (`--with=growth`). User wants a **growth round 2** (ideas: growth surprises (see 4), multi-year growth, a longer horizon; measure growth's weight with SHAP first; pick 2–3 variants before any results; draft 2026-10-19: `docs/GROWTH_ROUND2_PLAN.md`)
+2. Margin expansion — **tested 2026-10-19: DROP** (alone and with growth, A and B); kept in the code (`--with=margins`)
 3. Price strength (momentum, 52-week-high proximity, vs sector)
 4. Earnings reactions / surprises
 5. Reinvestment (R&D/revenue, ROIC)
@@ -111,7 +112,7 @@ Monthly rebalance, equal weight, **10 bps per side** (25 bps re-priced), 60% sec
 - `.git/info/exclude` (local to this clone) hides never-commit files from `git status` (dated graphify backups, `.agents/`, `product/`, local Claude / Cursor settings, skill links, `.claude/launch.json`…; the file is the full list). Never stage them; put new never-commit paths there, not in `.gitignore`. Workspace-wide Grep skips these paths → pass the folder as the search path.
 - **Claude setup:** Code tab, **Local**, folder `~/Desktop/Pinky` (never Cloud: Sharadar license). Rules: `CLAUDE.md` (loads `AGENTS.md`); settings `.claude/settings.local.json` (never commit). Full notes (start model, subagents, Context7 sign-in, Railway, old Cursor chats): `docs/PROJECT_HISTORY.md` → Claude and plugin setup.
 - Claude app Browser pane: while hidden it doesn't render (animations, IntersectionObserver and screenshots stall). Test animated pages in headless Chrome over CDP.
-- Plugins: Pinky uses Context7 + ECC (user's choice, 2026-10-09); Vercel / Supabase / Railway are ZerMap-only. Never "Uninstall" a plugin (removes it everywhere); change its scope (Claude: `.claude/settings.local.json` → `enabledPlugins`). ECC details: `docs/PROJECT_HISTORY.md` → Claude and plugin setup.
+- Plugins: Pinky uses Context7 + ECC (user's choice, 2026-10-09); Vercel / Supabase / Railway are ZerMap-only. ECC hooks: **on in all projects** since 2026-10-19 (`~/.claude/settings.json` → `pluginConfigs` → `hooks_enabled: true`; Pinky also sets `ECC_HOOKS_ENABLED=true` in `.claude/settings.local.json` → `env`). GateGuard: only the risky-command check is on (user, 2026-10-19; two `env` switches in `~/.claude/settings.json` that auto mode refused to add). Every reply names the ECC tools it used (`~/.claude/CLAUDE.md`), enforced by a Stop hook (`~/.claude/hooks/ecc-report-check.js`, 2026-10-19). Never "Uninstall" a plugin (removes it everywhere); change its scope (Claude: `.claude/settings.local.json` → `enabledPlugins`). ECC details: `docs/PROJECT_HISTORY.md` → Claude and plugin setup.
 
 ## Rules
 
@@ -121,7 +122,7 @@ Core rules: `AGENTS.md` (always on; every agent and subagent gets it, Claude thr
 
 Full layout with details: `docs/PROJECT_HISTORY.md`.
 - `pinky/`: the pipeline (module map, features, switches: `docs/ARCHITECTURE.md`; settings and `HOLDOUT_START`: `config.py`), plus legacy 128-stock files.
-- `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `check_margin_features`, `step3_verdict`, `batch_verdict`, `residual_edge`, `shap_report`, `product_numbers`, `product_page_data`, legacy build scripts.
+- `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `check_margin_features`, `step3_verdict`, `batch_verdict`, `fast_grower_margins`, `residual_edge`, `shap_report`, `product_numbers`, `product_page_data`, legacy build scripts.
 - `data/sharadar/` (~6 GB, gitignored, never share). `artifacts/`, `models/` (gitignored): per-run outputs named `<file>_<run>`; logs `artifacts/logs/train_<run>.log`. `models/<run>/1y/fold_NN/` = every fold's models + `folds.json` (v9+, ~9 MB per run); older runs: `models/1y_<tag>/` = last fold only (v7's: `1y_pit_v7`, `1y_pit_no-rank_label_v7`).
 - `showcase/`, `product/` (public page), `docs/` (also `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`), `graphify-out/`.
 - Agent add-ons (untracked; don't commit; none change training): skills in `.agents/skills/` (`residual-edge-analyzer`, `shap`, `verification-before-completion`, `systematic-debugging`; linked into `.claude/skills/`), Context7 plugin (Cursor and Claude). SHAP 0.52.0 is installed in `.venv`; don't follow the skill's `uv venv` step. Residual-edge input recipe: runbook step 8.

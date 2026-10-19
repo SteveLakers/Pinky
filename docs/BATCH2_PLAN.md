@@ -1,5 +1,7 @@
 # Batch 2 plan: margin expansion
 
+**Result (2026-10-19): DROP on all 4 tests** (A / B × Part 1 / Part 2); finals stay the baselines. Numbers: `docs/WALKFORWARD_RESULTS.md` → v9 batch 2; log: `docs/PROJECT_HISTORY.md` → Batch 2 results.
+
 **Status:** user approved both parts (24 runs) on 2026-10-16. Code built and checked 2026-10-16 (Claude Opus 5.5, user chose to continue on it): `check_margin_features.py` 50/50, `check_growth_features.py` 59/59, v9 training frames proven identical. **Not trained yet:** train only after the user says `run` (commands: Runbook below).
 
 ## Goal

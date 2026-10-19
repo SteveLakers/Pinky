@@ -1,5 +1,24 @@
 # Walk-Forward Results
 
+## v9 batch 2 — margin features (2026-10-19)
+
+Four margin features (`gm_ttm`, `gm_chg_q`, `om_ttm`, `om_chg_q`; growth's date rules; plan and checks `docs/BATCH2_PLAN.md`). Part 1 = margins alone, Part 2 = growth + margins (placebo shuffles only the margins). A and B × seeds 42 / 7 / 99 × real / placebo = 24 runs (6 in parallel, 3 threads), all EXIT 0, 20 folds. Locked rule: real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr each half, **and** real ≥ the baseline (A `v9_pit` +7.14%, B `v9_pit_no-rank_label` +6.10%; same 3 seeds). Verdict text: `artifacts/batch2_verdict.md`.
+
+LightGBM top 10% + buffer, net of 10 bps (all / 2001–08 / 2009–20). SPY +7.3% (−2.7% / +14.5%); equal-weight universe +8.0%.
+
+| Test | Real (mean of 3) | Placebo (mean of 3) | Real − placebo | Real − baseline |
+|---|---|---|---|---|
+| Part 1 margins, A | +6.95% / −0.87% / +12.51% | +6.83% / −2.66% / +13.67% | +0.12% / +1.79% / −1.16% | −0.19% |
+| Part 1 margins, B | +4.78% / −4.08% / +11.14% | +6.03% / −2.90% / +12.44% | −1.25% / −1.17% / −1.30% | −1.32% |
+| Part 2 growth + margins, A | +7.06% / −1.29% / +13.02% | +6.29% / −4.35% / +14.03% | +0.77% / +3.06% / −1.01% | −0.08% |
+| Part 2 growth + margins, B | +4.77% / −4.74% / +11.63% | +6.24% / −3.61% / +13.36% | −1.47% / −1.13% / −1.73% | −1.34% |
+
+- Paired monthly test real − placebo (Newey-West, 240 months): Part 1 A +0.36%/yr (t = +0.55), B −1.10% (t = −1.43); Part 2 A +0.77% (t = +1.43), B −1.40% (t = −2.47).
+- **Verdict: DROP on all 4.** No leak flag; baselines read back exactly. Final versions stay the baselines; A vs B: both continue.
+- A: margins help in 2001–08 (+1.8 / +3.1%/yr vs placebo) and hurt in 2009–20 (−1.2 / −1.0%/yr): a "profitable, steady" tilt that paid in the dot-com bust and cost in the 2010s rally.
+- B: real margins do **worse than shuffled ones** in both halves (Part 2 t = −2.5). Seed-42 top-10: big winners 13.4% → 10.0%, crashes 8.0% → 8.5%.
+- Seed-42 top-10 + buffer (noisy, info): A with margins +10.3% vs +7.2% baseline; doesn't hold for the top 10% or the other seeds.
+
 ## v8_pit — growth features, batch 1 (2026-10-03)
 
 Six growth features from SF1 ARQ/ART (`pinky/fundamentals.py`): `rev_yoy_q`, `rev_accel`, `gp_yoy_q`, `rev_yoy_ttm`, `days_since_news`, `has_growth`; dated by the earnings announcement (events code 22, from Aug 2004) or else the SEC filing. Tested on both targets: **A** = rank label (baseline `v7_pit`), **B** = raw return (baseline `v7_pit_no-rank_label`). Each: real growth on seeds 42 / 7 / 99, plus a **placebo** on the same seeds (the six growth values moved as a block between stocks within each date). Control `v8_pit_no-growth` (seed 42). 13 runs (6 in parallel, 3 threads each), ~39 min, all EXIT 0 on the first try. Locked rule (2026-10-03, before results): keep growth only if real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half (LightGBM, top 10% + buffer, 10 bps, mean of 3 seeds). Verdict text: `artifacts/step3_verdict.md`.

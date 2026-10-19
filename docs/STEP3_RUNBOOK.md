@@ -31,6 +31,7 @@ for m in 1y_pit 1y_pit_no-rank_label; do [ -e "models/${m}_v7" ] || cp -Rp "mode
 
 **2. Launch: 3 batches, one after another (~40 min total)**
 - Run each block as **one** shell command in the background. Claude: Bash tool with `run_in_background: true` and `timeout: 7200000` (background commands stop after 30 min by default; 2 h is the max). Cursor: Shell tool `block_until_ms: 0` (the default sandbox is fine, v7 ran that way). The block's `wait` ends when its batch ends.
+- **Never** start `caffeinate … &` inside a block that ends with `wait`: `wait` also waits for it, and `caffeinate -w $$` only ends with the shell → the block hangs after its runs finish (cost batch 2 ~17 min, 2026-10-19). Keep the Mac awake from a separate background command instead: `caffeinate -i -w <pid of the training shell>`.
 - Every block repeats the 2 setup lines. Log: `artifacts/logs/train_<run>.log`; its last line becomes `EXIT <code>`. Log name = the run name the code builds from the options.
 
 Batch 1: control alone (~8 min). It must reproduce v7, so it tests the whole setup before the 12 real runs.

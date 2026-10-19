@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "project.md": {
-    "mtime": 1792157613.4873495,
-    "seen": 1792157622.484239,
-    "ast_hash": "f1eeb4704ba116a19b7ac25b92a1ddf0",
+    "mtime": 1792438065.3249605,
+    "seen": 1792438066.1663759,
+    "ast_hash": "4719accf0c55bf8dddb0e4d65612b63f",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "docs/WALKFORWARD_RESULTS.md": {
-    "mtime": 1791062374.5429964,
-    "seen": 1791233363.13483,
-    "ast_hash": "59b30ee4508711aa5bdd1eef595ec162",
+    "mtime": 1792438009.6028345,
+    "seen": 1792438066.1663759,
+    "ast_hash": "b2b990af675a9bcb45b2e6e931d3b0b0",
     "semantic_hash": ""
   },
   "pinky/backtest.py": {
@@ -222,15 +222,15 @@
     "semantic_hash": ""
   },
   "docs/PROJECT_HISTORY.md": {
-    "mtime": 1792157613.4871144,
-    "seen": 1792157622.4842381,
-    "ast_hash": "821fd8654751c72c40704adcd896856a",
+    "mtime": 1792438022.672542,
+    "seen": 1792438066.166375,
+    "ast_hash": "e9403062c54a5ea5cc09968d68d0b47c",
     "semantic_hash": ""
   },
   "docs/STEP3_RUNBOOK.md": {
-    "mtime": 1792155549.9260805,
-    "seen": 1792156207.106893,
-    "ast_hash": "638e8dc8021ac6bae5edddf3ab5cd611",
+    "mtime": 1792438022.6755207,
+    "seen": 1792438066.166375,
+    "ast_hash": "ab939a31fa373a5947f0f77d7cac4fbe",
     "semantic_hash": ""
   },
   "scripts/product_numbers.py": {
@@ -270,9 +270,21 @@
     "semantic_hash": ""
   },
   "docs/BATCH2_PLAN.md": {
-    "mtime": 1792157583.9966817,
-    "seen": 1792157622.484237,
-    "ast_hash": "45cfc6c58ef8006577922fa6660914b9",
+    "mtime": 1792438009.6035087,
+    "seen": 1792438066.166373,
+    "ast_hash": "6eeb86f6c171c3b518dacf24ffd7d014",
+    "semantic_hash": ""
+  },
+  "scripts/fast_grower_margins.py": {
+    "mtime": 1792434597.1364243,
+    "seen": 1792438066.166367,
+    "ast_hash": "3c634182a12478b8618b1d3b5dcd9821",
+    "semantic_hash": ""
+  },
+  "docs/GROWTH_ROUND2_PLAN.md": {
+    "mtime": 1792438009.6042309,
+    "seen": 1792438066.166374,
+    "ast_hash": "a00c1c612ff61ebaccfd03e15781e036",
     "semantic_hash": ""
   }
 }
