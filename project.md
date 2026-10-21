@@ -9,7 +9,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 
 ## ▶ Resume here (new chat: read this first)
 
-Last updated **2026-10-19**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7`. Batch 2 prep (v9 code): `7f0b6c4`. Batch 2 code / results: `git log --grep "Batch 2"` (older milestone commits: `docs/PROJECT_HISTORY.md`).
+Last updated **2026-10-21**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7`. Batch 2 prep (v9 code): `7f0b6c4`. Batch 2 code / results: `git log --grep "Batch 2"` (older milestone commits: `docs/PROJECT_HISTORY.md`).
 
 **State**
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
@@ -25,9 +25,10 @@ Last updated **2026-10-19**. Step 3 commits: code + date/leak checks `349d0d6`, 
 
 **User decisions for batch 2 (2026-10-09 / 10-12; log: `docs/PROJECT_HISTORY.md` → Batch 2 decisions)**
 - **Keep rule:** step 3's rule (real − placebo ≥ +1.0%/yr overall and ≥ +0.5%/yr in each half, mean of seeds 42/7/99) **plus** real ≥ the baseline above (same 3 seeds).
+- 2026-10-19: growth round 2 = one by one, then all together; 2-year label later (plan: `docs/GROWTH_ROUND2_PLAN.md` → User decisions).
 - 2026-10-16: both parts of `docs/BATCH2_PLAN.md` approved (24 runs; Part 2 tie-break: if two tests KEEP for a version, the higher real mean wins).
 
-**Next:** growth round 2 draft `docs/GROWTH_ROUND2_PLAN.md` (pick: one 4-column group led by the price reaction to earnings; 12 runs): show the user a short summary, get their OK **before any code or run**. Optional, ask first: SHAP on the margin runs. Don't push (user, 2026-10-16: no).
+**Next: growth round 2** (`docs/GROWTH_ROUND2_PLAN.md`). User decided (2026-10-19): test the 4 new columns **one by one, then all 4 together** (price reaction to earnings `ear_3d`, sales surprise `rev_sue`, 3-year growth `rev_cagr_3y`, steady growth `rev_up_quarters`) = 5 tests, 60 runs; 2-year label later. **Before any code:** ask the open points in the plan (OK with 60 runs or tests 1–4 first; same locked rule + tie-break; caveats), as numbered options with reply codes. Then build + date/leak checks like batch 2, then train only on `run`. Optional, ask first: SHAP on the margin runs. Don't push (user, 2026-10-16: no).
 
 **When you finish a chunk of work:** update this Resume section so the next chat can pick up. Keep this file ~12–15 KB (`wc -c project.md`; every chat reads it): current state only. Move finished-step details (logs, decision logs, results tables) to `docs/PROJECT_HISTORY.md` and leave a 1–2 line summary + pointer here.
 

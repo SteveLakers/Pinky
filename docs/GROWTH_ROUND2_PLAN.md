@@ -1,6 +1,6 @@
 # Growth round 2 plan (DRAFT)
 
-**Status:** drafted 2026-10-19 (Claude Opus 5.5) while batch 2 trains. **Not approved:** needs the user's OK, and batch 2's verdict first (it decides the base). No code, no runs.
+**Status:** drafted 2026-10-19 (Claude Opus 5.5). **User decisions 2026-10-19 (end of the batch 2 chat):** test the 4 columns **one by one, then all together**; the 2-year label later. Design that follows: section "User decisions" at the bottom. **Not built:** before any code, get the user's OK on the open points there. No code, no runs.
 
 ## Why a round 2
 
@@ -28,7 +28,24 @@
 - Same checks as batches 1–2 before any run: made-up cases, independent recompute, leak-power test (fake early dates must look better), placebo sanity, old columns identical.
 - Info after the runs: SHAP; the fast-grower table, split by `ear_3d` and `rev_sue`.
 
-## Decisions for the user (after batch 2's verdict)
+## Decisions for the user (asked 2026-10-19)
 
 1. Ideas: 1a = 1 + 2 + 3 in one group (my pick) | 1b = only 1 (the reaction) | 1c = other mix.
 2. Longer label (idea 5): 2a = later, separately (my pick) | 2b = now.
+
+## User decisions (2026-10-19)
+
+User: "1, can we do one by one, and than at last everything together, this way we can see which helps and which doesn't. 2a". So the Recommendation above (one group) is replaced by:
+- **5 tests**, each its own feature group, all on the plain baselines (A `v9_pit`, B `v9_pit_no-rank_label`):
+  1. `ear_3d` alone (price reaction to the latest earnings report)
+  2. `rev_sue` alone (sales surprise vs own trend)
+  3. `rev_cagr_3y` alone (3-year sales growth)
+  4. `rev_up_quarters` alone (quarters of growth out of the last 8)
+  5. all 4 together (placebo shuffles all 4 as one block: needs `--placebo` to take several groups, or a 5th group holding all 4)
+- Each test: A and B × seeds 42 / 7 / 99 × real / placebo = 12 runs → **60 runs** (~2.5 h, 10 batches of 6).
+- 2-year label: later, as a separate test.
+
+**Open points (ask the user before code; my picks first):**
+- OK with 60 runs? (Option: run tests 1–4 first, then decide on test 5.)
+- Same locked rule for every test (real − placebo ≥ +1.0%/yr and ≥ +0.5%/yr each half; real ≥ baseline). If several KEEP for a version, the highest real mean wins (batch 2's tie-break).
+- Honest caveats: 5 tests × 2 versions = 10 chances, so one lucky KEEP is plausible; only the 2022+ holdout settles it. A single column rarely moves a portfolio +1%/yr, so DROP on the singles is likely even if one of them carries real information (its IC and SHAP share are reported as info).
