@@ -27,18 +27,42 @@ import pandas as pd
 
 from pinky import fundamentals as F
 from pinky.dataset import feature_columns
-from pinky.pit_dataset import DATASET_PATH, DERIVED_DIR
+from pinky.pit_dataset import DATASET_PATH, DERIVED_DIR, HORIZONS, TOP_FRAC
 from pinky.train import dev_rows
 from pinky.universe import benchmark_closeadj, load_panel
 
 V7_PATH = DERIVED_DIR / "pit_dataset_v7.parquet"
 RESULTS: list[tuple[bool, str]] = []
 D = pd.Timestamp
+RSI_FIX_ROWS = 252  # rows the 2026-10-21 RSI fix added (no losses in 14 days → RSI 100 or 50)
 
 
 def check(ok, name: str) -> None:
     RESULTS.append((bool(ok), name))
     print(f"{'PASS' if ok else 'FAIL'} - {name}")
+
+
+def without_rsi_fix_rows(old: pd.DataFrame, new: pd.DataFrame) -> tuple[pd.DataFrame, str | None]:
+    """`new` minus the rows the RSI fix added (top_* labels re-ranked without them), so a backup
+    made before the fix can be compared column by column; plus a problem message if the extra
+    rows aren't exactly the RSI-fix rows (None = fine)."""
+    key = ["Date", "Ticker"]
+    in_old = new[key].merge(old[key].assign(_in=True), on=key, how="left", validate="one_to_one")["_in"].notna().to_numpy()
+    extra = new.loc[~in_old]
+    problem = None
+    if len(extra) != RSI_FIX_ROWS or not extra["rsi_14"].isin([50.0, 100.0]).all():
+        problem = f"{len(extra)} extra rows, RSI values {sorted(extra['rsi_14'].unique())[:5]}"
+    out = new.loc[in_old].reset_index(drop=True)
+    for h in HORIZONS:
+        col = f"excess_{h}"
+        pct = out.groupby("Date")[col].rank(pct=True)
+        out[f"top_{h}"] = np.where(out[col].notna(), (pct > 1.0 - TOP_FRAC).astype(float), np.nan).astype("float32")
+    return out, problem
+
+
+def check_rsi_rows(problem: str | None, backup: str) -> None:
+    check(problem is None, f"since the {backup} backup the dataset gained only the {RSI_FIX_ROWS} RSI-fix rows (RSI 100 or 50)"
+          + (f": {problem}" if problem else ""))
 
 
 def same(a, b, rtol: float = 1e-5, atol: float = 1e-6) -> np.ndarray:
@@ -136,6 +160,8 @@ def synthetic_cases() -> None:
 def dataset_structure(new: pd.DataFrame) -> None:
     section("2. Dataset vs v7 backup")
     old = pd.read_parquet(V7_PATH)
+    new, problem = without_rsi_fix_rows(old, new)
+    check_rsi_rows(problem, "v7")
     check(len(old) == len(new), f"same row count ({len(old):,} vs {len(new):,})")
     check(old[["Date", "Ticker"]].equals(new[["Date", "Ticker"]]), "same rows in the same order")
     later = [*F.MARGIN_FEATURES, *F.GROWTH2_FEATURES]  # batch 2 and growth round 2 columns, added after growth

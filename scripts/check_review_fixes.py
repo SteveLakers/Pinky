@@ -11,6 +11,9 @@ Checks for the 2026-10-21 code review fixes (docs/CODE_REVIEW_2026-10-21.md). No
 5. Verdicts refuse runs scored with different backtests.
 6. Real data (saved v9 baselines): without `tradeable` the new code reproduces the saved monthly
    returns exactly; with it, no new buy lacks a real price; daily drawdown ≥ the old sampled one.
+7. RSI: no losses in 14 days → 100 (rising) or 50 (flat), short histories stay missing. The rebuilt
+   dataset = the pre-fix backup plus exactly the rows the old RSI dropped (found independently from
+   the price panels); every other value identical (top_* labels re-ranked without the new rows).
 
 Usage: PYTHONPATH=.:scripts python scripts/check_review_fixes.py
 Exits 1 if any check fails.
@@ -32,6 +35,9 @@ import train_walkforward as cli
 from pinky import sharadar
 from pinky.backtest import _daily_drawdown, _max_drawdown, run_backtest, summarize_backtest, with_cost
 from pinky.config import BACKTEST_BUFFER_MULT, BACKTEST_MAX_SECTOR_SHARE, BACKTEST_TOP_FRAC, BACKTEST_TOP_N, BENCHMARK
+from check_growth_features import without_rsi_fix_rows
+from pinky.config import FEATURE_WARMUP_DAYS
+from pinky.pit_dataset import DATASET_PATH, DATASET_SAMPLE_EVERY, DERIVED_DIR, _rsi
 from pinky.train import ARTIFACTS_DIR, backtest_settings
 from pinky.universe import backtest_prices, load_panel, sector_map, tradeable_panel
 
@@ -182,7 +188,9 @@ def real_data() -> None:
     ports = {"Top-10 + buffer": {"top_n": BACKTEST_TOP_N}, "Top 10% + buffer": {"top_frac": BACKTEST_TOP_FRAC}}
     for run in ("v9_pit", "v9_pit_no-rank_label"):
         preds = pd.read_parquet(ARTIFACTS_DIR / f"oos_preds_1y_{run}.parquet")
-        saved = pd.read_csv(ARTIFACTS_DIR / f"backtest_periods_1y_{run}.csv")
+        cfg = json.loads((ARTIFACTS_DIR / f"run_config_{run}.json").read_text())
+        first = ARTIFACTS_DIR.parent / cfg["rescored"][0]["backup"] if cfg.get("rescored") else ARTIFACTS_DIR
+        saved = pd.read_csv(first / f"backtest_periods_1y_{run}.csv")  # as first scored (backtest version 1)
         for port, kw in ports.items():
             kw = {**kw, "sectors": sectors, "max_sector_share": BACKTEST_MAX_SECTOR_SHARE, "buffer_mult": BACKTEST_BUFFER_MULT}
             old = run_backtest(preds, "pred_excess_lgbm", prices, **kw)
@@ -203,6 +211,49 @@ def real_data() -> None:
                   f"{b['cagr_universe_ew']:+.2%} | SPY DD daily {b['max_dd_spy']:.2%}")
 
 
+# 7 --------------------------------------------------------------------------------------
+def _old_rsi(close: pd.DataFrame, window: int = 14) -> pd.DataFrame:
+    delta = close.diff()
+    gain = delta.clip(lower=0.0).rolling(window).mean()
+    loss = (-delta.clip(upper=0.0)).rolling(window).mean()
+    return 100.0 - (100.0 / (1.0 + gain / loss.where(loss != 0.0)))
+
+
+def rsi_fix() -> None:
+    section("7. RSI fix")
+    i = pd.bdate_range("2020-01-01", periods=40)
+    toy = pd.DataFrame({"up": np.arange(40) + 10.0, "flat": 10.0, "down": 50.0 - np.arange(40),
+                        "young": [np.nan] * 30 + list(range(10))}, index=i)
+    last = _rsi(toy).iloc[-1]
+    check(last["up"] == 100.0 and last["flat"] == 50.0 and last["down"] == 0.0 and np.isnan(last["young"]),
+          "made-up: rising 100, flat 50, falling 0, < 14 days missing")
+    check(np.isnan(_old_rsi(toy).iloc[-1]["up"]), "made-up: the old formula gave missing for a steady rise (the bug)")
+
+    tr, univ, vol = load_panel("tr"), load_panel("universe"), load_panel("volume")
+    pos = np.arange(FEATURE_WARMUP_DAYS, len(tr), DATASET_SAMPLE_EVERY)
+    r, c = np.nonzero(univ.notna().to_numpy()[pos])
+    rows = pos[r]
+    ret = tr / tr.shift(1) - 1.0
+    vm = vol.rolling(21).mean()
+    ok = np.ones(len(rows), dtype=bool)
+    for w in (ret, tr / tr.shift(5) - 1.0, tr / tr.shift(21) - 1.0, ret.rolling(21).std(), vol / vm.where(vm != 0.0)):
+        ok &= np.isfinite(w.to_numpy(dtype="float64")[rows, c])
+    dropped = ok & ~np.isfinite(_old_rsi(tr).to_numpy(dtype="float64")[rows, c])
+    want = set(zip(tr.index[rows[dropped]], tr.columns[c[dropped]]))
+    del tr, univ, vol, ret, vm
+
+    old, new = pd.read_parquet(DERIVED_DIR / "pit_dataset_pre_rsi.parquet"), pd.read_parquet(DATASET_PATH)
+    same_rows, problem = without_rsi_fix_rows(old, new)
+    key = ["Date", "Ticker"]
+    extra = new[key].merge(old[key], on=key, how="left", indicator=True).query("_merge == 'left_only'")
+    got = set(zip(extra["Date"], extra["Ticker"]))
+    check(problem is None and got == want, f"rows added = the {len(want)} rows the old RSI dropped (found from the price panels)")
+    changed = [col for col in old.columns if not old[col].equals(same_rows[col])]
+    check(list(same_rows.columns) == list(old.columns) and not changed,
+          "every other row and value identical to the pre-fix backup" + (f" (changed: {changed})" if changed else ""))
+    print(f"     rows {len(old):,} → {len(new):,}; stocks {old['Ticker'].nunique():,} → {new['Ticker'].nunique():,}")
+
+
 def main() -> int:
     fills()
     drawdowns()
@@ -210,6 +261,7 @@ def main() -> int:
     api_key_scrub()
     verdict_guard()
     real_data()
+    rsi_fix()
     failed = [n for ok, n in RESULTS if not ok]
     print(f"\n{len(RESULTS) - len(failed)}/{len(RESULTS)} checks passed")
     for n in failed:

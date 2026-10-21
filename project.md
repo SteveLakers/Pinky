@@ -12,10 +12,10 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 Last updated **2026-10-21**. Milestone commits: `git log --grep "Batch 2"`; older: `docs/PROJECT_HISTORY.md`.
 
 **State**
-- **Code review (2026-10-21):** 6 findings (`docs/CODE_REVIEW_2026-10-21.md`) confirmed; 1, 2, 4, 5, 6 fixed = **backtest version 2** (37/37 checks). #3 (RSI drops 252 rows) open. Details: `docs/GROWTH_ROUND2_PLAN.md` → Code review fixes.
+- **Code review (2026-10-21):** 6 findings (`docs/CODE_REVIEW_2026-10-21.md`) confirmed; 1, 2, 4, 5, 6 fixed = **backtest version 2** (37/37 checks). #3 RSI fixed (252 rows back) → baselines retrained as v10. Details: `docs/GROWTH_ROUND2_PLAN.md` → Code review fixes.
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
 - **Step 3 (v8 growth) = DROP**; growth stays opt-in (`--with=growth`). v9 saves every fold's models; its baselines = the old A and B exactly.
-- **Final versions = batch 2 baselines** (LightGBM top 10% + buffer, net of 10 bps, mean of 3 seeds): A = `v9_pit` (+ `_s7`, `_s99`) **+7.15%/yr** (2001–08 −2.01%, 2009–20 +13.74%); B = `v9_pit_no-rank_label` (+ seeds) **+6.11%/yr** (−2.50%, +12.26%); re-scored with backtest v2 (v1: +7.14 / +6.10). Max drawdown A −49%, B −55%. SPY +7.28% (−2.74%, +14.53%), equal-weight universe +8.01%.
+- **Baselines = v10** (2026-10-21: v9 + RSI fix + backtest v2; LightGBM top 10% + buffer, net of 10 bps, mean of 3 seeds): A = `v10_pit` (+ `_s7`, `_s99`) **+7.15%/yr** (2001–08 −2.26%, 2009–20 +13.92%); B = `v10_pit_no-rank_label` (+ seeds) **+6.37%/yr** (−2.36%, +12.63%). Max drawdown A −51%, B −55%. (v9 / batch 2: +7.14 / +6.10.) SPY +7.28% (−2.74%, +14.53%), equal-weight universe +8.01%.
 - **Batch 2 (margins), 2026-10-19: DROP on all 4 tests** (24 clean runs); finals stay the baselines; margins stay opt-in (`--with=margins`). Numbers: `docs/WALKFORWARD_RESULTS.md` → v9 batch 2.
 - **Residual edge + SHAP, 2026-10-16:** no reliable edge in A or B (Key findings, last bullet; `docs/PROJECT_HISTORY.md` → Residual edge + SHAP).
 - Showcase: v6_pit. Product page https://pinky-research.vercel.app (class project; **v2 live since 2026-10-07**; `docs/PROJECT_HISTORY.md` → Product page redesign v2; study guide `product/presenter-notes.md`). Update either only when the user says.
@@ -129,7 +129,7 @@ Full layout with details: `docs/PROJECT_HISTORY.md`.
   1. Pull: `python scripts/pull_sharadar.py` (~10 min, needs network)
   2. Universe panels: `python -m pinky.universe` (~1 min)
   3. Dataset: `python -m pinky.pit_dataset` (~1 min)
-  4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min alone; output name = `train.VERSION` + `_pit`, currently `v9_pit` = A without growth)
+  4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min alone; output name = `train.VERSION` + `_pit`, currently `v10_pit` = A; v10 = v9 + RSI fix + backtest v2)
   - Ablations: `--without=rank_label,size` (`train.MODEL_FIXES`). Company data under test: `--with=growth,margins` or growth round 2's `ear` / `sue` / `cagr` / `steady` / `growth2` (`train.FEATURE_GROUPS`, off by default since v9; `--without=growth` errors); placebo `--placebo=<group>` (bare `--placebo` = growth). Parallel runs: `OMP_NUM_THREADS=3` each. Launch commands: `docs/STEP3_RUNBOOK.md`.
   - stdout is buffered when redirected to a file → use `python -u` to watch fold progress in a log.
   - Re-score a run with today's backtest (no retraining; old outputs → `artifacts/superseded/`): `python scripts/train_walkforward.py --report-only=v9_pit`.

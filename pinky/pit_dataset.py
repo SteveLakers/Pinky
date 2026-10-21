@@ -45,15 +45,19 @@ SHORT_FEATURES = ["ret_1d", "ret_5d", "ret_21d", "vol_21", "volume_ratio_21", "r
 
 
 def _rsi(close: pd.DataFrame, window: int = 14) -> pd.DataFrame:
+    """RSI; no losses in the window → 100 if it rose, 50 if flat (2026-10-21 review fix: both
+    used to be missing, which dropped 252 otherwise valid rows). Short histories stay missing."""
     delta = close.diff()
     gain = delta.clip(lower=0.0).rolling(window).mean()
     loss = (-delta.clip(upper=0.0)).rolling(window).mean()
     rs = gain / loss.where(loss != 0.0)
-    return 100.0 - (100.0 / (1.0 + rs))
+    rsi = 100.0 - (100.0 / (1.0 + rs))
+    no_loss = loss == 0.0
+    return rsi.mask(no_loss & (gain > 0.0), 100.0).mask(no_loss & (gain == 0.0), 50.0)
 
 
 def _wide_features(tr: pd.DataFrame, volume: pd.DataFrame):
-    """Yield (name, Date x Ticker frame) for each price feature; same math as features.py."""
+    """Yield (name, Date x Ticker frame) for each price feature; same math as features.py (except RSI)."""
     ret = tr / tr.shift(1) - 1.0
     yield "ret_1d", ret
     yield "ret_5d", tr / tr.shift(5) - 1.0

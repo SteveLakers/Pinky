@@ -47,7 +47,7 @@ User: "1, can we do one by one, and than at last everything together, this way w
 
 **Open points (asked 2026-10-21; user: "continue on opus 5.5 1a 2a", tests one at a time):**
 - 60 runs: yes (1a). Run **one test at a time** (12 runs each), result shown after each, in the fixed order 1 → 5. All 5 run whatever the early results say (no stopping after a KEEP or a DROP).
-- Same locked rule for every test (2a): real − placebo ≥ +1.0%/yr and ≥ +0.5%/yr each half; real ≥ baseline. Baselines under backtest version 2: A +7.15%/yr, B +6.11%/yr (section Code review fixes). If several KEEP for a version, the highest real mean wins (batch 2's tie-break).
+- Same locked rule for every test (2a): real − placebo ≥ +1.0%/yr and ≥ +0.5%/yr each half; real ≥ baseline. Baselines = v10 (section Code review fixes): A +7.15%/yr, B +6.37%/yr. If several KEEP for a version, the highest real mean wins (batch 2's tie-break).
 - Caveats (told the user): 5 tests × 2 versions = 10 chances, so one lucky KEEP is plausible; only the 2022+ holdout settles it. A single column rarely moves a portfolio +1%/yr, so DROP on the singles is likely even if one of them carries real information (its IC and SHAP share are reported as info). A column tested alone can miss value it only adds with the others: test 5 covers that.
 
 ## Design (pinned 2026-10-21, before any code ran on results)
@@ -63,7 +63,7 @@ Same date rules as growth and margins (`pinky/fundamentals.py`): ARQ / ART only,
 | 5 | `growth2` | all 4 | Can't be combined with groups 1–4 (same columns). |
 
 - Each test: `--with=<group>` (real) and `--with=<group> --placebo=<group>` (that group shuffled within each date), A and B, seeds 42 / 7 / 99.
-- Run names: `v9_pit_with-ear`, `v9_pit_with-ear_placebo-ear` (+ `_s7`, `_s99`); B: `v9_pit_no-rank_label_with-ear…`. Same pattern for `sue`, `cagr`, `steady`, `growth2`.
+- Run names: `v10_pit_with-ear`, `v10_pit_with-ear_placebo-ear` (+ `_s7`, `_s99`); B: `v10_pit_no-rank_label_with-ear…`. Same pattern for `sue`, `cagr`, `steady`, `growth2`.
 - Verdict: `scripts/batch_verdict.py 3` judges every test whose 12 runs exist; the final pick and A vs B only once all 5 are in.
 - Checks before any run (`scripts/check_growth2_features.py`): made-up cases, dataset vs the batch 2 backup (old columns identical, exactly 4 added), old training frames unchanged, date rules on real data, independent slow recompute, hand checks, coverage, correlations, leak-power test (fake early dates must look better), placebo sanity.
 
@@ -87,7 +87,7 @@ The review (`docs/CODE_REVIEW_2026-10-21.md`, other chat) found 6 issues; all 6 
 - Checks: `scripts/check_review_fixes.py` **37/37** (made-up cases for each fix; on the saved baselines, the new code without the fill rule reproduces the saved monthly returns exactly, and with it no new buy lacks a real price).
 - **Baselines re-scored** (saved predictions, no retraining; old outputs in `artifacts/superseded/v9_pit*_20261021-122228/`), mean of 3 seeds, LightGBM top 10% + buffer: A +7.14% → **+7.15%/yr**, B +6.10% → **+6.11%/yr**; halves A −2.01% / +13.74%, B −2.50% / +12.26%. True max drawdowns are deeper than reported: A −46.9% → −49.4%, B −52.5% → −55.3% (A's top-10, seed 42: −35.2% → −45.8%; SPY −55.2%).
 - Round 2 uses backtest version 2 and these baselines (`batch_verdict.py 3`). Earlier verdicts (step 3, batch 2) stay as written under version 1; re-running them now would stop on the mixed-backtest check, by design.
-- **Open: (3) RSI.** Zero average loss gave a missing RSI, so 252 dataset rows (226 steadily rising, 26 flat; 0.009%) were dropped. Fixing it changes the dataset, so the 6 baselines would need retraining before round 2. User decision.
+- **(3) RSI, fixed (user 1a):** zero average loss gave a missing RSI, so 252 rows (226 steadily rising, 26 flat; 0.009%) were dropped; now RSI = 100 (rose) or 50 (flat). Dataset rebuilt (2,932,585 → 2,932,837 rows; backup `pit_dataset_pre_rsi.parquet`); the added rows are exactly the ones the old RSI dropped, every other value identical. Because the dataset changed, the baselines are retrained as **v10** (`train.VERSION`; v10 = v9 + RSI fix + backtest version 2), so v9 results stay as they were. Round 2 runs on v10: names `v10_pit_with-<g>…`, baselines `v10_pit`, `v10_pit_no-rank_label` (+ seeds). **v10 baselines** (trained 2026-10-21, all EXIT 0; mean of 3 seeds, LightGBM top 10% + buffer): A **+7.15%/yr** (2001–08 −2.26%, 2009–20 +13.92%; max DD −50.6%), B **+6.37%/yr** (−2.36%, +12.63%; −55.3%). B moved +0.27%/yr from 252 extra rows (0.009%): retraining on slightly different data shifts LightGBM's trees, so differences this size are noise.
 
 ## Runbook (only after the user says `run`; one test at a time)
 
@@ -95,9 +95,9 @@ Follow `docs/STEP3_RUNBOOK.md` steps 0–7 with these changes:
 - **Pre-flight:** `PYTHONPATH=. python -c "import pyarrow.parquet as pq; print('round 2 ok' if 'ear_3d' in pq.read_schema('data/sharadar/derived/pit_dataset.parquet').names else 'OLD DATASET: STOP')"`; optional `PYTHONPATH=.:scripts python scripts/check_growth2_features.py | tail -1` (expect all checks passed). No model copy, no control run (old frames proven identical instead).
 - **One test = 12 runs = 2 batches of 6** (A, then B; ~15 min each). Order: `ear`, `sue`, `cagr`, `steady`, `growth2`. After each test: verdict, short result to the user, then the next test (all 5 run whatever the results).
 - **Launch** (group `g`): each batch is one background command (Claude: `run_in_background: true`, `timeout: 7200000`) starting with the runbook's 2 setup lines (`cd … && source .venv/bin/activate && mkdir -p artifacts/logs` and the `launch()` function). Then:
-  - A: `launch v9_pit_with-$g --with=$g`, `launch v9_pit_with-${g}_s7 --with=$g --seed=7`, `launch v9_pit_with-${g}_s99 --with=$g --seed=99`, `launch v9_pit_with-${g}_placebo-$g --with=$g --placebo=$g` (+ `_s7` / `_s99` with `--seed=7` / `--seed=99`), then `wait`.
-  - B: the same six with `--without=rank_label` and names `v9_pit_no-rank_label_with-$g…`.
-  - Seed suffix goes last: e.g. `v9_pit_no-rank_label_with-steady_placebo-steady_s7`.
-- **Watch / check:** runbook steps 3–4 with `train_v9_*with-$g*` logs; expect 12 stats files `artifacts/backtest_stats_1y_v9_*with-${g}*.csv` per test, every log `EXIT 0`, names match, configs show the right `fixes` / `placebo` / `seed`; each log's `[seed]` line says `placebo: <g> shuffled within each date` or `off`.
+  - A: `launch v10_pit_with-$g --with=$g`, `launch v10_pit_with-${g}_s7 --with=$g --seed=7`, `launch v10_pit_with-${g}_s99 --with=$g --seed=99`, `launch v10_pit_with-${g}_placebo-$g --with=$g --placebo=$g` (+ `_s7` / `_s99` with `--seed=7` / `--seed=99`), then `wait`.
+  - B: the same six with `--without=rank_label` and names `v10_pit_no-rank_label_with-$g…`.
+  - Seed suffix goes last: e.g. `v10_pit_no-rank_label_with-steady_placebo-steady_s7`.
+- **Watch / check:** runbook steps 3–4 with `train_v10_*with-$g*` logs; expect 12 stats files `artifacts/backtest_stats_1y_v10_*with-${g}*.csv` per test, every log `EXIT 0`, names match, configs show the right `fixes` / `placebo` / `seed`; each log's `[seed]` line says `placebo: <g> shuffled within each date` or `off`.
 - **Verdict:** `PYTHONPATH=.:scripts python scripts/batch_verdict.py 3` (writes `artifacts/batch3_verdict.md`): judges every test whose 12 runs exist, lists the rest as not run yet; final pick + A vs B once all 5 are in. It applies the locked rule; don't re-judge by hand. ON HOLD → audit first.
 - **Then (info, not gates):** per test, the new column's IC and SHAP share; after all 5, residual edge + SHAP on the finals and the fast-grower table split by `ear_3d` and `rev_sue`.

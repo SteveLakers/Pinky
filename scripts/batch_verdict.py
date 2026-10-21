@@ -53,8 +53,8 @@ BATCHES = {
     },
     "3": {
         "title": "Batch 3 verdict — growth round 2 (one column at a time, then all four)",
-        # backtest version 2: baselines re-scored 2026-10-21 (were +7.14% / +6.10% under version 1)
-        "baselines": {A: ("v9_pit", 0.0715), B: ("v9_pit_no-rank_label", 0.0611)},
+        # v10 baselines (RSI fix + backtest version 2), retrained 2026-10-21
+        "baselines": {A: ("v10_pit", 0.0715), B: ("v10_pit_no-rank_label", 0.0637)},
         "tests": [
             (f"Test {i} {label}", version, f"{base}_with-{g}", f"{base}_with-{g}_placebo-{g}")
             for i, (g, label) in enumerate(
@@ -67,7 +67,7 @@ BATCHES = {
                 ],
                 start=1,
             )
-            for version, base in ((A, "v9_pit"), (B, "v9_pit_no-rank_label"))
+            for version, base in ((A, "v10_pit"), (B, "v10_pit_no-rank_label"))
         ],
     },
 }

@@ -27,6 +27,10 @@ v9: `growth` is opt-in (`FEATURE_GROUPS`, switched on with `with_`), so a plain 
     it shuffles (True = growth, as in v8), so growth can stay real while margins are shuffled.
     Growth round 2 (same v9 defaults): one group per new column (`ear`, `sue`, `cagr`, `steady`)
     and `growth2` = all four; groups that share columns can't be on together.
+v10 (2026-10-21 code review): same models and options as v9, but the dataset's RSI fix adds 252 rows
+    (no losses in 14 days → RSI 100 / 50 instead of a dropped row) and the report uses backtest
+    version 2 (no buys without a real traded price; daily max drawdown). New name, so v9 results
+    stay as they were.
 """
 
 from __future__ import annotations
@@ -106,7 +110,7 @@ MODELS_DIR = PROJECT_ROOT / "models"
 DEFAULT_HORIZONS = ["1y"]
 SPLIT_YEAR = REPORT_SPLIT_YEAR
 
-VERSION = "v9"
+VERSION = "v10"
 MODEL_FIXES = ("rank_label", "rank_features", "young", "size")
 # company data under test: off unless `with_` names it
 FEATURE_GROUPS = ("growth", "margins", "ear", "sue", "cagr", "steady", "growth2")

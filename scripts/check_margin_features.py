@@ -26,7 +26,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from check_growth_features import _day_ranks, _mean_ic, _slow_attach, _slow_reports, same
+from check_growth_features import RSI_FIX_ROWS, _day_ranks, _mean_ic, _slow_attach, _slow_reports, same, without_rsi_fix_rows
 from pinky import fundamentals as F
 from pinky.dataset import feature_columns
 from pinky.pit_dataset import DATASET_PATH, DERIVED_DIR
@@ -325,9 +325,12 @@ def placebo_sanity(new: pd.DataFrame) -> None:
 def main() -> int:
     synthetic_cases()
     old, new = pd.read_parquet(V9_PATH), pd.read_parquet(DATASET_PATH)
-    dataset_structure(old, new)
-    training_frames(old, new)
-    del old
+    same_rows, problem = without_rsi_fix_rows(old, new)
+    check(problem is None, f"since the v9 backup the dataset gained only the {RSI_FIX_ROWS} RSI-fix rows (RSI 100 or 50)"
+          + (f": {problem}" if problem else ""))
+    dataset_structure(old, same_rows)
+    training_frames(old, same_rows)
+    del old, same_rows
     q, t = F.quarterly_margin_reports(), F.ttm_margin_reports()
     real_date_rules(new, q, t)
     independent_recompute(new)
