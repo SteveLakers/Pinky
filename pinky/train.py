@@ -32,6 +32,7 @@ v9: `growth` is opt-in (`FEATURE_GROUPS`, switched on with `with_`), so a plain 
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import joblib
@@ -43,6 +44,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from pinky.backtest import (
+    BACKTEST_VERSION,
+    PATH_COLS,
     between_years,
     default_prices,
     momentum_scores,
@@ -86,7 +89,14 @@ from pinky.metrics import (
 )
 from pinky.pit_dataset import DATASET_PATH, load_pit_dataset
 from pinky.preprocess import cross_section_rank, prepare_fold_frames, ranking_feature_cols
-from pinky.universe import acquisition_dates, backtest_prices, benchmark_closeadj, sector_map
+from pinky.universe import (
+    PANELS_DIR,
+    acquisition_dates,
+    backtest_prices,
+    benchmark_closeadj,
+    sector_map,
+    tradeable_panel,
+)
 from pinky.walkforward import WalkForwardFold, iter_walk_forward_folds
 
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
@@ -474,6 +484,7 @@ def _backtest_lines(
     prices: pd.DataFrame,
     sectors: dict[str, str] | None = None,
     mom: pd.DataFrame | None = None,
+    tradeable: pd.DataFrame | None = None,
 ) -> tuple[list[str], pd.DataFrame]:
     """Report lines + one stats row per (signal, portfolio)."""
     excess_col = f"excess_{horizon}"
@@ -499,7 +510,7 @@ def _backtest_lines(
         f"Top {frac:.0%} + buffer": {"top_frac": frac, **buffered},
     }
     bts = {
-        (sig, port): run_backtest(frame, col, prices, sectors=sectors, **kw)
+        (sig, port): run_backtest(frame, col, prices, sectors=sectors, tradeable=tradeable, **kw)
         for sig, (frame, col) in signals.items()
         for port, kw in portfolios.items()
     }
@@ -589,7 +600,7 @@ def _backtest_lines(
     ]
     for sig, (frame, col) in signals.items():
         bt = run_backtest(
-            frame, col, prices, exclude=winners, sectors=sectors, **portfolios[main]
+            frame, col, prices, exclude=winners, sectors=sectors, tradeable=tradeable, **portfolios[main]
         )
         lines.append(
             f"| {sig} | {_fmt_pct(stats[(sig, main)]['cagr_net'])} | "
@@ -642,7 +653,7 @@ def _backtest_lines(
         + split_rows
     )
     periods = pd.concat(
-        [bt.drop(columns="picks").assign(signal=sig, portfolio=port) for (sig, port), bt in bts.items()],
+        [bt.drop(columns=["picks", *PATH_COLS], errors="ignore").assign(signal=sig, portfolio=port) for (sig, port), bt in bts.items()],
         ignore_index=True,
     )
     return lines, table, periods
@@ -661,6 +672,7 @@ def _write_summary(
     fixes: list[str] | None = None,
     placebo: bool | str | None = None,
     seed: int = DEFAULT_SEED,
+    tradeable: pd.DataFrame | None = None,
 ) -> None:
     exclude = exclude or []
     if universe_desc is None:
@@ -719,7 +731,7 @@ def _write_summary(
             lines += group_lines
             if not groups.empty:
                 groups.to_csv(path.parent / f"score_groups_{horizon}_{run_name}.csv", index=False)
-            bt_lines, bt_table, bt_periods = _backtest_lines(horizon, preds, prices, sectors, mom)
+            bt_lines, bt_table, bt_periods = _backtest_lines(horizon, preds, prices, sectors, mom, tradeable)
             lines += bt_lines
             bt_table.to_csv(path.parent / f"backtest_stats_{horizon}_{run_name}.csv", index=False)
             bt_periods.to_csv(path.parent / f"backtest_periods_{horizon}_{run_name}.csv", index=False)
@@ -760,8 +772,38 @@ def _pit_universe_desc(n_stocks: int) -> str:
     )
 
 
+def backtest_settings() -> dict:
+    """What a run's backtest numbers depend on (saved in run_config; checked by the verdicts)."""
+    inputs = [PANELS_DIR / "tr.parquet", PANELS_DIR / "closeadj.parquet", DATASET_PATH]
+    return {
+        "version": BACKTEST_VERSION,
+        "cost_bps": BACKTEST_COST_BPS,
+        "max_sector_share": BACKTEST_MAX_SECTOR_SHARE,
+        "buffer_mult": BACKTEST_BUFFER_MULT,
+        "top_n": BACKTEST_TOP_N,
+        "wide_top_n": BACKTEST_WIDE_TOP_N,
+        "top_frac": BACKTEST_TOP_FRAC,
+        "inputs": {
+            f.name: {"bytes": f.stat().st_size, "modified": pd.Timestamp(f.stat().st_mtime, unit="s").isoformat()}
+            for f in inputs
+            if f.exists()
+        },
+    }
+
+
+def _run_outputs(run_name: str, horizons: list[str]) -> list[Path]:
+    """Files a report rebuild overwrites (summary, stats, monthly returns, score groups, config)."""
+    per_h = [f"{kind}_{h}_{run_name}.csv" for h in horizons for kind in ("backtest_stats", "backtest_periods", "score_groups")]
+    names = [f"walkforward_summary_{run_name}.md", f"run_config_{run_name}.json", *per_h]
+    return [ARTIFACTS_DIR / n for n in names if (ARTIFACTS_DIR / n).exists()]
+
+
 def rewrite_summary(run_name: str, horizons: list[str] | None = None) -> Path:
-    """Rebuild a pit run's report from its saved metrics + predictions (no retraining)."""
+    """Re-score a pit run from its saved metrics + predictions (no retraining).
+
+    Uses today's backtest code and data, so the old outputs are copied to
+    artifacts/superseded/<run>_<time>/ first, and run_config records the re-score.
+    """
     horizons = horizons or list(DEFAULT_HORIZONS)
     metrics = pd.read_csv(ARTIFACTS_DIR / f"walkforward_metrics_{run_name}.csv")
     preds_by_h = {
@@ -769,6 +811,11 @@ def rewrite_summary(run_name: str, horizons: list[str] | None = None) -> Path:
     }
     config_path = ARTIFACTS_DIR / f"run_config_{run_name}.json"
     config = json.loads(config_path.read_text()) if config_path.exists() else {}
+    backup = ARTIFACTS_DIR / "superseded" / f"{run_name}_{pd.Timestamp.now():%Y%m%d-%H%M%S}"
+    backup.mkdir(parents=True, exist_ok=False)
+    for f in _run_outputs(run_name, horizons):
+        shutil.copy2(f, backup / f.name)
+    print(f"Old outputs copied to {backup}")
     n_stocks = config.get("n_stocks") or pd.read_parquet(DATASET_PATH, columns=["Ticker"])["Ticker"].nunique()
     path = ARTIFACTS_DIR / f"walkforward_summary_{run_name}.md"
     _write_summary(
@@ -783,7 +830,14 @@ def rewrite_summary(run_name: str, horizons: list[str] | None = None) -> Path:
         fixes=config.get("fixes", []),
         placebo=config.get("placebo", False),
         seed=config.get("seed", DEFAULT_SEED),
+        tradeable=tradeable_panel(),
     )
+    rescores = config.get("rescored", [])
+    rescores.append({"date": pd.Timestamp.now().isoformat(timespec="seconds"),
+                     "previous_backtest": config.get("backtest", {"version": 1}),
+                     "backup": str(backup.relative_to(PROJECT_ROOT))})
+    config.update(backtest=backtest_settings(), rescored=rescores)
+    config_path.write_text(json.dumps(config))
     print(f"Wrote {path}")
     return path
 
@@ -884,12 +938,13 @@ def run_all(
     cols = [c for g in with_ for c in GROUP_FEATURES[g]]
     if len(cols) != len(set(cols)):
         raise ValueError(f"with={with_}: these groups share columns; turn on only one of them")
-    calendar = prices = sectors = universe_desc = acq = None
+    calendar = prices = sectors = universe_desc = acq = tradeable = None
     if pit:
         tag = pit_tag(tag, without, with_, placebo, seed)
         df = pit_training_frame(load_pit_dataset(), fixes, placebo, seed)
         calendar = pd.DatetimeIndex(benchmark_closeadj().index)
         prices = backtest_prices()
+        tradeable = tradeable_panel()
         sectors = sector_map()
         acq = acquisition_dates()
     else:
@@ -939,6 +994,7 @@ def run_all(
                     "n_stocks": int(df["Ticker"].nunique()),
                     "seed": seed,
                     "placebo": placebo or False,
+                    **({"backtest": backtest_settings()} if pit else {}),
                 }
             )
         )
@@ -956,6 +1012,7 @@ def run_all(
             fixes=fixes,
             placebo=placebo,
             seed=seed,
+            tradeable=tradeable,
         )
 
         models_root = save_models(models_by_h, run_name)

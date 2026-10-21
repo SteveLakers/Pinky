@@ -66,10 +66,11 @@ That gives about 1,200–2,850 stocks a day and 11,561 distinct stocks (1998–2
 - Holding buffer: a holding is kept while it ranks in the top 3× N.
 - Portfolios: top-10, top-50 and the top 10% of each date's stocks, each with and without the buffer, plus a "v5 rules" top-10 (no cap, no buffer) for comparison with old runs. Main comparison rows: **top-10 + buffer** and **top 10% + buffer**.
 - Signals: LightGBM, Ridge, Blend and naive 12-1 momentum, compared with SPY and the equal-weight universe over 2001–2020 and split at 2009.
+- **Backtest version 2** (2026-10-21 code review, `BACKTEST_VERSION`): new buys (and the equal-weight universe) need a real traded close on the trade day (`universe.tradeable_panel`), so a stock can't be bought after its last trade; a holding may stay, its value following `tr`. Max drawdown uses daily values inside each holding period, from a starting value of 1, costs included. Each stats row carries `backtest_version`; `run_config` records the backtest settings; the verdict scripts refuse runs scored with different backtests. Version 1 = every run through batch 2.
 
 ## Outputs (`artifacts/`, `models/`; never in git)
 
-Per run: `walkforward_summary_<run>.md` (the report), `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `backtest_periods_1y_<run>.csv` (monthly returns), `score_groups_1y_<run>.csv` and `run_config_<run>.json`; the log is `artifacts/logs/train_<run>.log`. `models/<run>/1y/fold_NN/` keeps every fold's models, with `folds.json` (fold dates) next to them (since v9; older runs: `models/1y_<tag>/`, last fold only, shared across versions). `--report-only=<run>` rebuilds a report without retraining.
+Per run: `walkforward_summary_<run>.md` (the report), `walkforward_metrics_<run>.csv`, `oos_preds_1y_<run>.parquet`, `backtest_stats_1y_<run>.csv`, `backtest_periods_1y_<run>.csv` (monthly returns), `score_groups_1y_<run>.csv` and `run_config_<run>.json`; the log is `artifacts/logs/train_<run>.log`. `models/<run>/1y/fold_NN/` keeps every fold's models, with `folds.json` (fold dates) next to them (since v9; older runs: `models/1y_<tag>/`, last fold only, shared across versions). `--report-only=<run>` re-scores a run with today's backtest and data, without retraining; it first copies the old outputs to `artifacts/superseded/<run>_<time>/` and logs the re-score in `run_config` (`rescored`).
 
 ## Locked decisions
 

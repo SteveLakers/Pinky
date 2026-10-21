@@ -27,13 +27,15 @@ from __future__ import annotations
 import sys
 
 import step3_verdict as v3
-from step3_verdict import mean_stat, monthly_gap, pct, periods, say, scoreboard, stats
+from step3_verdict import mean_stat, monthly_gap, pct, periods, same_backtest, say, scoreboard, stats
 
 ARTIFACTS_DIR = v3.ARTIFACTS_DIR
 SEEDS = v3.SEEDS
 KEEP_ALL, KEEP_HALF, LEAK_GAP, AB_GAP = v3.KEEP_ALL, v3.KEEP_HALF, v3.LEAK_GAP, v3.AB_GAP
 BASELINE_TOL = 0.0001
 A, B = "A (rank label)", "B (raw return)"
+# Expected baseline means (backtest version 1, as batch 2 judged them). A batch can override them
+# with "baselines" (batch 3: backtest version 2, re-scored after the 2026-10-21 code review).
 BASELINES = {A: ("v9_pit", 0.0714), B: ("v9_pit_no-rank_label", 0.0610)}
 BATCHES = {
     "2": {
@@ -51,6 +53,8 @@ BATCHES = {
     },
     "3": {
         "title": "Batch 3 verdict — growth round 2 (one column at a time, then all four)",
+        # backtest version 2: baselines re-scored 2026-10-21 (were +7.14% / +6.10% under version 1)
+        "baselines": {A: ("v9_pit", 0.0715), B: ("v9_pit_no-rank_label", 0.0611)},
         "tests": [
             (f"Test {i} {label}", version, f"{base}_with-{g}", f"{base}_with-{g}_placebo-{g}")
             for i, (g, label) in enumerate(
@@ -77,8 +81,8 @@ def seeded(base: str) -> list[str]:
     return [base if s == 42 else f"{base}_s{s}" for s in SEEDS]
 
 
-def needed_runs(tests: list[tuple]) -> list[str]:
-    bases = [b for _, _, real, fake in tests for b in (real, fake)] + [b for b, _ in BASELINES.values()]
+def needed_runs(tests: list[tuple], baselines: dict = BASELINES) -> list[str]:
+    bases = [b for _, _, real, fake in tests for b in (real, fake)] + [b for b, _ in baselines.values()]
     return [r for b in dict.fromkeys(bases) for r in seeded(b)]
 
 
@@ -88,9 +92,10 @@ def main(args: list[str]) -> int:
         return 1
     batch = args[0]
     cfg = BATCHES[batch]
+    baselines = cfg.get("baselines", BASELINES)
     ready = [t for t in cfg["tests"] if all(has_run(r) for r in seeded(t[2]) + seeded(t[3]))]
     waiting = [t for t in cfg["tests"] if t not in ready]
-    missing = [r for r in needed_runs(ready or cfg["tests"]) if not has_run(r)]
+    missing = [r for r in needed_runs(ready or cfg["tests"], baselines) if not has_run(r)]
     if missing or not ready:
         print("Missing runs (train them first):\n  " + "\n  ".join(missing))
         return 1
@@ -99,9 +104,9 @@ def main(args: list[str]) -> int:
     say("")
     say(f"Judged on {v3.SIGNAL}, {v3.PORTFOLIO}, 10 bps, monthly; mean of seeds {', '.join(map(str, SEEDS))}.")
     say("")
-    hold = False
+    hold = not same_backtest(needed_runs(ready, baselines))
     base_mean = {}
-    for version, (base, expected) in BASELINES.items():
+    for version, (base, expected) in baselines.items():
         m = mean_stat(seeded(base))
         base_mean[version] = m
         ok = abs(m["all"] - expected) <= BASELINE_TOL
@@ -112,7 +117,7 @@ def main(args: list[str]) -> int:
 
     kept: dict[str, list[tuple[float, str, list[str]]]] = {A: [], B: []}
     for name, version, real_base, fake_base in ready:
-        real, fake, baseline = seeded(real_base), seeded(fake_base), seeded(BASELINES[version][0])
+        real, fake, baseline = seeded(real_base), seeded(fake_base), seeded(baselines[version][0])
         ps = periods(real[0])
         r, f, b = mean_stat(real), mean_stat(fake), base_mean[version]
         gap, vs_base = r - f, r - b
@@ -166,7 +171,7 @@ def main(args: list[str]) -> int:
             finals[version] = runs
         else:
             say(f"- {version}: **baseline** (nothing kept)")
-            finals[version] = seeded(BASELINES[version][0])
+            finals[version] = seeded(baselines[version][0])
     say("")
 
     cagr = {version: scoreboard(version, runs) for version, runs in finals.items()}

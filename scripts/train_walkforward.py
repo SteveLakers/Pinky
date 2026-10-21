@@ -16,7 +16,9 @@ Usage:
 --placebo=<group> shuffles that group's features across stocks within each date (the group
   must be on via --with; outputs tagged `placebo-<group>`). Bare --placebo = growth (v8 tag `placebo`).
 --seed sets model randomness (outputs tagged `s<N>` unless N is the default 42).
---report-only rebuilds a saved pit run's report from its predictions (no retraining).
+--report-only re-scores a saved pit run from its predictions with today's backtest (no retraining;
+  old outputs are copied to artifacts/superseded/ first).
+Misspelled, empty or repeated options stop the run before any data loads.
 """
 
 import sys
@@ -24,30 +26,40 @@ import sys
 from pinky.config import HINDSIGHT_WINNERS
 from pinky.train import DEFAULT_HORIZONS, DEFAULT_SEED, rewrite_summary, run_all
 
+FLAGS = ("--ex-winners", "--pit", "--placebo")
+VALUES = ("--placebo=", "--report-only=", "--without=", "--with=", "--seed=")
+
+
+def parse_args(args: list[str]) -> dict:
+    """Exact flags only: a misspelled or malformed option (e.g. `--pit=true`) stops the run."""
+    unknown = [a for a in args if a.startswith("--") and a not in FLAGS and not a.startswith(VALUES)]
+    empty = [a for a in args if a.startswith(VALUES) and not a.split("=", 1)[1]]
+    repeated = sorted({a.split("=", 1)[0] for a in args if a.startswith("--")
+                       and sum(b.split("=", 1)[0] == a.split("=", 1)[0] for b in args) > 1})
+    if unknown or empty or repeated:
+        raise SystemExit(f"Bad options: unknown {unknown}, empty {empty}, repeated {repeated}")
+
+    def value(prefix: str) -> str | None:
+        return next((a.split("=", 1)[1] for a in args if a.startswith(prefix)), None)
+
+    return {
+        "horizons": [a for a in args if not a.startswith("--")] or list(DEFAULT_HORIZONS),
+        "ex_winners": "--ex-winners" in args,
+        "pit": "--pit" in args,
+        "placebo": "growth" if "--placebo" in args else value("--placebo="),
+        "report_only": value("--report-only="),
+        "without": value("--without=").split(",") if value("--without=") else [],
+        "with_": value("--with=").split(",") if value("--with=") else [],
+        "seed": int(value("--seed=") or DEFAULT_SEED),
+    }
+
+
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    ex_winners = "--ex-winners" in args
-    pit = "--pit" in args
-    placebo = next(
-        ("growth" if a == "--placebo" else a.split("=", 1)[1] for a in args if a == "--placebo" or a.startswith("--placebo=")),
-        None,
-    )
-    report_only = next((a.split("=", 1)[1] for a in args if a.startswith("--report-only=")), None)
-    without = next((a.split("=", 1)[1].split(",") for a in args if a.startswith("--without=")), [])
-    with_ = next((a.split("=", 1)[1].split(",") for a in args if a.startswith("--with=")), [])
-    seed = int(next((a.split("=", 1)[1] for a in args if a.startswith("--seed=")), DEFAULT_SEED))
-    known = ("--ex-winners", "--pit", "--placebo", "--report-only=", "--without=", "--with=", "--seed=")
-    unknown = [a for a in args if a.startswith("--") and not a.startswith(known)]
-    unknown += [a for a in args if a.startswith("--placebo") and a != "--placebo" and not a.startswith("--placebo=")]
-    if unknown:
-        sys.exit(f"Unknown options: {unknown}")
-    horizons = [a for a in args if not a.startswith("--")] or list(DEFAULT_HORIZONS)
-    if report_only:
-        rewrite_summary(report_only, horizons=horizons)
-    elif ex_winners:
-        run_all(
-            horizons=horizons, exclude=list(HINDSIGHT_WINNERS), tag="ex5", pit=pit,
-            without=without, with_=with_, placebo=placebo, seed=seed,
-        )
+    o = parse_args(sys.argv[1:])
+    common = dict(pit=o["pit"], without=o["without"], with_=o["with_"], placebo=o["placebo"], seed=o["seed"])
+    if o["report_only"]:
+        rewrite_summary(o["report_only"], horizons=o["horizons"])
+    elif o["ex_winners"]:
+        run_all(horizons=o["horizons"], exclude=list(HINDSIGHT_WINNERS), tag="ex5", **common)
     else:
-        run_all(horizons=horizons, pit=pit, without=without, with_=with_, placebo=placebo, seed=seed)
+        run_all(horizons=o["horizons"], **common)

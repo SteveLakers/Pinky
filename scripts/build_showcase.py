@@ -49,7 +49,7 @@ from pinky.config import (
 )
 from pinky.metrics import acquired_share, precision_at_k, winner_capture
 from pinky.pit_dataset import DATASET_PATH
-from pinky.universe import acquisition_dates, backtest_prices, sector_map
+from pinky.universe import acquisition_dates, backtest_prices, sector_map, tradeable_panel
 
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
 OUT_DIR = PROJECT_ROOT / "showcase"
@@ -77,7 +77,8 @@ def period_cagr(bt: pd.DataFrame, col: str, first: int | None = None, last: int 
 
 
 def max_drawdown(bt: pd.DataFrame, col: str) -> float:
-    curve = (1.0 + bt[col]).cumprod()
+    """At rebalance dates; the starting value 1 counts as a peak (2026-10-21 review fix)."""
+    curve = pd.concat([pd.Series([1.0]), (1.0 + bt[col]).cumprod()], ignore_index=True)
     return float((curve / curve.cummax() - 1.0).min())
 
 
@@ -183,6 +184,7 @@ def build_data() -> dict:
         "sectors": sectors,
         "max_sector_share": BACKTEST_MAX_SECTOR_SHARE,
         "buffer_mult": BACKTEST_BUFFER_MULT,
+        "tradeable": tradeable_panel(),
     }
     bt_broad = run_backtest(preds, "pred_excess_ridge", prices, top_frac=frac, **common)
     bt_ridge10 = run_backtest(preds, "pred_excess_ridge", prices, top_n=n, **common)

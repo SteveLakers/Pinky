@@ -15,6 +15,7 @@ import os
 import re
 import zipfile
 from pathlib import Path
+from urllib.parse import quote, quote_plus
 
 import pandas as pd
 import pyarrow.parquet as pq
@@ -53,26 +54,36 @@ def api_key() -> str:
 
 
 def _scrub(text: str) -> str:
-    return text.replace(api_key(), "***")
+    key = api_key()
+    for k in {key, quote(key, safe=""), quote_plus(key)}:
+        text = text.replace(k, "***")
+    return text
+
+
+def _get(table: str, params: dict, **kw) -> requests.Response:
+    """GET one table. Every failure is re-raised with the key removed and no chained traceback
+    (requests puts the full URL, key included, in its error messages)."""
+    try:
+        r = requests.get(f"{API_BASE}/{table}", params={**params, "api_key": api_key()}, **kw)
+    except requests.RequestException as e:
+        raise RuntimeError(f"{table}: request failed: {_scrub(str(e))}") from None
+    if r.status_code != 200:
+        msg = f"{table}: HTTP {r.status_code}: {_scrub(r.text)[:300]}"
+        r.close()
+        raise RuntimeError(msg)
+    return r
 
 
 def query(table: str, **params) -> pd.DataFrame:
     """Small filtered query (CSV). Pass `from_` for the `from` param."""
     if "from_" in params:
         params["from"] = params.pop("from_")
-    params.update(api_key=api_key(), format="csv")
-    r = requests.get(f"{API_BASE}/{table}", params=params, timeout=120)
-    if r.status_code != 200:
-        raise RuntimeError(f"{table}: HTTP {r.status_code}: {_scrub(r.text)[:300]}")
+    r = _get(table, {**params, "format": "csv"}, timeout=120)
     return pd.read_csv(io.StringIO(r.text), **CSV_KW)
 
 
 def bulk_status(table: str) -> dict:
-    r = requests.get(
-        f"{API_BASE}/{table}", params=dict(api_key=api_key(), status="True"), timeout=60
-    )
-    r.raise_for_status()
-    return r.json()
+    return _get(table, {"status": "True"}, timeout=60).json()
 
 
 def download_bulk(table: str, years: str = "full", out_dir: Path = DATA_SHARADAR_DIR) -> Path:
@@ -81,18 +92,13 @@ def download_bulk(table: str, years: str = "full", out_dir: Path = DATA_SHARADAR
     zdir.mkdir(parents=True, exist_ok=True)
     path = zdir / f"{table}-{years}.csv.zip"
     tmp = path.with_suffix(".part")
-    with requests.get(
-        f"{API_BASE}/{table}",
-        params=dict(api_key=api_key(), years=years),
-        stream=True,
-        timeout=600,
-        allow_redirects=True,
-    ) as r:
-        if r.status_code != 200:
-            raise RuntimeError(f"{table}: HTTP {r.status_code}: {_scrub(r.text)[:300]}")
-        with open(tmp, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8 << 20):
-                f.write(chunk)
+    try:
+        with _get(table, {"years": years}, stream=True, timeout=600, allow_redirects=True) as r:
+            with open(tmp, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8 << 20):
+                    f.write(chunk)
+    except requests.RequestException as e:
+        raise RuntimeError(f"{table}: download failed: {_scrub(str(e))}") from None
     tmp.replace(path)
     return path
 

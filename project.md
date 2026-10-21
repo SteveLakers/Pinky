@@ -12,10 +12,11 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 Last updated **2026-10-21**. Step 3 commits: code + date/leak checks `349d0d6`, results `66e83c7`. Batch 2 prep (v9 code): `7f0b6c4`. Batch 2 code / results: `git log --grep "Batch 2"` (older milestone commits: `docs/PROJECT_HISTORY.md`).
 
 **State**
+- **Code review (2026-10-21):** 6 findings (`docs/CODE_REVIEW_2026-10-21.md`) confirmed; 1, 2, 4, 5, 6 fixed = **backtest version 2** (37/37 checks). #3 (RSI drops 252 rows) open. Details: `docs/GROWTH_ROUND2_PLAN.md` → Code review fixes.
 - Phase 1 (honest evaluation) and Phase 2 steps 1–3 are **done**. **Still no edge over SPY.**
 - **Step 3 (v8 growth), 2026-10-03:** DROP on A and B (real − placebo +0.26 / +0.98%/yr; bar +1.0%). User 2026-10-12: keep growth (opt-in) and retest better versions (Roadmap: growth round 2).
 - **Batch 2 prep (v9), 2026-10-12:** growth opt-in (`--with=growth`); every fold's models saved (`models/<run>/1y/fold_NN/`); 6 baseline runs clean, seed 42 = the old A and B exactly.
-- **Final versions = batch 2 baselines** (LightGBM top 10% + buffer, net of 10 bps, mean of 3 seeds): A = `v9_pit` (+ `_s7`, `_s99`) **+7.14%/yr** (2001–08 −2.03%, 2009–20 +13.74%); B = `v9_pit_no-rank_label` (+ seeds) **+6.10%/yr** (−2.50%, +12.26%). SPY +7.28% (−2.74%, +14.53%), equal-weight universe +8.01%. Seed 42 alone: A +7.23%, B +5.83%.
+- **Final versions = batch 2 baselines** (LightGBM top 10% + buffer, net of 10 bps, mean of 3 seeds): A = `v9_pit` (+ `_s7`, `_s99`) **+7.15%/yr** (2001–08 −2.01%, 2009–20 +13.74%); B = `v9_pit_no-rank_label` (+ seeds) **+6.11%/yr** (−2.50%, +12.26%); re-scored with backtest v2 (v1: +7.14 / +6.10). Max drawdown A −49%, B −55%. SPY +7.28% (−2.74%, +14.53%), equal-weight universe +8.01%. Seed 42 alone: A +7.23%, B +5.83%.
 - **Batch 2 (margins), 2026-10-19: DROP on all 4 tests** (margins alone / growth + margins × A / B; 24 runs, all clean; no leak flag). A: real − placebo +0.12 / +0.77%/yr, real − baseline −0.19 / −0.08%; B: real *worse* than placebo (−1.25 / −1.47%/yr). Finals stay the baselines. Code: 4 margin features (opt-in `--with=margins`) + `--placebo=<group>`. Numbers: `docs/WALKFORWARD_RESULTS.md` → v9 batch 2.
 - **Residual edge + SHAP, 2026-10-16:** no reliable edge in A or B; what the models do and what growth does: Key findings (last bullet); details: `docs/PROJECT_HISTORY.md` → Residual edge + SHAP.
 - Showcase: v6_pit (2026-09-27). Product page https://pinky-research.vercel.app = the user's class project spec (link goes to the teacher, Mr. Lake): **v2 live since 2026-10-07** (details: `docs/PROJECT_HISTORY.md` → Product page redesign v2; study guide `product/presenter-notes.md`). Update either only when the user says.
@@ -138,7 +139,7 @@ Full layout with details: `docs/PROJECT_HISTORY.md`.
   4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min alone; output name = `train.VERSION` + `_pit`, currently `v9_pit` = A without growth)
   - Ablations: `--without=rank_label,size` (`train.MODEL_FIXES`). Company data under test: `--with=growth,margins` or growth round 2's `ear` / `sue` / `cagr` / `steady` / `growth2` (`train.FEATURE_GROUPS`, off by default since v9; `--without=growth` errors); placebo `--placebo=<group>` (bare `--placebo` = growth). Several runs fit in parallel: `OMP_NUM_THREADS=3` each, 6 runs ≈ 13 min on v7 (18 cores, 48 GiB RAM). Launch commands: `docs/STEP3_RUNBOOK.md`.
   - stdout is buffered when redirected to a file → use `python -u` to watch fold progress in a log.
-  - Rebuild a report without retraining: `python scripts/train_walkforward.py --report-only=v7_pit` (uses the saved metrics CSV + preds parquet).
+  - Re-score a run with today's backtest (no retraining; old outputs → `artifacts/superseded/`): `python scripts/train_walkforward.py --report-only=v9_pit`.
   - Compare runs: `python scripts/compare_runs.py v6_pit v7_pit ...`
   - Explain runs: `python scripts/residual_edge.py A=v9_pit,v9_pit_s7,v9_pit_s99` (seconds) and `python scripts/shap_report.py A=v9_pit,...` (~5 min for 6 runs; v9+ runs, all folds). Design and outputs: each script's docstring.
 - Showcase: `python scripts/build_showcase.py` (~1 min; run name = `RUN` at the top). View: click `showcase/index.html` in the Claude chat (Browser pane); Cursor needs `cd showcase && python3 -m http.server 8765`.

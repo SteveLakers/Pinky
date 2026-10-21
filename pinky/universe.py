@@ -174,6 +174,13 @@ def backtest_prices() -> pd.DataFrame:
     return tr
 
 
+def tradeable_panel() -> pd.DataFrame:
+    """Date x Ticker True where the stock has a real traded close that day (SPY always), for new buys."""
+    ok = load_panel("closeadj").notna()
+    ok[BENCHMARK] = True
+    return ok
+
+
 def universe_summary(universe: pd.DataFrame) -> pd.DataFrame:
     """Per-year: average stocks in the universe per day, and distinct stocks seen."""
     daily = universe.notna().sum(axis=1)
@@ -195,6 +202,7 @@ __all__ = [
     "save_panels",
     "sector_map",
     "total_return_panel",
+    "tradeable_panel",
     "universe_summary",
 ]
 

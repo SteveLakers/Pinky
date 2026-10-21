@@ -29,7 +29,7 @@ from pinky.config import (
     PROJECT_ROOT,
 )
 from pinky.metrics import acquired_share
-from pinky.universe import acquisition_dates, backtest_prices, load_panel, sector_map
+from pinky.universe import acquisition_dates, backtest_prices, load_panel, sector_map, tradeable_panel
 
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
 SEEDS = {42: "", 7: "_s7", 99: "_s99"}
@@ -91,7 +91,7 @@ def main() -> None:
 
     prices, sectors = backtest_prices(), sector_map()
     kw = dict(top_frac=BACKTEST_TOP_FRAC, max_sector_share=BACKTEST_MAX_SECTOR_SHARE,
-              buffer_mult=BACKTEST_BUFFER_MULT, sectors=sectors)
+              buffer_mult=BACKTEST_BUFFER_MULT, sectors=sectors, tradeable=tradeable_panel())
     p6, pa, pb = preds("v6_pit"), preds("v8_pit_no-growth"), preds("v7_pit_no-rank_label")
     bt6 = run_backtest(p6, "pred_excess_ridge", prices, **kw)
     bta = run_backtest(pa, "pred_excess_lgbm", prices, **kw)

@@ -10,12 +10,21 @@ Tradeable portfolio backtest on out-of-sample (walk-forward test) predictions.
 - Costs: `cost_bps` per side on every dollar traded (buys + sells),
   using drifted weights, so only real turnover is charged.
 - Compare to SPY and to an equal-weight universe basket over the same windows.
+- With `tradeable` (Date x Ticker, True = a real traded close that day), new buys and the
+  universe basket need a real price on the trade day; holdings already owned may stay (their
+  value keeps following the delisting-aware `prices`).
+- Max drawdown uses the daily value of each holding period (`path` columns), costs included.
+
+Version 2 (2026-10-21, code review): `tradeable` fills + daily drawdown from the starting value.
+Version 1 (through batch 2): new buys could fill at synthetic post-delisting prices; drawdown
+was sampled at rebalance dates and skipped a loss in the first period.
 """
 
 from __future__ import annotations
 
 import math
 
+import numpy as np
 import pandas as pd
 
 from pinky.config import (
@@ -30,6 +39,8 @@ from pinky.raw_io import adj_close_series, load_raw_ticker
 
 HOLD_DAYS_LAST = 21  # final period has no next rebalance; hold ~1 month
 HOLD_DAYS_LAST_WEEKLY = 5
+BACKTEST_VERSION = 2
+PATH_COLS = ["path", "spy_path"]  # daily values within each period (not saved to CSV)
 
 
 def load_price_panel(tickers: list[str]) -> pd.DataFrame:
@@ -127,14 +138,16 @@ def run_backtest(
     top_frac: float | None = None,
     buffer_mult: float | None = None,
     rebalance: str = "monthly",
+    tradeable: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """
-    One row per holding period (gross, cost, net, SPY, universe, turnover).
+    One row per holding period (gross, cost, net, SPY, universe, turnover, daily paths).
 
     Signal at close of rebalance day D; trade at close of D+1 (no same-close fill).
     `top_frac` holds the top fraction of each date's stocks instead of `top_n`.
     `buffer_mult` keeps a holding while it ranks in the top `buffer_mult` x N.
     `rebalance="weekly"` trades on every prediction date instead of monthly.
+    `tradeable` (see module docstring): names without a real price on D+1 can't be bought.
     """
     calendar = prices.index
     rebal = rebalance_dates(preds["Date"], rebalance)
@@ -155,6 +168,11 @@ def run_backtest(
             g = g[~g["Ticker"].isin(exclude)]
         p0 = prices.loc[d, g["Ticker"]]
         g = g[p0.notna().to_numpy()]
+        fresh = np.ones(len(g), dtype=bool)  # can be bought on day d
+        if tradeable is not None:
+            fresh = tradeable.loc[d].reindex(g["Ticker"], fill_value=False).to_numpy(dtype=bool)
+            keep = fresh | g["Ticker"].isin(prev_drift.index).to_numpy()
+            g, fresh = g[keep], fresh[keep]
         if g.empty:
             continue
 
@@ -168,6 +186,10 @@ def run_backtest(
             held=set(prev_drift.index), hold_rank=hold_rank,
         )
         target = pd.Series(1.0 / len(picks), index=picks)
+        window = prices.loc[d:end, picks]
+        rel = (window / window.iloc[0]).ffill().fillna(1.0)
+        rel.iloc[-1] = 1.0 + stock_ret.reindex(picks).to_numpy()
+        spy_window = prices.loc[d:end, BENCHMARK]
 
         all_names = target.index.union(prev_drift.index)
         turnover = float(
@@ -180,7 +202,7 @@ def run_backtest(
         net = (1.0 - cost) * (1.0 + gross) - 1.0
 
         spy = float(prices.loc[end, BENCHMARK] / prices.loc[d, BENCHMARK] - 1.0)
-        univ = float(stock_ret.mean())
+        univ = float(stock_ret.to_numpy()[fresh].mean())
 
         grown = target * (1.0 + stock_ret.reindex(picks))
         prev_drift = grown / grown.sum()
@@ -198,6 +220,8 @@ def run_backtest(
                 "spy": spy,
                 "universe_ew": univ,
                 "net_minus_spy": net - spy,
+                "path": tuple(rel.to_numpy(dtype=float) @ target.to_numpy()),
+                "spy_path": tuple(spy_window.to_numpy(dtype=float) / float(spy_window.iloc[0])),
             }
         )
 
@@ -229,8 +253,21 @@ def _cagr(period_rets: pd.Series, start: pd.Timestamp, end: pd.Timestamp) -> flo
 
 
 def _max_drawdown(period_rets: pd.Series) -> float:
-    curve = (1.0 + period_rets).cumprod()
-    return float((curve / curve.cummax() - 1.0).min())
+    """Worst fall from a peak, sampled at period ends; the starting value 1 counts as a peak."""
+    curve = np.concatenate([[1.0], (1.0 + period_rets.to_numpy(dtype=float)).cumprod()])
+    return float((curve / np.maximum.accumulate(curve) - 1.0).min())
+
+
+def _daily_drawdown(paths: pd.Series, costs: pd.Series | None = None) -> float:
+    """Worst fall from a peak using each period's daily values; costs come off at the period start."""
+    value, pieces = 1.0, [np.array([1.0])]
+    for i, path in enumerate(paths):
+        keep = 1.0 - (float(costs.iloc[i]) if costs is not None else 0.0)
+        piece = value * keep * np.asarray(path, dtype=float)
+        pieces.append(piece)
+        value = piece[-1]
+    curve = np.concatenate(pieces)
+    return float((curve / np.maximum.accumulate(curve) - 1.0).min())
 
 
 def summarize_backtest(bt: pd.DataFrame) -> dict:
@@ -251,8 +288,9 @@ def summarize_backtest(bt: pd.DataFrame) -> dict:
         "months_beat_spy": float((bt["net"] > bt["spy"]).mean()),
         "avg_monthly_turnover": float(bt["turnover"].mean()),
         "annual_cost_drag": float(bt["cost"].sum() / years) if years > 0 else float("nan"),
-        "max_dd_net": _max_drawdown(bt["net"]),
-        "max_dd_spy": _max_drawdown(bt["spy"]),
+        "max_dd_net": _daily_drawdown(bt["path"], bt["cost"]) if "path" in bt else _max_drawdown(bt["net"]),
+        "max_dd_spy": _daily_drawdown(bt["spy_path"]) if "spy_path" in bt else _max_drawdown(bt["spy"]),
+        "backtest_version": BACKTEST_VERSION,
     }
 
 
@@ -315,6 +353,8 @@ def within_sector_ic(
 
 
 __all__ = [
+    "BACKTEST_VERSION",
+    "PATH_COLS",
     "between_years",
     "default_prices",
     "load_price_panel",

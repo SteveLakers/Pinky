@@ -18,6 +18,7 @@ Writes the same text to artifacts/step3_verdict.md.
 
 from __future__ import annotations
 
+import json
 import sys
 
 import numpy as np
@@ -32,7 +33,7 @@ from pinky.config import (
     PROJECT_ROOT,
     REPORT_SPLIT_YEAR,
 )
-from pinky.universe import backtest_prices, sector_map
+from pinky.universe import backtest_prices, sector_map, tradeable_panel
 
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
 SEEDS = (42, 7, 99)
@@ -67,6 +68,31 @@ def needed_runs() -> list[str]:
 def stats(run: str) -> pd.DataFrame:
     s = pd.read_csv(ARTIFACTS_DIR / f"backtest_stats_1y_{run}.csv")
     return s[(s["signal"] == SIGNAL) & (s["portfolio"] == PORTFOLIO)].set_index("period")
+
+
+def backtest_id(run: str) -> str:
+    """Backtest version + settings a run was scored with (no record = version 1, before 2026-10-21)."""
+    path = ARTIFACTS_DIR / f"run_config_{run}.json"
+    cfg = json.loads(path.read_text()) if path.exists() else {}
+    bt = {k: v for k, v in cfg.get("backtest", {"version": 1}).items() if k != "inputs"}
+    s = stats(run)
+    scored = int(s["backtest_version"].iloc[0]) if "backtest_version" in s else 1
+    if scored != bt.get("version", 1):
+        return f"{run}: stats say version {scored}, config says {bt.get('version', 1)}"
+    return json.dumps(bt, sort_keys=True)
+
+
+def same_backtest(runs: list[str]) -> bool:
+    """True if every run was scored with the same backtest; else prints the groups (say)."""
+    ids: dict[str, list[str]] = {}
+    for r in runs:
+        ids.setdefault(backtest_id(r), []).append(r)
+    if len(ids) == 1:
+        return True
+    say("- **Runs scored with different backtests (re-score with `--report-only` first):**")
+    for k, rs in ids.items():
+        say(f"  - {k}: {', '.join(rs)}")
+    return False
 
 
 def periods(run: str) -> list[str]:
@@ -129,12 +155,14 @@ def scoreboard(name: str, runs: list[str]) -> float:
 
 
 def weekly_test(name: str, runs: list[str], prices: pd.DataFrame, sectors: dict[str, str]) -> None:
+    tradeable = tradeable_panel()
     rows = []
     for r in runs:
         preds = pd.read_parquet(ARTIFACTS_DIR / f"oos_preds_1y_{r}.parquet")
         bt = run_backtest(
             preds, "pred_excess_lgbm", prices, sectors=sectors, top_frac=BACKTEST_TOP_FRAC,
             max_sector_share=BACKTEST_MAX_SECTOR_SHARE, buffer_mult=BACKTEST_BUFFER_MULT, rebalance="weekly",
+            tradeable=tradeable,
         )
         s = stats(r).loc["all"]
         rows.append((s["cagr_net"], s["cagr_net_25bps"], summarize_backtest(bt)["cagr_net"], summarize_backtest(with_cost(bt, 25.0))["cagr_net"]))

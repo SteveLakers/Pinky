@@ -47,7 +47,7 @@ User: "1, can we do one by one, and than at last everything together, this way w
 
 **Open points (asked 2026-10-21; user: "continue on opus 5.5 1a 2a", tests one at a time):**
 - 60 runs: yes (1a). Run **one test at a time** (12 runs each), result shown after each, in the fixed order 1 → 5. All 5 run whatever the early results say (no stopping after a KEEP or a DROP).
-- Same locked rule for every test (2a): real − placebo ≥ +1.0%/yr and ≥ +0.5%/yr each half; real ≥ baseline. If several KEEP for a version, the highest real mean wins (batch 2's tie-break).
+- Same locked rule for every test (2a): real − placebo ≥ +1.0%/yr and ≥ +0.5%/yr each half; real ≥ baseline. Baselines under backtest version 2: A +7.15%/yr, B +6.11%/yr (section Code review fixes). If several KEEP for a version, the highest real mean wins (batch 2's tie-break).
 - Caveats (told the user): 5 tests × 2 versions = 10 chances, so one lucky KEEP is plausible; only the 2022+ holdout settles it. A single column rarely moves a portfolio +1%/yr, so DROP on the singles is likely even if one of them carries real information (its IC and SHAP share are reported as info). A column tested alone can miss value it only adds with the others: test 5 covers that.
 
 ## Design (pinned 2026-10-21, before any code ran on results)
@@ -79,6 +79,15 @@ Same date rules as growth and margins (`pinky/fundamentals.py`): ARQ / ART only,
 - Correlations (per-date ranks): `rev_cagr_3y` / `rev_up_quarters` 0.62; strongest links to older inputs: `rev_sue`–`rev_accel` 0.69, `ear_3d`–`mom_63` 0.36; all below the 0.92 drop threshold.
 - **Leak-power test** (dev rows 2005+, 3-month return vs SPY), rank IC real dates | fake early dates (quarter end + 1 day) | placebo: `ear_3d` +0.0073 | +0.1545 | −0.0002; `rev_sue` +0.0047 | +0.0288 | +0.0001; `rev_cagr_3y` −0.0014 | +0.0002 | +0.0003; `rev_up_quarters` +0.0182 | +0.0210 | −0.0002. A leak would show; ours doesn't. With honest dates only `rev_up_quarters` ranks 3-month returns a little; expect small gains, if any.
 - Not covered: the review's "fundamental availability" risk (values from the filing dated at the earlier announcement) applies to all fundamentals since v8; it doesn't touch `ear_3d`, which uses prices only.
+
+## Code review fixes (2026-10-21, before any round 2 run)
+
+The review (`docs/CODE_REVIEW_2026-10-21.md`, other chat) found 6 issues; all 6 were confirmed here (Claude Opus 5.5).
+- **Fixed (backtest version 2):** (1) new buys and the equal-weight universe need a real traded close on the trade day (the old code bought delisted stocks at their synthetic post-delisting value: 1 new buy in A's top-10 (ABNK1, 2005-12-05), 3 in A's and 2 in B's top 10% (seed 42)); (2) max drawdown from daily values, starting value counted, costs included; (4) misspelled / malformed / empty / repeated CLI options stop the run (`--pit=true` used to run the legacy path); (5) every Sharadar request goes through one wrapper that strips the key (and its URL-encoded form) from errors; (6) `--report-only` copies old outputs to `artifacts/superseded/` first and logs the re-score; stats carry `backtest_version`, `run_config` records the backtest settings, and the verdicts refuse runs scored with different backtests.
+- Checks: `scripts/check_review_fixes.py` **37/37** (made-up cases for each fix; on the saved baselines, the new code without the fill rule reproduces the saved monthly returns exactly, and with it no new buy lacks a real price).
+- **Baselines re-scored** (saved predictions, no retraining; old outputs in `artifacts/superseded/v9_pit*_20261021-122228/`), mean of 3 seeds, LightGBM top 10% + buffer: A +7.14% → **+7.15%/yr**, B +6.10% → **+6.11%/yr**; halves A −2.01% / +13.74%, B −2.50% / +12.26%. True max drawdowns are deeper than reported: A −46.9% → −49.4%, B −52.5% → −55.3% (A's top-10, seed 42: −35.2% → −45.8%; SPY −55.2%).
+- Round 2 uses backtest version 2 and these baselines (`batch_verdict.py 3`). Earlier verdicts (step 3, batch 2) stay as written under version 1; re-running them now would stop on the mixed-backtest check, by design.
+- **Open: (3) RSI.** Zero average loss gave a missing RSI, so 252 dataset rows (226 steadily rising, 26 flat; 0.009%) were dropped. Fixing it changes the dataset, so the 6 baselines would need retraining before round 2. User decision.
 
 ## Runbook (only after the user says `run`; one test at a time)
 
