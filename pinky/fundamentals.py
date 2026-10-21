@@ -18,6 +18,14 @@ filing) never replaces the newer one.
 
 Margins (batch 2): gross and operating margin over the last 12 months (ART), and their change
 vs the same quarter a year ago (ARQ, in margin points). Revenue <= 0 -> missing.
+
+Growth round 2 (one group per column, `growth2` = all four):
+- ear_3d: stock minus SPY return over trading days -1..+1 around the quarter's news date
+  (day 0 = first trading day on or after it); usable only after day +1's close.
+- rev_sue: this quarter's revenue YoY minus the mean of the previous 4 quarters', divided by
+  their std (floor `SUE_MIN_STD`); all 4 public by this quarter's news date.
+- rev_cagr_3y: 12-month revenue vs 3 years earlier, per year (ART).
+- rev_up_quarters: of this and the previous 7 quarters, how many grew YoY; all 8 known and public.
 """
 
 from __future__ import annotations
@@ -36,12 +44,25 @@ GROWTH_FEATURES = [
     "has_growth",
 ]
 MARGIN_FEATURES = ["gm_ttm", "gm_chg_q", "om_ttm", "om_chg_q"]
-GROUP_FEATURES = {"growth": GROWTH_FEATURES, "margins": MARGIN_FEATURES}
+GROWTH2_FEATURES = ["ear_3d", "rev_sue", "rev_cagr_3y", "rev_up_quarters"]
+GROUP_FEATURES = {
+    "growth": GROWTH_FEATURES,
+    "margins": MARGIN_FEATURES,
+    "ear": ["ear_3d"],
+    "sue": ["rev_sue"],
+    "cagr": ["rev_cagr_3y"],
+    "steady": ["rev_up_quarters"],
+    "growth2": GROWTH2_FEATURES,
+}
 
 EARNINGS_EVENT_CODE = "22"
 MIN_DAYS_AFTER_PERIOD = 10
 QUARTER_STALE_DAYS = 365
 TTM_STALE_DAYS = 550
+REACTION_DAYS = (1, 1)  # trading days before / after day 0
+SUE_QUARTERS = 4
+SUE_MIN_STD = 0.01
+STEADY_QUARTERS = 8
 
 _FUND_PATH = DATA_SHARADAR_DIR / "fundamentals.parquet"
 _EVENTS_PATH = DATA_SHARADAR_DIR / "events.parquet"
@@ -140,6 +161,54 @@ def add_accel(reports: pd.DataFrame, yoy_col: str = "rev_yoy_q") -> pd.Series:
     return pd.Series(np.where(ok, m[yoy_col] - m[f"{yoy_col}_pq"], np.nan), index=reports.index)
 
 
+def _earlier_quarters(reports: pd.DataFrame, col: str, n: int) -> pd.DataFrame:
+    """col for each of the `n` quarters before every report; missing unless public by its news date."""
+    cur = reports[["ticker", "calendardate"]]
+    out = {}
+    for k in range(1, n + 1):
+        prev = reports[["ticker", "calendardate", col, "news_date"]]
+        prev = prev.assign(calendardate=prev["calendardate"] + pd.offsets.MonthEnd(3 * k))
+        m = cur.merge(prev, on=["ticker", "calendardate"], how="left", validate="one_to_one")
+        out[k] = m[col].where(m["news_date"] <= reports["news_date"].to_numpy()).to_numpy()
+    return pd.DataFrame(out, index=reports.index)
+
+
+def add_sue(reports: pd.DataFrame, col: str = "rev_yoy_q") -> pd.Series:
+    """(col − mean of the previous `SUE_QUARTERS` quarters') / max(their std, `SUE_MIN_STD`)."""
+    prev = _earlier_quarters(reports, col, SUE_QUARTERS)
+    ok = reports[col].notna() & prev.notna().all(axis=1)
+    sd = prev.std(axis=1, ddof=1).clip(lower=SUE_MIN_STD)
+    return ((reports[col] - prev.mean(axis=1)) / sd).where(ok)
+
+
+def add_up_quarters(reports: pd.DataFrame, col: str = "rev_yoy_q") -> pd.Series:
+    """How many of this and the previous `STEADY_QUARTERS` − 1 quarters had col > 0; all known."""
+    vals = pd.concat([reports[[col]], _earlier_quarters(reports, col, STEADY_QUARTERS - 1)], axis=1)
+    return (vals > 0).sum(axis=1).astype("float64").where(vals.notna().all(axis=1))
+
+
+def add_reaction(reports: pd.DataFrame, tr: pd.DataFrame, spy: pd.Series) -> pd.DataFrame:
+    """`ear_3d` (stock − SPY over trading days −1…+1 around news_date) and `ear_known` (day +1).
+
+    `ear_known` is missing only when day +1 is past the price data (not known yet).
+    """
+    before, after = REACTION_DAYS
+    cal = pd.DatetimeIndex(tr.index)
+    day0 = cal.searchsorted(reports["news_date"].to_numpy(), side="left")
+    start, end = day0 - before - 1, day0 + after
+    inside = (start >= 0) & (end < len(cal))
+    col = tr.columns.get_indexer(reports["ticker"])
+    ok = inside & (col >= 0)
+    px = tr.to_numpy(dtype="float64")
+    bench = spy.reindex(cal).to_numpy(dtype="float64")
+    s, e, c = start[ok], end[ok], col[ok]
+    ear = np.full(len(reports), np.nan)
+    ear[ok] = (px[e, c] / px[s, c] - 1.0) - (bench[e] / bench[s] - 1.0)
+    known = np.full(len(reports), np.datetime64("NaT"), dtype="datetime64[us]")
+    known[end < len(cal)] = cal[end[end < len(cal)]].to_numpy().astype("datetime64[us]")
+    return pd.DataFrame({"ear_3d": np.where(np.isfinite(ear), ear, np.nan), "ear_known": known}, index=reports.index)
+
+
 def _load_dimension(dimension: str, value_cols: list[str]) -> pd.DataFrame:
     cols = ["ticker", "calendardate", "reportperiod", "date", *value_cols]
     raw = pd.read_parquet(_FUND_PATH, columns=cols, filters=[("dimension", "==", dimension)])
@@ -198,6 +267,32 @@ def ttm_margin_reports(
     reports = with_news_dates(reports, anns)
     reports["gm_ttm"] = margin(reports, "gp")
     reports["om_ttm"] = margin(reports, "opinc")
+    return reports
+
+
+def quarterly_growth2_reports(
+    tr: pd.DataFrame,
+    spy: pd.Series,
+    raw: pd.DataFrame | None = None,
+    announcements: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """Quarterly growth reports + ear_3d / ear_known, rev_sue, rev_up_quarters."""
+    reports = quarterly_growth_reports(raw, announcements)
+    reaction = add_reaction(reports, tr, spy)
+    reports["ear_3d"], reports["ear_known"] = reaction["ear_3d"], reaction["ear_known"]
+    reports["rev_sue"] = add_sue(reports)
+    reports["rev_up_quarters"] = add_up_quarters(reports)
+    return reports
+
+
+def ttm_growth2_reports(
+    raw: pd.DataFrame | None = None,
+    announcements: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    reports = first_filed(raw) if raw is not None else _load_dimension("ART", ["revenue"])
+    anns = announcements if announcements is not None else load_announcements()
+    reports = with_news_dates(reports, anns)
+    reports["rev_cagr_3y"] = (1.0 + add_yoy(reports, "revenue", months=36)) ** (1.0 / 3.0) - 1.0
     return reports
 
 
@@ -298,6 +393,37 @@ def attach_margin_features(rows: pd.DataFrame) -> pd.DataFrame:
     return rows.merge(extra, on=["Date", "Ticker"], how="left", validate="one_to_one")
 
 
+def growth2_feature_frame(
+    rows: pd.DataFrame,
+    quarterly: pd.DataFrame,
+    ttm: pd.DataFrame,
+    with_dates: bool = False,
+) -> pd.DataFrame:
+    """Date, Ticker + the four round 2 columns (+ news/period dates of the used reports if `with_dates`).
+
+    ear_3d attaches on its known date (day +1), the rest on the report's news date.
+    """
+    keys = pd.DataFrame({"Date": _dates(rows["Date"]), "Ticker": rows["Ticker"].astype(str)})
+    if keys.duplicated(["Date", "Ticker"]).any():
+        raise ValueError("growth2 attach needs unique Date, Ticker rows")
+
+    reaction = quarterly.assign(news_date=quarterly["ear_known"])
+    out = _asof_attach(keys, reaction, ["ear_3d"], QUARTER_STALE_DAYS, "e")
+    out = _asof_attach(out, quarterly, ["rev_sue", "rev_up_quarters"], QUARTER_STALE_DAYS, "q")
+    out = _asof_attach(out, ttm, ["rev_cagr_3y"], TTM_STALE_DAYS, "t")
+    for c in GROWTH2_FEATURES:
+        out[c] = out[c].astype("float32")
+    helpers = ["news_e", "period_e", "news_q", "period_q", "news_t", "period_t"] if with_dates else []
+    return out[["Date", "Ticker", *GROWTH2_FEATURES, *helpers]]
+
+
+def attach_growth2_features(rows: pd.DataFrame, tr: pd.DataFrame, spy: pd.Series) -> pd.DataFrame:
+    """Add the four round 2 columns to a Date/Ticker frame (row order kept); `tr`, `spy` = daily prices."""
+    extra = growth2_feature_frame(rows[["Date", "Ticker"]], quarterly_growth2_reports(tr, spy), ttm_growth2_reports())
+    extra = extra.astype({"Date": rows["Date"].dtype, "Ticker": rows["Ticker"].dtype})
+    return rows.merge(extra, on=["Date", "Ticker"], how="left", validate="one_to_one")
+
+
 def shuffle_within_date(df: pd.DataFrame, cols: list[str], seed: int) -> pd.DataFrame:
     """Placebo: give each row another same-date row's values of `cols` (block kept together)."""
     missing = sorted(set(cols) - set(df.columns))
@@ -320,24 +446,32 @@ def shuffle_growth_within_date(df: pd.DataFrame, seed: int) -> pd.DataFrame:
 
 __all__ = [
     "GROUP_FEATURES",
+    "GROWTH2_FEATURES",
     "GROWTH_FEATURES",
     "MARGIN_FEATURES",
     "add_accel",
     "add_change",
+    "add_reaction",
+    "add_sue",
+    "add_up_quarters",
     "add_yoy",
+    "attach_growth2_features",
     "attach_growth_features",
     "attach_margin_features",
     "earnings_announcements",
     "first_filed",
+    "growth2_feature_frame",
     "growth_feature_frame",
     "load_announcements",
     "margin",
     "margin_feature_frame",
     "published_reports",
+    "quarterly_growth2_reports",
     "quarterly_growth_reports",
     "quarterly_margin_reports",
     "shuffle_growth_within_date",
     "shuffle_within_date",
+    "ttm_growth2_reports",
     "ttm_growth_reports",
     "ttm_margin_reports",
     "with_news_dates",

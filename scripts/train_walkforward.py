@@ -11,7 +11,8 @@ Usage:
 --without switches off some of the pit model fixes (train.MODEL_FIXES) for ablations
   (outputs tagged `no-<fix>`).
 --with switches on company data under test (train.FEATURE_GROUPS, off by default; outputs
-  tagged `with-<group>`).
+  tagged `with-<group>`): growth, margins, and growth round 2's ear, sue, cagr, steady
+  (one column each) or growth2 (all four; not together with the single ones).
 --placebo=<group> shuffles that group's features across stocks within each date (the group
   must be on via --with; outputs tagged `placebo-<group>`). Bare --placebo = growth (v8 tag `placebo`).
 --seed sets model randomness (outputs tagged `s<N>` unless N is the default 42).

@@ -107,14 +107,15 @@ def dataset_structure(old: pd.DataFrame, new: pd.DataFrame) -> None:
     section("2. Dataset vs v9 backup")
     check(len(old) == len(new), f"same row count ({len(old):,} vs {len(new):,})")
     check(old[["Date", "Ticker"]].equals(new[["Date", "Ticker"]]), "same rows in the same order")
-    added = [c for c in new.columns if c not in old.columns]
+    later = F.GROWTH2_FEATURES  # growth round 2 columns, added after margins (check_growth2_features.py)
+    added = [c for c in new.columns if c not in old.columns and c not in later]
     removed = [c for c in old.columns if c not in new.columns]
     check(added == M and not removed, f"added exactly the four margin columns: {added}")
     changed = [c for c in old.columns if not old[c].equals(new[c])]
     check(not changed, f"all {len(old.columns)} old columns identical" + (f" (changed: {changed})" if changed else ""))
     check([c for c in new.columns if c in old.columns] == list(old.columns), "old columns keep their order")
-    fnew = [c for c in feature_columns(new) if c not in feature_columns(old)]
-    check(fnew == M, f"model inputs gain exactly the four margin columns ({len(feature_columns(new))} total)")
+    fnew = [c for c in feature_columns(new) if c not in feature_columns(old) and c not in later]
+    check(fnew == M, f"model inputs gain exactly the four margin columns (+ {len(later)} later columns)")
     check(all(str(new[c].dtype) == "float32" for c in M), "margin columns are float32")
 
 

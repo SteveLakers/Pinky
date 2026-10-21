@@ -25,6 +25,8 @@ v9: `growth` is opt-in (`FEATURE_GROUPS`, switched on with `with_`), so a plain 
     models/<run>/<horizon>/fold_NN/ (before: only the last fold, in a folder shared by versions).
     Batch 2 (same v9 defaults): `margins` group (four margin features); `placebo` names the group
     it shuffles (True = growth, as in v8), so growth can stay real while margins are shuffled.
+    Growth round 2 (same v9 defaults): one group per new column (`ear`, `sue`, `cagr`, `steady`)
+    and `growth2` = all four; groups that share columns can't be on together.
 """
 
 from __future__ import annotations
@@ -96,7 +98,9 @@ SPLIT_YEAR = REPORT_SPLIT_YEAR
 
 VERSION = "v9"
 MODEL_FIXES = ("rank_label", "rank_features", "young", "size")
-FEATURE_GROUPS = ("growth", "margins")  # company data under test: off unless `with_` names it
+# company data under test: off unless `with_` names it
+FEATURE_GROUPS = ("growth", "margins", "ear", "sue", "cagr", "steady", "growth2")
+ROUND2_GROUPS = ("ear", "sue", "cagr", "steady", "growth2")
 DEFAULT_SEED = 42
 PRED_COLS = [
     "pred_excess_ridge",
@@ -737,6 +741,7 @@ def _prep_desc(fixes: list[str], placebo: bool | str | None = None, seed: int = 
         "size feature (log market cap)" if "size" in fixes else "no size feature",
         "company growth features" if "growth" in fixes else "no growth features",
         *(["margin features"] if "margins" in fixes else []),
+        *[f"growth round 2: {', '.join(GROUP_FEATURES[g])}" for g in ROUND2_GROUPS if g in fixes],
     ]
     desc = "Prep: " + ", ".join(parts) + " + correlated-feature drop + regularized LightGBM."
     if placebo:
@@ -801,9 +806,9 @@ def pit_training_frame(
         df = df[df["history_1y"] >= 1.0].drop(columns="history_1y")
     if "size" not in fixes:
         df = df.drop(columns="log_mcap")
-    for g in FEATURE_GROUPS:
-        if g not in fixes:
-            df = df.drop(columns=GROUP_FEATURES[g], errors="ignore")
+    on = {c for g in FEATURE_GROUPS if g in fixes for c in GROUP_FEATURES[g]}
+    off = [c for g in FEATURE_GROUPS if g not in fixes for c in GROUP_FEATURES[g] if c not in on]
+    df = df.drop(columns=list(dict.fromkeys(off)), errors="ignore")
     if placebo:
         df = shuffle_within_date(df, GROUP_FEATURES[placebo], seed)
     if "rank_features" in fixes:
@@ -876,6 +881,9 @@ def run_all(
         raise ValueError("with, placebo and seed options are for pit runs")
     if placebo and placebo not in fixes:
         raise ValueError(f"placebo={placebo} needs that group on (with {placebo}); groups: {list(FEATURE_GROUPS)}")
+    cols = [c for g in with_ for c in GROUP_FEATURES[g]]
+    if len(cols) != len(set(cols)):
+        raise ValueError(f"with={with_}: these groups share columns; turn on only one of them")
     calendar = prices = sectors = universe_desc = acq = None
     if pit:
         tag = pit_tag(tag, without, with_, placebo, seed)

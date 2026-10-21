@@ -5,7 +5,7 @@ Local stock-prediction project. **Goal: predict stocks that will perform well an
 - **Favor tech**, and especially **finding future big winners** early ("the next NVDA/TSLA").
 - **Still buy other sectors** (energy, industrials, etc.) when they're the best picks — not tech-only.
 
-**Docs:** history, decision logs, results tables → `docs/PROJECT_HISTORY.md`. Batch 2 plan → `docs/BATCH2_PLAN.md`. Growth round 2 draft → `docs/GROWTH_ROUND2_PLAN.md`. When the user says `run`, follow `docs/STEP3_RUNBOOK.md` (with the new batch's run names / flags).
+**Docs:** history, decision logs, results tables → `docs/PROJECT_HISTORY.md`. Batch 2 plan → `docs/BATCH2_PLAN.md`. Growth round 2 plan + runbook → `docs/GROWTH_ROUND2_PLAN.md`. When the user says `run`, follow `docs/STEP3_RUNBOOK.md` with the current plan's Runbook section (run names / flags).
 
 ## ▶ Resume here (new chat: read this first)
 
@@ -28,7 +28,7 @@ Last updated **2026-10-21**. Step 3 commits: code + date/leak checks `349d0d6`, 
 - 2026-10-19: growth round 2 = one by one, then all together; 2-year label later (plan: `docs/GROWTH_ROUND2_PLAN.md` → User decisions).
 - 2026-10-16: both parts of `docs/BATCH2_PLAN.md` approved (24 runs; Part 2 tie-break: if two tests KEEP for a version, the higher real mean wins).
 
-**Next: growth round 2** (`docs/GROWTH_ROUND2_PLAN.md`). User decided (2026-10-19): test the 4 new columns **one by one, then all 4 together** (price reaction to earnings `ear_3d`, sales surprise `rev_sue`, 3-year growth `rev_cagr_3y`, steady growth `rev_up_quarters`) = 5 tests, 60 runs; 2-year label later. **Before any code:** ask the open points in the plan (OK with 60 runs or tests 1–4 first; same locked rule + tie-break; caveats), as numbered options with reply codes. Then build + date/leak checks like batch 2, then train only on `run`. Optional, ask first: SHAP on the margin runs. Don't push (user, 2026-10-16: no).
+**Next: growth round 2** (`docs/GROWTH_ROUND2_PLAN.md`). User decided (2026-10-19): test the 4 new columns **one by one, then all 4 together** (price reaction to earnings `ear_3d`, sales surprise `rev_sue`, 3-year growth `rev_cagr_3y`, steady growth `rev_up_quarters`) = 5 tests, 60 runs; 2-year label later. User 2026-10-21: same locked rule, **one test at a time** (all 5 run). **Code built + checked 2026-10-21** (85/85; old checks pass; old frames identical). Next: train only on `run` (plan → Runbook). Optional, ask first: SHAP on the margin runs. Don't push (user, 2026-10-16: no).
 
 **When you finish a chunk of work:** update this Resume section so the next chat can pick up. Keep this file ~12–15 KB (`wc -c project.md`; every chat reads it): current state only. Move finished-step details (logs, decision logs, results tables) to `docs/PROJECT_HISTORY.md` and leave a 1–2 line summary + pointer here.
 
@@ -123,7 +123,7 @@ Core rules: `AGENTS.md` (always on; every agent and subagent gets it, Claude thr
 
 Full layout with details: `docs/PROJECT_HISTORY.md`.
 - `pinky/`: the pipeline (module map, features, switches: `docs/ARCHITECTURE.md`; settings and `HOLDOUT_START`: `config.py`), plus legacy 128-stock files.
-- `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `check_margin_features`, `step3_verdict`, `batch_verdict`, `fast_grower_margins`, `residual_edge`, `shap_report`, `product_numbers`, `product_page_data`, legacy build scripts.
+- `scripts/`: `pull_sharadar`, `train_walkforward`, `compare_runs`, `build_showcase`, `check_growth_features`, `check_margin_features`, `check_growth2_features`, `step3_verdict`, `batch_verdict`, `fast_grower_margins`, `residual_edge`, `shap_report`, `product_numbers`, `product_page_data`, legacy build scripts.
 - `data/sharadar/` (~6 GB, gitignored, never share). `artifacts/`, `models/` (gitignored): per-run outputs named `<file>_<run>`; logs `artifacts/logs/train_<run>.log`. `models/<run>/1y/fold_NN/` = every fold's models + `folds.json` (v9+, ~9 MB per run); older runs: `models/1y_<tag>/` = last fold only (v7's: `1y_pit_v7`, `1y_pit_no-rank_label_v7`).
 - `showcase/`, `product/` (public page), `docs/` (also `ARCHITECTURE.md`, `PRD.md`, `EVAL.md`), `graphify-out/`.
 - Agent add-ons (untracked; don't commit; none change training): skills in `.agents/skills/` (`residual-edge-analyzer`, `shap`, `verification-before-completion`, `systematic-debugging`; linked into `.claude/skills/`), Context7 plugin (Cursor and Claude). SHAP 0.52.0 is installed in `.venv`; don't follow the skill's `uv venv` step. Residual-edge input recipe: runbook step 8.
@@ -136,7 +136,7 @@ Full layout with details: `docs/PROJECT_HISTORY.md`.
   2. Universe panels: `python -m pinky.universe` (~1 min)
   3. Dataset: `python -m pinky.pit_dataset` (~1 min)
   4. Train/eval: `python scripts/train_walkforward.py --pit` (~8 min alone; output name = `train.VERSION` + `_pit`, currently `v9_pit` = A without growth)
-  - Ablations: `--without=rank_label,size` (`train.MODEL_FIXES`). Company data under test: `--with=growth,margins` (`train.FEATURE_GROUPS`, off by default since v9; `--without=growth` errors); placebo `--placebo=<group>` (bare `--placebo` = growth). Several runs fit in parallel: `OMP_NUM_THREADS=3` each, 6 runs ≈ 13 min on v7 (18 cores, 48 GiB RAM). Launch commands: `docs/STEP3_RUNBOOK.md`.
+  - Ablations: `--without=rank_label,size` (`train.MODEL_FIXES`). Company data under test: `--with=growth,margins` or growth round 2's `ear` / `sue` / `cagr` / `steady` / `growth2` (`train.FEATURE_GROUPS`, off by default since v9; `--without=growth` errors); placebo `--placebo=<group>` (bare `--placebo` = growth). Several runs fit in parallel: `OMP_NUM_THREADS=3` each, 6 runs ≈ 13 min on v7 (18 cores, 48 GiB RAM). Launch commands: `docs/STEP3_RUNBOOK.md`.
   - stdout is buffered when redirected to a file → use `python -u` to watch fold progress in a log.
   - Rebuild a report without retraining: `python scripts/train_walkforward.py --report-only=v7_pit` (uses the saved metrics CSV + preds parquet).
   - Compare runs: `python scripts/compare_runs.py v6_pit v7_pit ...`

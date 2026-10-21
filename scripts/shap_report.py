@@ -38,7 +38,7 @@ import pandas as pd
 import shap
 
 from pinky.config import REPORT_SPLIT_YEAR
-from pinky.fundamentals import GROWTH_FEATURES, MARGIN_FEATURES
+from pinky.fundamentals import GROWTH2_FEATURES, GROWTH_FEATURES, MARGIN_FEATURES
 from pinky.pit_dataset import load_pit_dataset
 from pinky.preprocess import prepare_fold_frames
 from pinky.train import ARTIFACTS_DIR, MODELS_DIR, dev_rows, pit_training_frame
@@ -57,6 +57,7 @@ FAMILIES = {
     "stock age": ["history_1y"],
     "growth": list(GROWTH_FEATURES),
     "margins": list(MARGIN_FEATURES),
+    "growth round 2": list(GROWTH2_FEATURES),
 }
 LABELS = {
     "ret_1d": "last day's return", "ret_5d": "last week's return", "ret_21d": "last month's return",
@@ -70,6 +71,8 @@ LABELS = {
     "days_since_news": "days since last report", "has_growth": "has growth data",
     "gm_ttm": "gross margin (12 months)", "gm_chg_q": "gross margin change vs a year ago (quarter)",
     "om_ttm": "operating margin (12 months)", "om_chg_q": "operating margin change vs a year ago (quarter)",
+    "ear_3d": "price reaction to the last report (3 days)", "rev_sue": "sales surprise vs own trend",
+    "rev_cagr_3y": "sales growth per year over 3 years", "rev_up_quarters": "quarters of growth (last 8)",
 }
 
 

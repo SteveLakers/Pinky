@@ -40,7 +40,8 @@ That gives about 1,200–2,850 stocks a day and 11,561 distinct stocks (1998–2
   - 13 price features: returns over 1, 5 and 21 days; volatility over 21 and 63 days; volume vs its 21-day average; RSI-14; distance from the 50- and 200-day averages; momentum over 63, 126 and 252 days, and 12-1 momentum.
   - `history_1y` (how much of a year of prices the stock has; 1 = a full year) and `log_mcap` (size).
   - 6 growth features (`pinky/fundamentals.py`): `rev_yoy_q`, `rev_accel`, `gp_yoy_q`, `rev_yoy_ttm`, `days_since_news`, `has_growth`. Each number is used only on dates strictly after its news date (the earnings announcement, else the SEC filing). Tested in v8 and dropped; still in the dataset.
-  - 4 margin features (batch 2, same date rules): `gm_ttm`, `om_ttm` (gross / operating margin, last 12 months), `gm_chg_q`, `om_chg_q` (change vs the same quarter a year ago, in margin points). Revenue ≤ 0 → missing.
+  - 4 margin features (batch 2, same date rules): `gm_ttm`, `om_ttm` (gross / operating margin, last 12 months), `gm_chg_q`, `om_chg_q` (change vs the same quarter a year ago, in margin points). Revenue ≤ 0 → missing. Tested and dropped; still in the dataset.
+  - 4 growth round 2 features (same date rules; exact definitions: `docs/GROWTH_ROUND2_PLAN.md` → Design): `ear_3d` (stock − SPY over trading days −1…+1 around the earnings news; used only after day +1), `rev_sue` (sales growth vs its own last 4 quarters), `rev_cagr_3y` (12-month sales vs 3 years earlier, per year), `rev_up_quarters` (of the last 8 quarters, how many grew vs a year ago).
 - **Labels** for 3m, 6m, 1y and 2y (1y is the main target): `excess_*` (stock return − SPY return), `beat_*`, `stock_fwd_*`, `spy_fwd_*`, `top_*` (top 10% of that date).
 - Any column whose name doesn't start with a prefix in `dataset.LABEL_PREFIXES` is treated as a model input, so a new label must get a prefix there.
 
@@ -54,7 +55,7 @@ That gives about 1,200–2,850 stocks a day and 11,561 distinct stocks (1998–2
   - Return models: Ridge (the baseline) and LightGBM (120 trees, depth 4, 15 leaves, half the columns per tree, no row sampling). Target: each day's return rank (version A) or the raw excess return (version B).
   - Blend: the average of the two models' daily ranks.
   - Beat-SPY classifiers (logistic regression, LightGBM): reported only, not used for picks.
-- **Switches** (`MODEL_FIXES`, all on with `--pit`; turn some off with `--without=`): `rank_label`, `rank_features`, `young`, `size`. **Company data under test** (`FEATURE_GROUPS`, off unless `--with=`; since v9): `growth`, `margins`. Also `--placebo=<group>` (that group's values shuffled between stocks within each date; bare `--placebo` = growth) and `--seed=N`.
+- **Switches** (`MODEL_FIXES`, all on with `--pit`; turn some off with `--without=`): `rank_label`, `rank_features`, `young`, `size`. **Company data under test** (`FEATURE_GROUPS`, off unless `--with=`; since v9): `growth`, `margins`; growth round 2: `ear`, `sue`, `cagr`, `steady` (one column each) or `growth2` (all four; can't be on with the single ones). Also `--placebo=<group>` (that group's values shuffled between stocks within each date; bare `--placebo` = growth) and `--seed=N`.
 - Run names come from the options (for example `v9_pit_no-rank_label_s7`, `v9_pit_with-growth_placebo`, `v9_pit_with-growth_with-margins_placebo-margins`), not from log file names. v9's plain `v9_pit` = v8's `v8_pit_no-growth` (same predictions).
 
 ## Backtest (`pinky/backtest.py`)

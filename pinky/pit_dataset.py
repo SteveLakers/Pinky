@@ -9,8 +9,8 @@ The legacy market-wide features are left out: prep drops them before ranking, an
 `rs_*` features equal plain returns after the per-day z-score.
 Plus `history_1y` (share of the last year the stock has traded) and `log_mcap` (size).
 Stocks need ~1 month of prices; younger than 1y, the long-window features are missing.
-Plus six company growth and four margin features (fundamentals.py), used only after their
-news date.
+Plus six company growth, four margin and four growth round 2 features (fundamentals.py), used
+only after their news date (the earnings reaction only after its 3-day window closes).
 
 Labels come from the delisting-aware total-return index (`universe.total_return_panel`),
 so stocks that go bankrupt or get acquired inside the horizon stay in the data.
@@ -25,8 +25,10 @@ import pandas as pd
 
 from pinky.config import DATA_SHARADAR_DIR, FEATURE_WARMUP_DAYS, HORIZONS
 from pinky.fundamentals import (
+    GROWTH2_FEATURES,
     GROWTH_FEATURES,
     MARGIN_FEATURES,
+    attach_growth2_features,
     attach_growth_features,
     attach_margin_features,
 )
@@ -146,6 +148,11 @@ def build_pit_dataset(sample_every: int = DATASET_SAMPLE_EVERY) -> pd.DataFrame:
     cover = ", ".join(f"{c} {out[c].notna().mean():.1%}" for c in MARGIN_FEATURES)
     print(f"[pit] margins found: {cover}")
     fcols += MARGIN_FEATURES
+
+    out = attach_growth2_features(out, tr, benchmark_closeadj().reindex(dates).ffill())
+    cover = ", ".join(f"{c} {out[c].notna().mean():.1%}" for c in GROWTH2_FEATURES)
+    print(f"[pit] growth round 2 found: {cover}")
+    fcols += GROWTH2_FEATURES
 
     for h in HORIZONS:
         col = f"excess_{h}"

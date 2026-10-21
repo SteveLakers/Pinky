@@ -15,7 +15,10 @@ Top 10% + buffer, 10 bps, monthly; each side = mean over seeds 42, 7, 99. KEEP o
 - A vs B (final runs): both continue unless one trails the other by more than 4%/yr.
 - Scoreboard (shown, never decides): as in step 3.
 
-Usage: PYTHONPATH=. python scripts/batch_verdict.py 2
+Batch 3 = growth round 2 (one column at a time, then all four; run one test at a time): tests
+whose 12 runs exist are judged; the final pick and A vs B wait until every test is in.
+
+Usage: PYTHONPATH=. python scripts/batch_verdict.py 2   (or 3)
 Writes the same text to artifacts/batch<N>_verdict.md.
 """
 
@@ -46,7 +49,28 @@ BATCHES = {
             ),
         ],
     },
+    "3": {
+        "title": "Batch 3 verdict — growth round 2 (one column at a time, then all four)",
+        "tests": [
+            (f"Test {i} {label}", version, f"{base}_with-{g}", f"{base}_with-{g}_placebo-{g}")
+            for i, (g, label) in enumerate(
+                [
+                    ("ear", "ear_3d (reaction to earnings)"),
+                    ("sue", "rev_sue (sales surprise)"),
+                    ("cagr", "rev_cagr_3y (3-year sales growth)"),
+                    ("steady", "rev_up_quarters (steady growth)"),
+                    ("growth2", "all four together"),
+                ],
+                start=1,
+            )
+            for version, base in ((A, "v9_pit"), (B, "v9_pit_no-rank_label"))
+        ],
+    },
 }
+
+
+def has_run(run: str) -> bool:
+    return (ARTIFACTS_DIR / f"backtest_stats_1y_{run}.csv").exists()
 
 
 def seeded(base: str) -> list[str]:
@@ -64,8 +88,10 @@ def main(args: list[str]) -> int:
         return 1
     batch = args[0]
     cfg = BATCHES[batch]
-    missing = [r for r in needed_runs(cfg["tests"]) if not (ARTIFACTS_DIR / f"backtest_stats_1y_{r}.csv").exists()]
-    if missing:
+    ready = [t for t in cfg["tests"] if all(has_run(r) for r in seeded(t[2]) + seeded(t[3]))]
+    waiting = [t for t in cfg["tests"] if t not in ready]
+    missing = [r for r in needed_runs(ready or cfg["tests"]) if not has_run(r)]
+    if missing or not ready:
         print("Missing runs (train them first):\n  " + "\n  ".join(missing))
         return 1
 
@@ -85,7 +111,7 @@ def main(args: list[str]) -> int:
     say("")
 
     kept: dict[str, list[tuple[float, str, list[str]]]] = {A: [], B: []}
-    for name, version, real_base, fake_base in cfg["tests"]:
+    for name, version, real_base, fake_base in ready:
         real, fake, baseline = seeded(real_base), seeded(fake_base), seeded(BASELINES[version][0])
         ps = periods(real[0])
         r, f, b = mean_stat(real), mean_stat(fake), base_mean[version]
@@ -114,6 +140,21 @@ def main(args: list[str]) -> int:
         say("")
         if rule1 and rule2:
             kept[version].append((float(r["all"]), name, real))
+
+    if waiting:
+        say("## Not run yet")
+        say("")
+        for name, version, _, _ in waiting:
+            say(f"- {name} — {version}")
+        say("")
+        say("Final versions and A vs B: once every test is in.")
+        if hold:
+            say("")
+            say("**ON HOLD: resolve the flags above before acting on this verdict.**")
+        out = ARTIFACTS_DIR / f"batch{batch}_verdict.md"
+        out.write_text("\n".join(v3.OUT) + "\n")
+        print(f"\nWrote {out}")
+        return 0
 
     say("## Final versions")
     say("")
